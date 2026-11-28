@@ -2,6 +2,7 @@
 // The stones are the shore sheet's own, raised by its height sheet on a fine fan of mesh, so each has a side and hides what lies behind it.
 import * as THREE from 'three';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
+import { SHORE_LAY_GLSL } from './lay';
 import { BAY, landHeight } from './height';
 import { LOD_GLSL, WARM_GLSL } from './lod';
 
@@ -62,10 +63,11 @@ export function lipGeometry(): THREE.BufferGeometry {
 // pebbles and its pebbles grit, and the same sheet again large and turned, whose cobbles are the stones that stand out of the grit.
 const LIP_GLSL = /* glsl */ `
 uniform sampler2D tShorePH;
+${SHORE_LAY_GLSL}
 vec2 lipHigh(vec2 xz, float level) {
   // Both are read a level and more above the mesh: the sheet's height is its tone, sharp at every fleck of weed, and raised texel by
   // texel it is a field of thorns. Read soft, each stone is one round back.
-  float fine = textureLod(tShorePH, xz / vec2(2.0, 1.125), level + 10.3).r;
+  float fine = textureLod(tShorePH, shoreLay(tShorePH, xz).xy, level + 10.3).r;
   vec2 t = vec2(xz.x * 0.82 + xz.y * 0.57, -xz.x * 0.57 + xz.y * 0.82);
   float stand = smoothstep(0.42, 0.9, textureLod(tShorePH, t / vec2(6.4, 3.6) + 0.37, max(level + 9.6, 4.0)).r);
   // A standing stone keeps the grain of the small ones on its back, so no top is a flat table.
@@ -103,7 +105,7 @@ void main() {
   float hx = lipHigh(p.xz + vec2(e, 0.0), level).x;
   float hz = lipHigh(p.xz + vec2(0.0, e), level).x;
   vec3 n = normalize(vec3(h.x - hx, e, h.x - hz));
-  vec3 small = textureLod(tShoreP, p.xz / vec2(2.0, 1.125), AT(1672.0, 2.0)).rgb;
+  vec3 small = textureLod(tShoreP, shoreLay(tShorePH, p.xz).xy, AT(1672.0, 2.0)).rgb;
   vec2 t = vec2(p.x * 0.82 + p.z * 0.57, -p.x * 0.57 + p.z * 0.82);
   vec3 large = textureLod(tShoreP, t / vec2(6.4, 3.6) + 0.37, AT(1672.0, 6.4)).rgb;
   vec3 albedo = mix(small, large, 0.5 * h.y) * vec3(1.12, 0.93, 0.72) * warmSide(n);

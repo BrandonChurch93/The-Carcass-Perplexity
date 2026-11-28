@@ -3,19 +3,18 @@
 // half in the crust, stained and cracked, with the weed of the shelf drawn over them strand by strand.
 import * as THREE from 'three';
 import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { KEYS } from '../cameras';
-import { DEG } from '../layout';
 import { lipAt } from '../land/height';
 import { vnoise } from '../shared/noise';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { WARM_GLSL } from '../land/lod';
+import { SHELF_FLAT } from '../land/shelf';
+import { SCALE, bonesSeat } from './place';
 import { SCULPT } from './sculpt';
 
 export const PARTS: readonly string[] = ['skeleton'];
 
 /** Where it lies: on the lip, ahead and to the right of the camera of the edge shot, and the bearing its spine lies along. */
-export const BONES = { ahead: 6.4, right: 16, along: 112 };
 
 const VERTEX = /* glsl */ `
 // aBone: the tone of the bone (below nothing: a strand of weed), how near its end the point is, and how much of the sky it sees.
@@ -49,7 +48,8 @@ void main() {
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 q = vLocal;
-  float lift = vWorld.y;
+  // Over the flat of rock it lies on (land/shelf.ts).
+  float lift = vWorld.y - ${SHELF_FLAT.toFixed(3)};
   // The software renderer shades four pixels together, and a screen derivative taken under a branch takes stale memory from the pixels
   // that did not go that way: no frame then renders the same twice. So the grain of bone is worked out here, for every point,
   // and its lie across the screen taken before any branch.
@@ -80,7 +80,8 @@ void main() {
   vec3 r2 = cross(n, dx);
   float det = dot(dx, r1);
   vec3 lean = sign(det) * (hLie.x * r1 + hLie.y * r2);
-  n = normalize(abs(det) * n - 0.0045 * lean);
+  // Only where a pixel is finer than the grain: on a rib a few pixels wide the lie across the screen is the rib's edge, not its grain.
+  n = normalize(abs(det) * n - 0.0045 * smoothstep(0.012, 0.003, length(dx) + length(dy)) * lean);
 
   // Old bone: ivory where the air has had it, bleached on what looks up, yellow and brown where it has lain.
   float tone = vBone.x;
@@ -110,8 +111,11 @@ void main() {
   rough = mix(0.8, 0.35, damp);
   glint = damp * 0.6;
   }
-  vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
-  c += glint * rigGlint(vWorld, n, v, 0.3);
+  // The rig's contact shade under the bones is meant for the floor: a bone that stands in it would be darkened by its own shade, the
+  // ribs most. A bone is lit as a thing above that shade, and what it sees less of the sky for is in its own measure (vBone.z).
+  vec3 lit = vWorld + vec3(0.0, vBone.x < 0.0 ? 0.0 : 3.2, 0.0);
+  vec3 c = rigShade(lit, n, v, albedo, rough, occ);
+  c += glint * rigGlint(lit, n, v, 0.3);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -250,8 +254,6 @@ function shadeMap(geometry: THREE.BufferGeometry, sun: V3, sunk: number, inFromL
 
 type V3 = [number, number, number];
 
-// The bones are built at the size of a small animal and laid half as large again: it was a grown one.
-const SCALE = 1.5;
 /** How deep the bones are sunk in the floor, in their own measure. */
 const SUNK = 0.017;
 
@@ -347,38 +349,14 @@ export function create(ctx: Context): Piece {
   material.userData.depthFragment = DEPTH;
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
-  // Ahead and to the right of the camera of the edge shot, then out to the rim of the lip from there.
-  const from = KEYS.edge.position;
-  const px = from[0] + Math.sin(BONES.right * DEG) * BONES.ahead;
-  const pz = from[2] - Math.cos(BONES.right * DEG) * BONES.ahead;
-  const a = Math.atan2(px, -pz);
-  const lipPoint = (angle: number): [number, number] => [Math.sin(angle) * lipAt(angle), -Math.cos(angle) * lipAt(angle)];
-  // It lies the way the lip runs there, its skull toward the left of the edge shot and its belly toward that camera: `along` is only
-  // the side of the lip its hind end points to.
-  const span = 2.6 / lipAt(a);
-  const [ax, az] = lipPoint(a - span);
-  const [bx, bz] = lipPoint(a + span);
-  const along = new THREE.Vector3(bx - ax, 0, bz - az).normalize();
-  if (along.x * Math.sin(BONES.along * DEG) - along.z * Math.cos(BONES.along * DEG) < 0) along.negate();
-  const toCamera = new THREE.Vector3(-along.z, 0, along.x);
-  if (toCamera.x * Math.sin(a) - toCamera.z * Math.cos(a) < 0) toCamera.negate();
-  // As near the lip as its ragged line lets every bone lie on the floor: the hind limb that trails farthest back is 0.35 from the spine.
-  const [lx, lz] = lipPoint(a);
-  let back = 0;
-  for (let pass = 0; pass < 3; pass++) {
-    let short = -Infinity;
-    for (let u = -1.35; u <= 1.85; u += 0.2) {
-      const qx = lx + (along.x * (u - 0.35) + toCamera.x * (back - 0.36)) * SCALE;
-      const qz = lz + (along.z * (u - 0.35) + toCamera.z * (back - 0.36)) * SCALE;
-      short = Math.max(short, lipAt(Math.atan2(qx, -qz)) + 0.1 - Math.hypot(qx, qz));
-    }
-    back += short / SCALE;
-  }
-  const x = lx + (toCamera.x * back - along.x * 0.35) * SCALE;
-  const z = lz + (toCamera.z * back - along.z * 0.35) * SCALE;
+  const seat = bonesSeat();
+  const along = new THREE.Vector3(seat.along[0], 0, seat.along[1]);
+  const toCamera = new THREE.Vector3(seat.toCamera[0], 0, seat.toCamera[1]);
+  const x = seat.x;
+  const z = seat.z;
   mesh.matrixAutoUpdate = false;
   // Sunk into the crust: the lower half of every bone that lies on the floor is under it.
-  mesh.matrix.makeBasis(along.clone().multiplyScalar(SCALE), new THREE.Vector3(0, SCALE, 0), toCamera.clone().multiplyScalar(SCALE)).setPosition(x, -SUNK * SCALE, z);
+  mesh.matrix.makeBasis(along.clone().multiplyScalar(SCALE), new THREE.Vector3(0, SCALE, 0), toCamera.clone().multiplyScalar(SCALE)).setPosition(x, SHELF_FLAT - SUNK * SCALE, z);
   mesh.matrixWorldNeedsUpdate = true;
   // What the bones take from the floor: the sheet lies a hair over it and multiplies what is drawn there.
   const sunDir = ctx.rig.sun.direction;
@@ -408,7 +386,7 @@ export function create(ctx: Context): Piece {
   const sheet = new THREE.Mesh(sheetGeometry, sheetMaterial);
   sheet.frustumCulled = false;
   sheet.matrixAutoUpdate = false;
-  sheet.matrix.makeBasis(along.clone().multiplyScalar(SCALE), new THREE.Vector3(0, SCALE, 0), toCamera.clone().multiplyScalar(SCALE)).setPosition(x, 0.004, z);
+  sheet.matrix.makeBasis(along.clone().multiplyScalar(SCALE), new THREE.Vector3(0, SCALE, 0), toCamera.clone().multiplyScalar(SCALE)).setPosition(x, SHELF_FLAT + 0.006, z);
   sheet.matrixWorldNeedsUpdate = true;
   ctx.scene.add(sheet);
   ctx.scene.add(ctx.parts.built('skeleton', mesh, sheet));
