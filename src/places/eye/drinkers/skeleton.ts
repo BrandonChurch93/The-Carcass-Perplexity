@@ -68,6 +68,8 @@ export interface Hoof {
   at: V3;
   /** 0 planted, 1 folded at the top of a step. */
   fold: number;
+  /** The cannon leant from how it stands at rest, radians: forward at its top where the hoof is behind the leg. */
+  lean?: number;
 }
 
 export interface Pose {
@@ -220,7 +222,7 @@ export function solve(b: Build, p: Pose, out: Float32Array): Solved {
     let from = leg.hind ? add(pelvisAt, apply(pelvis, sub(top, J('pelvis')))) : add(chestAt, apply(chest, sub(top, J('chest'))));
     const fetlock: V3 = [hoof.at[0], hoof.at[1] + (r[3] as V3)[1] * s, hoof.at[2]];
     // The cannon stands nearly upright under a planted leg, and folds as the hoof comes up: the hock goes forward over the hoof, the knee too.
-    const lean = Math.atan2(-r3[2], -r3[1]) + hoof.fold * (leg.hind ? 0.75 : 0.95);
+    const lean = Math.atan2(-r3[2], -r3[1]) + hoof.fold * (leg.hind ? 0.75 : 0.95) + (hoof.lean ?? 0);
     let upper: V3 = [fetlock[0] - r3[0] * s, fetlock[1] + l3 * Math.cos(lean), fetlock[2] + l3 * Math.sin(lean)];
     let d = sub(upper, from);
     if (!leg.hind) {
