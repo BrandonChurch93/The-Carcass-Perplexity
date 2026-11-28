@@ -8,7 +8,7 @@ import type { Line } from './bolt';
 
 /** Radius of the main channel's white heart, metres, and the least it is drawn at, in pixels of a 4K frame. */
 export const HEART_RADIUS = 0.2;
-const HEART_PIXELS = 1.6;
+const HEART_PIXELS = 1.25;
 /** The radius the glow is laid out from, metres, and its least in pixels of a 4K frame: it is the air's, not the heart's. */
 const AIR_RADIUS = 0.8;
 const AIR_PIXELS = 2.1;

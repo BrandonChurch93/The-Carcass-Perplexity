@@ -272,7 +272,7 @@ export function ground(s: number, l: number): number {
     y += along * (9 * Math.exp(-(((l - CANAL_L - 15) / 12) ** 2)) + 5.5 * Math.exp(-(((l - CANAL_L + 19) / 8) ** 2)));
   }
   if (d > EXIT - 0.6 && d < EXIT + 6 && Math.abs(l - canalL(d)) < flare(d) + 4.5) y = Math.min(y, FLOOR - 0.4);
-  if (d >= EXIT + 6 && d < EXIT + 300) {
+  if (d >= EXIT + 6 && d < EXIT + 620) {
     // Beyond the far mouth the floor does not go on as a plain: it breaks into a gully of snow that falls away to the cloud, veering to
     // the lee, so that from inside the mouth holds a slope going down, the far spires and the sea of cloud.
     const run = d - EXIT - 6;
@@ -283,7 +283,12 @@ export function ground(s: number, l: number): number {
     y += (Math.min(y, FLOOR - 0.4 - (0.55 * run * run) / (run + 22)) - y) * w;
     // On the windward hand of it a shoulder of drifted snow stands up and goes down across the mouth's view into the gully.
     const shoulder = FLOOR - 0.4 + 5 * Math.exp(-(((run - 50) / 30) ** 2));
-    y += (Math.max(y, shoulder) - y) * smooth(-26, -52, off) * (1 - smooth(-70, -120, off)) * smooth(0, 14, run);
+    // Farther out it is a spur of the ridge: its lee side leans down to the cloud and its end goes down as it came. It stood as a level
+    // band with a wall of a hundred metres to the lee and a cut end, a card from the trail.
+    const spur = smooth(80, 170, run);
+    const down = Math.max(0, off + 52);
+    const top = shoulder - spur * (0.85 * down * (1 + down / 260) + 0.7 * Math.max(0, run - 255));
+    y += (Math.max(y, top) - y) * (1 - (1 - spur) * (1 - smooth(-26, -52, off))) * (1 - smooth(-70, -120, off)) * smooth(0, 14, run);
   }
   // Over the canal the rock is the foot of the spire's own face: the near mouth is a few metres before that face and the ground carries
   // a lip of rock over it, which goes up into the blade behind it (the mouth is a hole in the ground's mesh and in the blade's).

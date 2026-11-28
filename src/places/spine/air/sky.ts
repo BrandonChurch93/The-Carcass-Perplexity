@@ -52,7 +52,8 @@ const float FLOW_RATE = 0.014;
 const float FLOW_PERIOD = 6.5;
 const float SCUD_OVER = 650.0;
 vec2 panoUv(float az, float el) {
-  return (vec2(wrapPi(az) - uSkyStage.x - PANO_DRIFT * (uTime - 12.0), el) - PANO_FROM) / PANO_SPAN;
+  // The cloud travels at layered speeds: what stands low and far hardly moves, what hangs high over the ridge goes with the gale.
+  return (vec2(wrapPi(az) - uSkyStage.x - PANO_DRIFT * (uTime - 12.0) * mix(0.3, 1.3, smoothstep(0.0, 0.5, el)), el) - PANO_FROM) / PANO_SPAN;
 }
 vec3 panoRead(vec2 uv, float lod) {
   return textureLod(tSkyPano, vec2(mirrored(uv.x), clamp(uv.y, 0.004, 0.996)), lod).rgb;
@@ -75,8 +76,12 @@ vec3 panoAtRest(vec3 c, float toLast, float el, float lit) {
 vec3 flowing(sampler2D picture, vec2 uv, vec2 drift, float period, float lod) {
   // Read very soft (as the colour of haze), the picture's flow is under the size of what is read: one read, where it stands.
   if (lod > 3.5) return textureLod(picture, vec2(mirrored(uv.x), clamp(uv.y, 0.004, 0.996)), lod).rgb;
+  // The band of the dusk and the far deck under it hold still and keep their layers, as light on a far horizon does. The cloud over them
+  // is carried, each height at its own pace, the higher the faster.
+  float lifted = smoothstep(0.4, 0.62, uv.y);
+  if (lifted <= 0.0) return textureLod(picture, vec2(mirrored(uv.x), clamp(uv.y, 0.004, 0.996)), lod).rgb;
   vec2 eddy = textureLod(tNoise, vec3(uv * vec2(1.3, 0.9), 0.31), 0.0).rg - 0.5 + 0.5 * (textureLod(tNoise, vec3(uv * vec2(3.7, 2.9) + 0.4, 0.67), 0.0).ba - 0.5);
-  vec2 flow = drift + 0.035 * eddy;
+  vec2 flow = (drift * (0.45 + 1.1 * smoothstep(0.5, 1.0, uv.y)) + 0.035 * eddy) * lifted;
   float a = fract(uTime / period);
   float b = fract(uTime / period + 0.5);
   vec2 ua = uv - flow * (a - 0.5);
@@ -273,7 +278,8 @@ vec3 skyPainted(vec3 from, vec3 d, float foot) {
   vec2 uv = panoUv(az, el);
   float lod = max(log2(max(foot, 1e-6) / PANO_DOT), 0.0);
   vec3 f = textureLod(tSkyFlow, vec2(mirrored(uv.x), clamp(uv.y, 0.004, 0.996)), 0.0).rgb;
-  vec2 carried = (f.rg - 0.5) * (2.0 * FLOW_RATE * FLOW_PERIOD) / PANO_SPAN;
+  // The band of the dusk holds still: low on the horizon nothing of the picture is carried, and its layers keep their own edges.
+  vec2 carried = (f.rg - 0.5) * (2.0 * FLOW_RATE * FLOW_PERIOD) / PANO_SPAN * smoothstep(0.03, 0.13, el);
   float a = fract(uTime / FLOW_PERIOD + f.b);
   float b = fract(a + 0.5);
   float w = abs(1.0 - 2.0 * a);
@@ -334,7 +340,15 @@ void main() {
     c *= 1.0 + uSkyStage.y;
     // (It is read as the sea reads it, flash and all: in a strike the sea's far end and the sky's foot light as one.)
     vec3 seaAir = skyCloud(cameraPosition, normalize(vec3(d.x, 0.0003, d.z)), 0.0);
-    c = mix(c, seaAir, smoothstep(0.0, -0.005, d.y));
+    // Under the level the foot is the far sea's own last rows, pale cold cloud with a share of the sky's foot in it, and not the dark of
+    // the cloud over the band: left as that dark it lay under the band as a ruled bar a degree deep, between the band and a pale sea.
+    // (On the storm's side the sea goes into the wall's foot whole, and the foot stays the wall's.)
+    float inFall = smoothstep(0.05, 0.75, -dot(d.xz, GALE) * inversesqrt(max(dot(d.xz, d.xz), 1e-6)));
+    float sunk = smoothstep(0.0, -0.005, d.y);
+    float banks = textureLod(tNoise, vec3(az * 3.1 + uTime * 0.0006, 0.31, 0.57), 0.0).g;
+    vec3 lastRows = mix(vec3(0.124, 0.14, 0.227) * (0.72 + 0.3 * banks), seaAir, 0.42);
+    seaAir = mix(seaAir, lastRows, sunk * (1.0 - inFall) * (1.0 - plateOn));
+    c = mix(c, seaAir, sunk);
     // The sky's foot stands in the air the far sea stands in: the horizon is no ruled line between a pale sea and a dark storm, the one goes
     // into the other over a degree or two. Toward the last light the band keeps its line.
     float toLast = 0.5 + 0.5 * dot(d.xz, LAST_LIGHT) * inversesqrt(max(dot(d.xz, d.xz), 1e-6));
@@ -342,7 +356,6 @@ void main() {
     float lumps = textureLod(tNoise, vec3(az * 3.1 + uTime * 0.0006, 0.31, 0.57), 0.0).g + 0.5 * textureLod(tNoise, vec3(az * 9.7 - uTime * 0.0011, 0.63, 0.19), 0.0).r;
     float tallAir = mix(0.02, 0.011, pow(toLast, 3.0)) * (0.2 + 1.2 * lumps);
     // On the storm's side the mist of its fall stands down to the sea and is the foot itself: no darker bar lies along the horizon there.
-    float inFall = smoothstep(0.05, 0.75, -dot(d.xz, GALE) * inversesqrt(max(dot(d.xz, d.xz), 1e-6)));
     c = mix(c, seaAir, 0.92 * exp(-max(d.y, 0.0) / tallAir) * (1.0 - 0.8 * smoothstep(0.55, 0.85, toLast)) * (1.0 - 0.9 * inFall));
     // The last band of orange: a thin bright line low on the horizon toward the last light, broken along its length by the far cloud that
     // stands before it, with a little of its glow in the air over it. It is the one warm thing in the frame, in a flash too.
@@ -365,10 +378,27 @@ void main() {
     // The far sea's tops stand over the picture's level line: heads of cloud, here higher and there lower, that the gale carries along.
     float tops = 0.65 * textureLod(tNoise, vec3(uvQ.x * 2.3 - uTime * 0.004, 0.27, 0.55), 0.0).r
       + 0.35 * textureLod(tNoise, vec3(uvQ.x * 7.1 - uTime * 0.009, 0.63, 0.21), 0.0).r
-      + 0.18 * textureLod(tNoise, vec3(uvQ.x * 19.0 - uTime * 0.016, 0.11, 0.83), 0.0).b;
-    float offLine = (uvQ.y - 0.32) / 0.06;
-    uvQ.y -= 0.048 * (tops - 0.38) * exp(-offLine * offLine);
+      + 0.1 * textureLod(tNoise, vec3(uvQ.x * 19.0 - uTime * 0.016, 0.11, 0.83), 0.0).b;
+    // Only the sea's own top is moved. Under it the deck is lifted with it, less the deeper; over it the sky stands where the picture
+    // has it and gives way within a hair of the top. Moved a tenth of the picture up and down, every layer of the band took the sea's
+    // wave and all their edges rippled as one.
+    float lift = 0.048 * (tops - 0.38);
+    // (The picture's sea ends at 0.281 of its height. The line was taken at 0.32, in the middle of the band.)
+    float over = uvQ.y - 0.281 - lift;
+    // (Over a raised top the sky is not drawn down to meet it: every row of the picture between its level and the top, the foot of the
+    // band among them, then lay in a hair along the top as a red line. The top stands before the sky, and its edge is a pixel soft.)
+    float seam = 0.0;
+    if (over < 0.0) uvQ.y -= lift * exp(-over * over / 0.0036);
+    else if (lift > 0.0) seam = 1.0 - smoothstep(0.0, 0.0008, over);
+    else uvQ.y = max(uvQ.y, 0.281 + 0.003 * clamp(over / max(-lift, 1e-5), 0.0, 1.0));
     vec3 held = plateCloud(uvQ, 0.0);
+    if (seam > 0.0) held = mix(held, plateCloud(vec2(uvQ.x, 0.281), 0.0), seam);
+    // The picture's own sea, under its level, is the far end of the deck the air pass draws, and answers a stroke as that deck does.
+    // Left dark while the deck went pale under it, it lay on the deck's last row as a dark bar with a ruled foot, the frame across.
+    float sunkP = smoothstep(0.004, -0.012, over) * (1.0 + smoothstep(-0.008, -0.03, over));
+    if (uStrikeTop.w > 0.0) held += STRIKE_COLOUR * vec3(0.86, 0.84, 1.0) * (min(uStrikeTop.w * 0.008, 0.05) * sunkP);
+    // And it stands in the air the deck stands in: between strokes too the deck's last row is slate, and the picture's sea was black on it.
+    held += vec3(0.005, 0.0068, 0.0125) * sunkP;
     // On the storm's side of the long lens stands the wall of falling snow: the fall of the whole sky's picture, seen large and soft, where
     // the strike's own picture is only dark.
     vec2 uvW = vec2(0.03 + 0.3 * uvQ.x + 0.0006 * uTime, 0.1 + 0.75 * (uvQ.y - 0.32));
@@ -381,7 +411,9 @@ void main() {
     // Through a long lens the picture is seen larger than it was made: the same cloud, four times smaller, gives it the detail it lacks
     // there, as much as the lens asks for.
     vec2 uvT = vec2(az, el) * 2.3 + vec2(uTime * 0.0012, 0.0);
-    uvT = vec2(mirrored(uvT.x), mirrored(uvT.y + 0.2));
+    // (From the picture's upper half, where it is heads of cloud: its lower half is the fall of snow, and the fine of that stood in
+    // the far deck and the band as upright streaks.)
+    uvT = vec2(mirrored(uvT.x), 0.45 + 0.55 * mirrored(uvT.y / 0.55 + 0.2));
     if (foot < 0.0009) {
       float fine = dot(textureLod(tStormWall, uvT, 0.0).rgb, vec3(0.33));
       float broad = dot(textureLod(tStormWall, uvT, 4.5).rgb, vec3(0.33));
@@ -395,40 +427,8 @@ void main() {
     vec3 heldSoft = plateCloud(uvQ, 5.0);
     c += vec3(0.085, 0.036, 0.014) * (plateOn * clamp((heldSoft.r - heldSoft.b) * 14.0, 0.0, 1.0));
   }
-  // The ridge runs on beyond what is built: a row of far spires stands out of the sea toward the last light, each smaller and bluer than
-  // the one before it. They are too far to shift with the lens, so they are of the dome.
-  // Behind the strike's long lens they are three, placed where its picture has them: right of the struck spire, against the band.
-  bool pl = uPlate.w > 0.0;
-  float hf = uPlate.z / 1.2;
-  float elS = el - (pl ? uPlate.y : 0.0);
-  // Only there: in every other shot the far ridge is built, and stands in the air as the near one does.
-  if (pl && elS > -0.02 && elS < 0.09) {
-    for (int i = 0; i < 6; i++) {
-      if (pl && i > 2) break;
-      float k = float(i);
-      float size = pl ? 1.0 : 1.0 / (1.0 + 0.3 * k);
-      float azS = pl ? uPlate.x + hf * (i == 0 ? 0.29 : i == 1 ? 0.42 : 0.49) : DUSK_AZ - 0.5 + 0.14 * k + 0.05 * sin(k * 2.7 + 0.4);
-      float tall = pl ? hf * 0.5625 * (i == 0 ? 0.11 : i == 1 ? 0.07 : 0.05) : 0.075 * size * (0.8 + 0.4 * fract(sin(k * 12.9898) * 43758.5453));
-      float unit = pl ? tall / 0.075 : 1.0;
-      if (abs(wrapPi(az - azS)) > tall || elS > tall + 0.004) continue;
-      float h = clamp((elS + 0.012 * unit) / (tall + 0.012 * unit), 0.0, 1.0);
-      // A leaning blade: broad at the sea, a knife at the top, broken along both edges.
-      float lean = (pl ? -0.4 : mod(k, 2.0) < 0.5 ? -0.35 : 0.28) * tall * h * h;
-      float half_ = tall * ((pl ? 0.55 : 0.34) * pow(1.0 - h, 1.3) + 0.012) * (1.0 + 0.5 * (textureLod(tNoise, vec3(h * 3.0 + k, k * 0.37, 0.2), 0.0).r - 0.5));
-      float off = wrapPi(az - azS) - lean;
-      float inSpire = (1.0 - smoothstep(half_ - 1.5 * foot, half_ + 1.5 * foot, abs(off) + 0.004 * size * unit * (textureLod(tNoise, vec3(elS / unit * 90.0, off / unit * 60.0 + k, 0.7), 0.0).r - 0.5))) * (1.0 - smoothstep(tall - 2.0 * foot, tall + 2.0 * foot, elS));
-      if (inSpire > 0.0) {
-        // Rock in the far air: dark toward the storm, the dusk on its lee face, and paler the farther off; its foot is in the cloud.
-        float lee = smoothstep(-0.3, 0.6, off / max(half_, 1e-4));
-        vec3 rockFar = mix(vec3(0.02, 0.022, 0.034), vec3(0.075, 0.05, 0.04), lee * 0.6) * (0.7 + 0.6 * textureLod(tNoise, vec3(elS / unit * 70.0 + k, off / unit * 45.0, 0.31), 0.0).r);
-        // Against the strike's dark cloud a far spire is a darker shape still, never a pale one.
-        if (pl) rockFar = min(rockFar, c * 0.4);
-        float air = 1.0 - exp(-(0.3 + 0.2 * k));
-        float foot_ = smoothstep(0.012 * unit, -0.006 * unit, elS - 0.004 * size * unit);
-        c = mix(c, mix(rockFar, c, clamp(air * (pl ? 0.35 : 0.6) + foot_, 0.0, 1.0)), inSpire);
-      }
-    }
-  }
+  // (No far spire is drawn on the dome. Behind the strike's long lens three stood against the band, dark blades with their feet in the
+  // air over the sea: the far ridge is built in every shot, and the picture is held with no spire in it.)
   // Under the horizon there is only the cloud sea, which the air pass draws.
   vec2 uvP = vec2(0.0);
   c = mix(c, uSkyGround, smoothstep(0.0, -0.06, d.y) * (1.0 - (uPlate.w > 0.0 ? plateAt(az, el, uvP) : 0.0)));

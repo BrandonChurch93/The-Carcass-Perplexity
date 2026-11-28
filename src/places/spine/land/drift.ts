@@ -36,7 +36,7 @@ function tongues(a: number, w: number, wide: number, long: number, seed: number)
 export function driftAt(s: number, l: number, x: number, z: number): { y: number; rock: number; snow: number } {
   const edge = Math.min(smooth(0, 9, s - FIELD_FROM), smooth(0, 9, FIELD_TO - s), smooth(0, 7, FIELD_WIDE - Math.abs(l)));
   const path = Math.abs(l - trail(s));
-  const clear = edge * smooth(1.6, 5.5, path) * smooth(5, 10, Math.hypot(x - CARCASS[0], z - CARCASS[2]));
+  const clear = edge * smooth(1.0, 3.6, path) * smooth(3.6, 7.5, Math.hypot(x - CARCASS[0], z - CARCASS[2]));
   if (clear <= 0) return { y: 0, rock: 0, snow: 0 };
   // The rock, as height.ts has it, with the edges of its slabs as steep as this mesh can cut them.
   const near = Math.min(path, Math.max(0, Math.hypot(s - CARCASS_S - 14, l - 16) - 36));
