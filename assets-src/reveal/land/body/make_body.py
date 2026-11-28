@@ -43,6 +43,7 @@ RELIEF_KM = float(os.environ.get('RELIEF_KM', '16'))
 BODYW = float(os.environ.get('BODYW', '1.0'))
 RIBFLAT = float(os.environ.get('RIBFLAT', '0.7'))
 LESSFLAT = float(os.environ.get('LESSFLAT', '0.75'))
+SHELF = float(os.environ.get('SHELF', '60'))
 ONLY = os.environ.get('ONLY', '')
 TURN = math.atan2(-0.2, 0.78) - math.radians(3.0)
 SUN = (math.sin(TURN), -math.cos(TURN))
@@ -254,7 +255,14 @@ def outputs():
     relief_old = np.asarray(Image.open(os.path.join(LAND, 'relief-a.jpg')).convert('RGB').resize((W, H), Image.LANCZOS), dtype=np.float32) / 255.0
     r = 0.5 + 0.5 * np.tanh(gx_lit * 17.0)
     g = 0.5 + 0.5 * np.tanh(gy_lit * 17.0)
-    b = np.where(dom, 0.3 + 0.7 * (0.07 + 0.93 * e), np.minimum(relief_old[..., 2], 0.25))
+    # (The shelves: off low shores the bed stays shallow a long way out and then falls away, off high ground it falls at once; the
+    # width is unlike from reach to reach and the shelf is barred. The old map's shallows stay where they are deeper in than these.)
+    low_near = ndimage.gaussian_filter(e * dom, 24.0 * px) / (ndimage.gaussian_filter(dom.astype(np.float32), 24.0 * px) + 1e-3)
+    shelf_w = 8.0 + SHELF * (1.0 - smooth(0.05, 0.2, low_near)) * smooth(0.3, 0.7, fbm((H, W), np.random.default_rng(SEED + 13), 150 * px, 3))
+    d_sea = ndimage.gaussian_filter(np.maximum(-d_shore, 0.0), 1.5 * px)
+    bars = 0.7 + 0.6 * fbm((H, W), np.random.default_rng(SEED + 14), 28 * px, 4)
+    shelf = (1.0 - smooth(0.55 * shelf_w, shelf_w, d_sea)) * (1.0 - 0.4 * d_sea / shelf_w) * bars * (1.0 - keep)
+    b = np.where(dom, 0.3 + 0.7 * (0.07 + 0.93 * e), np.minimum(np.maximum(relief_old[..., 2], 0.21 * np.clip(shelf, 0.0, 1.0)), 0.25))
     # (The strait of the Ribs: the land sheet lets the sea into the low ground there by this height. Its water stays where the
     # old relief had it, so the coast of the strait does not move.)
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
@@ -388,7 +396,7 @@ def outputs():
     rock = mixc(rock, srgb(232, 232, 228), smooth(0.88, 0.98, e) * smooth(0.0, 0.05, ridge) * (1.0 - lesser))
     colour = mixc(country, rock, np.maximum(smooth(0.13, 0.36, e + 0.25 * np.maximum(ridge, 0.0) * 4.0), np.clip(BODYW * 1.2 * body, 0.0, 1.0) * (1.0 - 0.9 * lesser)))
     # The coast: a pale hairline of beach on low shores, dark rock where the land meets the sea steep.
-    low_shore = (1.0 - smooth(0.02, 0.07, ndimage.gaussian_filter(e, 2.0 * px))) * smooth(0.42, 0.56, fbm((H, W), rng, 120 * px, 3))
+    low_shore = (1.0 - smooth(0.02, 0.07, ndimage.gaussian_filter(e, 2.0 * px))) * smooth(0.5, 0.62, fbm((H, W), rng, 120 * px, 3))
     # The coastal plain: dark wet growth and grey flats behind the beach, deep in one reach and a strip in the next, so no low
     # shore runs to the water as one fill.
     reach = 8.0 + 40.0 * fbm((H, W), np.random.default_rng(SEED + 11), 90 * px, 3)
@@ -396,8 +404,10 @@ def outputs():
     tide = smooth(0.42, 0.6, fbm((H, W), np.random.default_rng(SEED + 12), 26 * px, 4))
     colour = mixc(colour, srgb(38, 50, 40), 0.7 * coastal * tide)
     colour = mixc(colour, srgb(74, 68, 60), 0.5 * coastal * (1.0 - tide))
-    beach = (1.0 - smooth(0.6, 2.2, d_shore)) * low_shore * dom
-    colour = mixc(colour, sand, 0.85 * beach)
+    # (A beach lies on the land's side of the water only: the bed of a river is not sand from bank to bank, it is dark with silt.)
+    beach = (1.0 - smooth(0.6, 2.2, d_shore)) * smooth(-1.2, -0.2, d_shore) * low_shore * dom
+    colour = mixc(colour, srgb(34, 42, 40), 0.7 * (1.0 - smooth(-1.6, -0.4, d_shore)) * dom)
+    colour = mixc(colour, sand, 0.7 * beach)
     steep_shore = (1.0 - smooth(1.0, 5.0, d_shore)) * smooth(0.05, 0.14, ndimage.gaussian_filter(e, 2.0 * px))
     colour = mixc(colour, cliff, 0.7 * steep_shore * dom)
     colour *= (0.93 + 0.14 * grain)[..., None]
