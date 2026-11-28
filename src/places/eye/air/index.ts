@@ -184,17 +184,11 @@ vec3 mistShape(vec3 q, vec4 big, float tongueRead) {
   // water of the middle and leaves the middle itself clear, so the pool is seen whole. It lies where it lies: it comes into sight as the lens climbs over it and
   // does not travel.
   if (uMistRound > 0.0) {
-    // Its patches are as wide one way as the other: they are looked down on, and no lens draws them out.
-    vec4 round2 = texture(tMistNoise, vec3(lie.x / 560.0 + 0.11, lie.y / 560.0 + 0.37, 0.3 + stretch.z * 0.004));
-    float lying = smoothstep(0.42, 0.88, 0.5 * big.r + 0.5 * round2.g);
-    float rim = smoothstep(290.0, 520.0, ROUND - q.z);
-#ifdef VEIL_STRANDS
-    // In the shot that climbs over it the veil is not in puffs: each patch is drawn out in strands a few metres across that bend
-    // round one another, and the thinnest of them reach in over the rim of the pool.
-    vec4 strand = texture(tMistNoise, vec3(lie.x / 330.0 + 0.5 * (round2.b - 0.5), lie.y / 190.0 + 0.5 * (round2.a - 0.5), 0.7 + stretch.z * 0.006));
-    lying = smoothstep(0.34, 0.86, 0.5 * big.r + 0.5 * round2.g) * (0.45 + 1.3 * smoothstep(0.25, 0.85, 0.6 * strand.g + 0.4 * strand.b));
-    rim = mix(0.3 * smoothstep(120.0, 400.0, ROUND - q.z), 1.0, rim);
-#endif
+    // Its patches are wide and torn: each is drawn out in strands that bend round one another, and the thinnest of them reach in
+    // over the rim of the pool. The patches themselves are told by the reads the bank has already made.
+    vec4 strand = texture(tMistNoise, vec3(lie.x / 330.0 + 0.11 + 0.5 * (mid.b - 0.5), lie.y / 190.0 + 0.37 + 0.5 * (mid.a - 0.5), 0.7 + stretch.z * 0.006));
+    float lying = smoothstep(0.34, 0.86, 0.6 * big.r + 0.4 * mid.r) * (0.45 + 1.3 * smoothstep(0.25, 0.85, 0.6 * strand.g + 0.4 * strand.b));
+    float rim = mix(0.3 * smoothstep(120.0, 400.0, ROUND - q.z), 1.0, smoothstep(290.0, 520.0, ROUND - q.z));
     sheet += uMistRound * 3.8 * lying * rim * exp(-q.y / 6.0);
   }
   return vec3(sheet, top, uThin * cover * ramp * stands * stretch.y);
@@ -451,11 +445,6 @@ export function create(ctx: Context): Piece {
         show.uMistRound.value = smooth(0.45, 1, over) * (1 - smooth(end - 0.9, end - 0.2, t));
       }
       (rig.uMistOn as THREE.IUniform<number>).value = show.uThin.value;
-      // The strands of the veil are a program of their own, as the layers of the wall are: only the shot that climbs over it pays.
-      if ('VEIL_STRANDS' in volume.defines !== during('eye-05')) {
-        volume.defines = during('eye-05') ? { VEIL_STRANDS: 1 } : {};
-        volume.needsUpdate = true;
-      }
       // The evening shade over the south shore and the spur is laid for the wide shot alone.
       (rig.uShade as THREE.IUniform<THREE.Vector4>).value.w = during('eye-01') ? 0.55 : 0;
       (rig.uPlateShade as THREE.IUniform<THREE.Vector2>).value.x = during('eye-01') ? 1 : 0;
