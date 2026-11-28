@@ -161,7 +161,7 @@ vec4 windG(vec4 gAt, mat2 m) {
 }
 
 // The lays of the low field in the wind's map (600 km a unit): whole numbers, each turned its own way to the wind.
-const mat2 LOW_A = mat2(0.5, 0.0, 0.0, 1.0);
+const mat2 LOW_A = mat2(1.0, 0.0, 0.0, 1.0);
 const mat2 LOW_B = mat2(3.0, 1.0, -1.0, 3.0);
 const mat2 LOW_C = mat2(1.0, 1.0, -1.0, 1.0);
 const mat2 LOW_D = mat2(9.0, 4.0, -4.0, 9.0);
@@ -246,7 +246,7 @@ float lowDepth(vec2 at) {
   float veiled = amount * smoothstep(0.4, 0.7, stands.g);
   if (cluster <= 0.0 && veiled <= 0.0) return 0.0;
   float chain = dot(pic(uMatStreaks, lowUvA, lowGA, 1.0).rgb, vec3(0.3, 0.55, 0.15)) / 0.31;
-  float density = cluster * smoothstep(0.92 - 0.12 * LOW_MUCH, 1.82 - 0.12 * LOW_MUCH, chain);
+  float density = cluster * smoothstep(0.82 - 0.12 * LOW_MUCH, 1.92 - 0.12 * LOW_MUCH, chain);
   float drawn = 0.45 * veiled * pow(max(chain - 0.9, 0.0), 1.3);
   if (density <= 0.0) return drawn;
   float cell = cloudAt(uMatPopcorn, lowUvB, lowGB, 0.34);
@@ -327,7 +327,7 @@ float highDepth(vec2 at) {
   where *= 0.12 + 0.88 * smoothstep(0.12, 0.4, textureLod(uCover, clamp((at - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0), 5.0).g);
   float sheet = cloudAt(uMatVeil, highUvSheet, highGSheet, 0.27);
   float thread = cloudAt(uMatStreaks, highUvThread, highGThread, 0.31);
-  float depth = 0.2 * where * max(sheet * (0.6 + 0.4 * thread) - 0.7, 0.0);
+  float depth = 0.1 * where * max(sheet * (0.6 + 0.4 * thread) - 0.7, 0.0);
   // (Ice in swaths over the land (sky/banks.png, blue) is not drawn: as straight drawn-out fibre it read as scratches on the plate.)
   return (1.0 - exp(-1.1 * max(depth, 0.0))) * far;
 }
