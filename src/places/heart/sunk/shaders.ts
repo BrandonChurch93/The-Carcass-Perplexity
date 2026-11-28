@@ -366,8 +366,13 @@ void main() {
   float heat = mk.r * (1.0 + 2.2 * uTearOpen);
   // The heat comes spread a hand wide. The bright of it is broken by a grain of 2 to 6 cm into cracks and beads that join and
   // part, so no line is drawn along the facets of the sheet; the rest of the patch is skin that glows dull from under.
-  float bead = vnoise(l * 23.0 + 5.0);
-  float vein = 1.0 - abs(2.0 * vnoise(l * 41.0 + 11.0) - 1.0);
+  // Sums only, and only where there is heat: nothing in the branch reads a texture or a slope of the picture.
+  float bead = 0.5;
+  float vein = 0.5;
+  if (mk.r > 0.004) {
+    bead = vnoise(l * 23.0 + 5.0);
+    vein = 1.0 - abs(2.0 * vnoise(l * 41.0 + 11.0) - 1.0);
+  }
   float hot = smoothstep(0.34, 0.74, heat * (0.35 + 0.55 * bead + 0.5 * vein * vein) * (0.8 + 0.4 * small));
   // The fire of the split wavers, each length of it in its own time. Every rate is a whole count of turns in 8 s.
   float breath = 22.0 * sin(uTime * 1.5708 + 6.0 * small) + 20.0 * sin(uTime * 3.927 + 4.0 * l.x) + 14.0 * sin(uTime * 8.6394 + 7.0 * l.y + 2.0);
