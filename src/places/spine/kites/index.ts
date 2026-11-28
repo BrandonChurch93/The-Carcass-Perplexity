@@ -130,6 +130,13 @@ bool kiteSet() {
         kBlade *= 1.0 + 0.22 * rank;
         kHalf *= 1.0 + 0.3 * rank;
       }
+      if (uFly.y > 0.5) {
+        // Before the close lens no two fly at one angle: one climbs, the next is pressed down under it, and they cross; each hangs
+        // on its cord by its own amount.
+        kClimb += 0.34 * (fract(kSeed * 41.3) - 0.42);
+        kYaw += 0.2 * (fract(kSeed * 29.9) - 0.5);
+        kSag *= 0.5 + 1.8 * fract(kSeed * 19.1);
+      }
       kBlade *= uStage.x * lead;
       if (uStageMore.x > 0.5) kHalf *= aLead > 0.9 ? 1.0 : mix(0.3, 0.5, aLead);
       kWave *= uStage.x * lead;
