@@ -364,20 +364,20 @@ void main() {
   #ifndef RIM
   // The split: open lava at the bottom, a skin that still glows on its walls.
   float heat = mk.r * (1.0 + 2.2 * uTearOpen);
-  // The heat comes spread a hand wide. The bright of it is broken by a grain of 2 to 6 cm into cracks and beads that join and
+  // The heat comes spread a hand wide. The bright of it is broken by a grain of 4 to 12 cm into cracks and beads that join and
   // part, so no line is drawn along the facets of the sheet; the rest of the patch is skin that glows dull from under.
   // Sums only, and only where there is heat: nothing in the branch reads a texture or a slope of the picture.
   float bead = 0.5;
   float vein = 0.5;
   if (mk.r > 0.004) {
     bead = vnoise(l * 23.0 + 5.0);
-    vein = 1.0 - abs(2.0 * vnoise(l * 41.0 + 11.0) - 1.0);
+    vein = 1.0 - abs(2.0 * vnoise(l * 17.0 + 11.0) - 1.0);
   }
-  float hot = smoothstep(0.34, 0.74, heat * (0.35 + 0.55 * bead + 0.5 * vein * vein) * (0.8 + 0.4 * small));
+  float hot = smoothstep(0.34, 0.74, heat * (0.3 + 0.2 * bead + 0.9 * vein * vein * vein) * (0.8 + 0.4 * small));
   // The fire of the split wavers, each length of it in its own time. Every rate is a whole count of turns in 8 s.
   float breath = 22.0 * sin(uTime * 1.5708 + 6.0 * small) + 20.0 * sin(uTime * 3.927 + 4.0 * l.x) + 14.0 * sin(uTime * 8.6394 + 7.0 * l.y + 2.0);
-  float kelvin = mix(880.0 + 110.0 * bead + 0.5 * breath, uTearKelvin - 50.0 + 60.0 * small + breath + 50.0 * uTearOpen, hot);
-  float lit = smoothstep(0.1, 0.5, heat * (0.6 + 0.8 * bead));
+  float kelvin = mix(965.0 + 90.0 * bead + 0.5 * breath, uTearKelvin - 50.0 + 60.0 * small + breath + 50.0 * uTearOpen, hot);
+  float lit = smoothstep(0.1, 0.5, heat * (0.85 + 0.3 * bead));
   c *= 1.0 - 0.9 * lit;
   c += blackbody(kelvin) * lit;
   // The face of the break. Before the slab goes it is a fine seam, hot in lengths at its foot; when the slab goes the whole
@@ -388,7 +388,10 @@ void main() {
   float seamLit = smoothstep(0.26, 0.4, 0.5 + 0.3 * sin(l.x * 2.1 + 1.0) + 0.2 * sin(l.x * 3.7 + 4.0) + 0.12 * uSeam) * smoothstep(0.22, 0.42, 0.5 + 0.3 * sin(l.x * 9.3 + 2.0) + 0.2 * sin(l.x * 15.1 + l.y * 4.0) + 0.1 * uSeam) * smoothstep(40.0, 25.0, far);
   float standing = onFace * smoothstep(fallen - 0.036, fallen - 0.024, vBreak.x * fallen) * seamLit;
   float flaring = onFace * smoothstep(0.0, 0.25, uFlare);
-  float seamKelvin = 900.0 + 190.0 * uSeam + 300.0 * (0.5 + 0.3 * sin(l.x * 6.7 + 5.0) + 0.2 * sin(l.x * 11.9 + 1.0)) + 60.0 * (small - 0.5) + 0.6 * breath;
+  // The seam is not of one heat: a grain of 2 to 5 cm along it sets lengths of it dull and lengths bright, as a crack over lava is.
+  float fleck = 0.5;
+  if (onFace > 0.0) fleck = vnoise(l * 29.0 + 3.0);
+  float seamKelvin = 900.0 + 190.0 * uSeam + 300.0 * (0.5 + 0.3 * sin(l.x * 6.7 + 5.0) + 0.2 * sin(l.x * 11.9 + 1.0)) + 60.0 * (small - 0.5) + 0.6 * breath + 320.0 * (fleck - 0.5);
   float faceKelvin = mix(760.0, 1310.0, uFlare) + 70.0 * (small - 0.5) + 60.0 * (grainNh.b - 0.5) + 0.5 * breath * uFlare;
   // What glows, lights: the skin within a hand or two of the seam is warmed by it.
   c += albedo * blackbody(seamKelvin) * (0.2 * seamLit * (1.0 + 1.2 * uFlare)) * exp(-abs(vBreak.y) / 0.22) * (1.0 - onFace) * step(0.02, vBreak.z + vBreak.x + step(vBreak.y, 0.0));
@@ -432,7 +435,7 @@ void main() {
 }`;
 
 /** How light the char of the hull is: the sheet's charcoal is about 0.03 and comes out near 0.07, as charred wood is. */
-const HULL_CHAR = 2.2;
+const HULL_CHAR = 1.85;
 /** How pale a plate left on a limb is, of what it was: the critics had the plates as pale scale patches. */
 const LEG_PLATE = 0.5;
 /** How much of the pale dried plate is left on a plate of the hull, 0 to 1. */
@@ -466,7 +469,7 @@ void main() {
   float lump2 = vnoise3(vLocal * 2.7 + 11.0);
 #ifdef HULL
   // The charred sheet lies on the hull in blocks a hand to a forearm long, wound round it as the cords are.
-  vec2 uvH = vec2(vMap.x * 4.0 + 0.57 * vMap.y + 0.25 * lump, vMap.y * 0.4 + 0.2 * lump2);
+  vec2 uvH = vec2(vMap.x * 6.4 + 0.57 * vMap.y + 0.25 * lump, vMap.y * 0.64 + 0.2 * lump2);
 #else
   vec2 uvH = mix(vec2(vMap.x * vMap.z, vMap.y / 0.6), vec2(vMap.x * 6.0 + 0.86 * vMap.y + 0.25 * lump, vMap.y * 0.55 + 0.2 * lump2), isBody);
 #endif
@@ -497,6 +500,9 @@ void main() {
   scab *= mix(0.4, 1.0, smoothstep(60.0, 28.0, far));
   float plated = smoothstep(0.35, 0.6, vSurf.y);
   float furrow = isBody * vSurf.w;
+  // A limb is burnt as the hull is: half the brown is out of its bark and of the plates on it, so it reads as char and not as wood.
+  bark = mix(bark, vec3(dot(bark, vec3(0.3, 0.5, 0.2))) * vec3(1.05, 1.0, 0.94), 0.5 * isLeg) * mix(1.0, 0.85, isLeg);
+  scab = mix(scab, vec3(dot(scab, vec3(0.3, 0.5, 0.2))) * vec3(1.05, 1.0, 0.94), 0.5 * isLeg);
 #ifdef HULL
   // A plate that lifts off the hull is the same char, a little greyer on its back: never a pale slat on it.
   scab = mix(bark * 1.5, scab, ${HULL_SLAT.toFixed(2)});
@@ -506,8 +512,8 @@ void main() {
   float cavity = mix(0.6 + 0.4 * hideNh.b, 0.6 + 0.4 * flakeNh.b, plated);
 #ifdef HULL
   // The splits between the blocks are deep: they take the bump of the sheet whole, and no light gets down them.
-  bump = mix((hideNh.rg - 0.5) * 3.4 + (flakeNh.rg - 0.5) * 1.2, bump, 0.5 * plated) * (0.35 + 0.65 * close);
-  cavity = mix(0.2 + 0.8 * smoothstep(0.08, 0.5, hideNh.b), cavity, 0.5 * plated);
+  bump = mix((hideNh.rg - 0.5) * 2.5 + (flakeNh.rg - 0.5) * 1.2, bump, 0.5 * plated) * (0.35 + 0.65 * close);
+  cavity = mix(0.3 + 0.7 * smoothstep(0.08, 0.5, hideNh.b), cavity, 0.5 * plated);
 #endif
 
   // Where a plate has gone from a leg: dried flesh, almost black, strung with sinew along the limb.
