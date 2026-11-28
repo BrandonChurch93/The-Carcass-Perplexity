@@ -383,7 +383,7 @@ export class Animal {
         const tube = skin.tube(3, 3);
         const local = new Float32Array(3 * 3 * 2);
         // Most are crumbs of three or four centimetres; one in five is a clod as big as a fist.
-        const size = (0.05 + 0.16 * Math.pow(hash(n, seed + j * 5 + 70), 2.5)) * Math.sqrt(k);
+        const size = (0.065 + 0.19 * Math.pow(hash(n, seed + j * 5 + 70), 2.5)) * Math.sqrt(k);
         for (let r = 0; r < 3; r++) {
           for (let side = 0; side < 3; side++) {
             const a = (side / 3) * Math.PI * 2 + n;

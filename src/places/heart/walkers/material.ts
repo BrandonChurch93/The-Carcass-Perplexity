@@ -463,7 +463,7 @@ void main() {
     c *= mix(1.0, mix(0.5, 0.9, smoothstep(0.8, 0.98, vLook.y)), crownPale * (1.0 - tendril));
   }
   // A crumb in the air is seen against the lit haze behind it: a dark speck, as the picture has them under the lifted pad.
-  c *= mix(1.0, 0.22, crumb);
+  c *= mix(1.0, 0.16, crumb);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
