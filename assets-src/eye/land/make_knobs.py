@@ -93,7 +93,9 @@ class Crag:
                     continue
                 # How high the column stands: highest off the middle, and one in five has fallen away.
                 dome = (1 - e) ** 0.55
-                top = -0.45 * sy + 1.45 * sy * dome * r.uniform(0.62, 1.0)
+                # One end stands and the other has worn down to a ramp.
+                ramp = 0.42 + 0.58 * min(1.0, max(0.0, 0.5 + 0.75 * cx / sx))
+                top = -0.45 * sy + 1.45 * sy * dome * ramp * r.uniform(0.62, 1.0)
                 if r.uniform() < 0.2:
                     top = -0.45 * sy + 0.35 * sy * r.uniform(0.3, 1.0)
                 y = -1.1 * sy
@@ -101,7 +103,7 @@ class Crag:
                 while y < top - 0.25:
                     # Thick beds and thin ones; most joints are tight and a few stand open.
                     th = min(r.uniform(0.25, 0.5) if r.uniform() < 0.3 else r.uniform(0.9, 2.1), top - y)
-                    gap = r.uniform(0.03, 0.16) if r.uniform() < 0.3 else -0.1
+                    gap = r.uniform(0.03, 0.16) if r.uniform() < 0.14 else -0.14
                     half = np.array([(x1 - x0) / 2 - gap + r.uniform(-0.3, 0.12), th / 2 + 0.03, (z1 - z0) / 2 - gap + r.uniform(-0.3, 0.12)])
                     c = np.array([cx + r.uniform(-0.1, 0.1), y + th / 2, cz + r.uniform(-0.1, 0.1)])
                     R = turn(r.normal(0, 0.11), r.normal(0, 0.035), r.normal(0, 0.035))
@@ -110,11 +112,11 @@ class Crag:
                     y += th
                     level += 1
         # Blocks that have come off lie against its foot, leaning.
-        for _ in range(r.integers(5, 8)):
+        for _ in range(r.integers(10, 15)):
             a = r.uniform(0, 2 * np.pi)
             c = np.array([np.cos(a) * sx * r.uniform(0.62, 0.86), -0.45 * sy + r.uniform(-0.2, 0.5), np.sin(a) * sz * r.uniform(0.62, 0.86)])
-            half = np.array([r.uniform(0.5, 1.1), r.uniform(0.3, 0.6), r.uniform(0.4, 0.9)])
-            boxes.append((c, turn(r.uniform(0, 3), r.uniform(-0.5, 0.5), r.uniform(-0.5, 0.5)), half, r.uniform(0.06, 0.16)))
+            half = np.array([r.uniform(0.6, 1.7), r.uniform(0.22, 0.55), r.uniform(0.5, 1.2)])
+            boxes.append((c, turn(r.uniform(0, 3), r.uniform(-1.0, 1.0), r.uniform(-0.7, 0.7)), half, r.uniform(0.05, 0.14)))
         self.c = np.array([b[0] for b in boxes], F32)
         self.R = np.array([b[1] for b in boxes], F32)
         self.half = np.array([b[2] for b in boxes], F32)
@@ -127,6 +129,16 @@ class Crag:
             n /= np.linalg.norm(n)
             chips.append(np.append(n, r.uniform(0.5, 0.95)))
         self.chips = np.array(chips, F32)
+        # It has split: three or four steep breaks go right through it, the stone beyond each has dropped and leaned away, and the break stands open.
+        splits = []
+        for i in range(r.integers(3, 5)):
+            a = r.uniform(0, 2 * np.pi)
+            n = np.array([np.cos(a), r.uniform(-0.35, 0.35), np.sin(a)])
+            n /= np.linalg.norm(n)
+            at = np.array([np.cos(a) * sx, 0, np.sin(a) * sz]) * r.uniform(0.12, 0.5)
+            drop = np.array([n[0] * r.uniform(0.15, 0.5), -r.uniform(0.25, 0.9), n[2] * r.uniform(0.15, 0.5)])
+            splits.append((n, at, drop, r.uniform(0.08, 0.24), r.uniform(0.1, 0.28)))
+        self.splits = splits
         self.jx = r.uniform(0, 10)
         self.jz = r.uniform(0, 10)
 
@@ -134,7 +146,16 @@ class Crag:
         o = self.off
         # The joints are not ruled: the stone is pulled about a little before it is cut.
         w = np.stack([fbm3(p * 0.33 + o, 2), fbm3(p * 0.33 + o + 17.0, 2), fbm3(p * 0.33 + o + 41.0, 2)], -1) - 0.36
-        q = p @ self.lie.T + 1.1 * w + 0.22 * (np.stack([vnoise3(p * 1.3 + o + 3.0), vnoise3(p * 1.3 + o + 23.0), vnoise3(p * 1.3 + o + 57.0)], -1) - 0.5)
+        # The breaks wander; what lies beyond one is read from where it stood before it dropped and leaned.
+        cut = np.full(p.shape[:-1], -1e9, F32)
+        moved = p
+        for n, at, drop, gap, lean in self.splits:
+            side = ((moved - at.astype(F32)) * n.astype(F32)).sum(-1) + 0.55 * (w[..., 0] + 0.4) + 0.12 * (vnoise3(p * 1.9 + o + 61.0) - 0.5)
+            beyond = (side > 0)[..., None]
+            tip = lean * np.clip(side, 0, 3.0)[..., None] * np.array([0, 1, 0], F32)
+            moved = np.where(beyond, moved - drop.astype(F32) + tip, moved).astype(F32)
+            cut = np.maximum(cut, gap * (0.35 + 1.3 * vnoise3(p * 0.7 + o + 83.0)) - np.abs(side))
+        q = moved @ self.lie.T + 1.75 * w + 0.22 * (np.stack([vnoise3(p * 1.3 + o + 3.0), vnoise3(p * 1.3 + o + 23.0), vnoise3(p * 1.3 + o + 57.0)], -1) - 0.5)
         best = np.full(p.shape[:-1], 1e9, F32)
         for k in range(len(self.c)):
             l = (q - self.c[k]) @ self.R[k].T
@@ -148,16 +169,18 @@ class Crag:
             chip = (l * n[:3]).sum(-1) - n[3] * float(np.abs(n[:3]) @ hh)
             d = np.maximum(d, chip)
             # Stone that touches stone is one stone: the crease between them is soft.
-            h = np.clip(0.5 + 0.5 * (best - d) / 0.09, 0, 1)
-            best = best * (1 - h) + d * h - 0.09 * h * (1 - h)
+            h = np.clip(0.5 + 0.5 * (best - d) / 0.17, 0, 1)
+            best = best * (1 - h) + d * h - 0.17 * h * (1 - h)
         # The heart of it, so that every line out of the middle meets stone.
         core = (np.sqrt((((p - np.array([0, -0.3 * self.S[1], 0], F32)) / (self.S * F32(0.5))) ** 2).sum(-1)) - 1) * float(self.S.min()) * 0.5
-        return np.minimum(best, core)
+        return np.minimum(np.maximum(best, cut), core)
 
     def detail(self, p, fine=True):
         o = self.off
         q = p @ self.lie.T
-        d = 0.3 * (fbm3(p * 0.5 + o + 5.0, 3) - 0.47)
+        d = 0.5 * (fbm3(p * 0.5 + o + 5.0, 3) - 0.47)
+        # Whole pieces have gone: hollows scooped out of the mass.
+        d = d - 0.75 * np.clip((fbm3(p * 0.3 + o + 77.0, 2) - 0.5) * 3.5, 0, 1)
         rough = fbm3(p * 2.4 + o + 31.0, 4)
         d = d + 0.09 * (rough - 0.47)
         # Flakes have come off: the rough taken in steps, in places.

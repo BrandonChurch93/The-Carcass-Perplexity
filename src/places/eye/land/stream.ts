@@ -24,7 +24,7 @@ const CELL = 2.2;
 export const streamDepth = (along: number): number => 0.14 + 0.2 * smooth(24, 44, along);
 // The ribbon is laid wider than the water: the ground that comes up through it is its edge.
 const halfWidth = (along: number): number => 4.3 + 2.4 * smooth(40, 26, along);
-const wetWidth = (along: number): number => 1.5 + 0.9 * vnoise(along / 9, 3.3);
+const wetWidth = (along: number): number => 1.5 + 0.9 * vnoise(along / 9, 3.3) + 1.5 * smooth(66, 78, along) * smooth(124, 110, along);
 const levelAt = (along: number): number => Math.max(0.012, streamFloor(along) + streamDepth(along));
 
 /** One stone or none to each stretch of the stream, larger where it falls steeply. */
@@ -126,6 +126,8 @@ void main() {
   float much = clamp(0.03 + 0.75 * riffle * (0.35 + 0.65 * lumps) + 0.85 * max(fall, 0.85 * churned) + 0.5 * piled + 0.7 * wake + 0.12 * smoothstep(0.1, 0.03, depth), 0.0, 1.0);
   // Glass for the most part: the white is threads, and they thicken only where the water has been broken.
   float white = smoothstep(0.9 - 0.56 * much, 1.06 - 0.4 * much, ridden) * smoothstep(0.02, 0.2, much);
+  // A rapid is white water from bank to bank, with dark only in its tongues.
+  white = max(white, smoothstep(0.3, 0.75, fall) * smoothstep(0.22, 0.5, ridden + 0.3 * lumps - 0.12));
   // The skin of the water: small waves that go with it, higher where it runs fast.
   float rough = 0.07 + 0.3 * fall + 0.3 * piled + 0.25 * wake + 0.2 * riffle;
   vec2 lean = vec2(mix(vnoise(q2 * vec2(1.3, 3.9) + 5.0), vnoise(q1 * vec2(1.3, 3.9) + 5.0), w1), mix(vnoise(q2 * vec2(1.3, 3.9) + 21.0), vnoise(q1 * vec2(1.3, 3.9) + 21.0), w1)) - 0.5;
