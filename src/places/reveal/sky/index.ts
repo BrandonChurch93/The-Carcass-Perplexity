@@ -192,7 +192,7 @@ void main() {
 // The cyclone: drawn from the Builder's photographs of wind-drawn streaks and of small cumulus, wound round its eye (the cyclone of round 19:
 // the photograph of a whole cyclone that stood here in round 25 read soft and flat at native size).
 // How another storm is drawn out (the cyclone's sheet, below): so much shorter all round, less so much on the side at this angle.
-const DRAWN_OUT = [1.3, 2.0, 0.9] as const;
+const DRAWN_OUT = [0.0, 0.0, 0.9] as const;
 // The part of its square sheet that another storm can reach, as [left, bottom, right, top] with the square -1 to 1: the sheet is
 // cut to it, so the clear sea round a storm that is drawn out to one side is not paid for.
 function reachOfOther(): [number, number, number, number] {
@@ -282,6 +282,11 @@ float storm(vec2 p, float turn, float lopsided, float shorter, float drawnIn) {
   // (Toward the eye a band is one body of cloud and its cells are the lumps of its top; outward it opens into rows of them.)
   // (Inside a band the cells still show: a band is a crowd of tops, not a smooth sheet.)
   float body = cover * mix(cells, 0.07 + 0.93 * cells, max(core, band * (1.0 - outer)));
+  // (Another storm is a comma: a small whole head, and of its arms only one, which leaves the head and winds out as its front,
+  // wide by the head and drawn thin to its end.)
+  float off = fract(phase + uOther.y + 0.5) - 0.5;
+  float tail = exp(-pow(off / mix(0.16, 0.07, smoothstep(0.2, 0.9, r)), 2.0));
+  body *= mix(1.0, max(tail, 1.0 - smoothstep(0.1, 0.2, r)), uOther.z);
   return body * mix(smoothstep(0.006, 0.036, r), 1.0, uOther.z) * (1.0 - smoothstep(0.8, 0.98, r * shorter)) * (1.0 - uOther.w);
 }
 void main() {
@@ -299,7 +304,8 @@ void main() {
     drawnIn = 0.011 * uWx;
     lopsided = smoothstep(0.0, 9.0, uWx);
     turn = ${LIVE_FROM.toFixed(6)} * (0.009 + 0.05 / (1.0 + 14.0 * r)) / 6.28318;
-    float wound = uWx * (0.05 + 0.035 / (1.0 + 14.0 * r));
+    // (Another storm turns far slower: its front does not sweep the sea round it in the hold.)
+    float wound = uWx * (0.05 + 0.035 / (1.0 + 14.0 * r)) * (1.0 - 0.8 * uOther.z);
     body = mat2(cos(wound), sin(wound), -sin(wound), cos(wound)) * p;
   }
   vec2 sunStep = normalize(uSunDir.xz);

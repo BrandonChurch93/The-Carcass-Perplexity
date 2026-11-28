@@ -35,10 +35,10 @@ MASK_RECT = (-1800.0, -800.0, 7416.0, 4834.0)
 W, H = 1024, 576
 X0, Y0, WIDE, HIGH = -2600.0, -1400.0, 10800.0, 6075.0
 # The far low (LOW2 of weather.ts), the cyclone, the middle of the body, and the way the low wind blows (px of the master, y down).
-LOW2 = (400.0, 1560.0)
+LOW2 = (1750.0, 2800.0)
 CYCLONE = (5557.0, 3007.0)
 # (Half the width of the far low's sheet, and how far the systems travel through the hold: OTHER_STORMS and SYSTEMS_RUN of weather.ts.)
-LOW2_HALF = 900.0
+LOW2_HALF = 460.0
 TRAVEL = 95.0
 # How many storms the sea holds: 1 the cyclone alone, 2 with the far low and its front, 3 with the small one to the south-west.
 STORMS = int(os.environ.get('STORMS', '3'))
@@ -86,7 +86,7 @@ def weather():
     # The far low is a storm drawn by its own sheet (OTHER_STORMS of weather.ts), front and all: the sea stands clear under and
     # round it, as round the cyclone, so nothing of this map is on a storm's disc.
     if STORMS >= 2:
-        clear = smooth(0.35 * LOW2_HALF, 0.7 * LOW2_HALF, np.hypot(mx - LOW2[0], my - LOW2[1]))
+        clear = smooth(0.9 * LOW2_HALF, 1.5 * LOW2_HALF, np.hypot(mx - LOW2[0], my - LOW2[1]))
         red, green = red * clear, green * clear
         kind = 0.5 + (kind - 0.5) * clear
 
@@ -110,6 +110,10 @@ def weather():
     off_land = 1.0 - smooth(0.03, 0.3, ndimage.gaussian_filter(under, 75.0 / px))
     red, green = red * off_land, green * off_land
 
+    # None in the glare of the sun's image either (about px 5875, 703): cloud there is a grey smudge on the light.
+    glare = smooth(1300.0, 2000.0, np.hypot(mx - 5875.0, my - 703.0))
+    red, green = red * glare, green * glare
+
     # Nothing of this map stands over the cyclone's disc, nor crowds it: clear water round it.
     away = np.hypot(mx - CYCLONE[0], my - CYCLONE[1])
     keep = smooth(850.0, 1450.0, away)
@@ -121,7 +125,7 @@ def weather():
     # (Past its border the map is read at its border: there it is one even thin field of cumulus, so nothing is drawn out in bars.)
     inside = np.minimum.reduce([xs, W - 1.0 - xs, ys, H - 1.0 - ys])
     rim = smooth(2.0, 40.0, inside)[..., None]
-    out = np.array([0.4, 0.25, 0.5], np.float32) * (1.0 - rim) + out * rim
+    out = np.array([0.0, 0.0, 0.5], np.float32) * (1.0 - rim) + out * rim
     Image.fromarray((np.clip(out, 0.0, 1.0) * 255.0 + 0.5).astype(np.uint8), 'RGB').save(os.path.join(PUB, 'weather.png'), optimize=True)
     print('weather.png', os.path.getsize(os.path.join(PUB, 'weather.png')))
 

@@ -39,9 +39,9 @@ y -820 to 3961.25). Where the weather stands:
 ## `public/assets/reveal/sky/weather.png`
 
 Made by: `assets-src/reveal/sky/make_weather.py` (Python 3 with numpy, scipy and Pillow), committed here
-From: seeded noise and the place of the far low; the body's outline from `public/assets/reveal/land/relief-a.png` (blue over 0.28, read only) and the ocean builder's mask of other land and ice, `assets-src/reveal/land/ocean/ocean-mask.png`, read and never copied, as it stands at commit 6aa0419 of the unit branch (the same mask sets the red of `cover.png`)
-Prompt or command: `python3 assets-src/reveal/sky/make_weather.py [mask]`, from the root of the repo, after `make_cover.py` (the mask is the repo's own unless one is named; what is committed was made with the repo's own, as at 6aa0419); `STORMS=1` or `2` before it sets how many storms the sea holds (2 is what is committed); no model and no prompt; the only noise is of fixed seeds
-Takes: 10 made (an even field of small cumulus; clusters with lanes; the comma of the far low with its dry slot and open cells; decks kept away from the body; then, after the lead's word that small marks read as an even speckle at 960 x 540, large patches with clear sea between; fewer of them; a third small storm; its arms left whole; the banks of the far coast thinner; then, after the ruling that only a crisp storm reads as weather, the painted front and the third storm taken out, the far low moved to open sea and the map cleared over the body's outline and the other land); the tenth is kept
+From: seeded noise and the place of the far low; the body's outline from `public/assets/reveal/land/relief-a.png` (blue over 0.28, read only) and the ocean builder's mask of other land and ice, `assets-src/reveal/land/ocean/ocean-mask.png`, read and never copied, as it stands at commit d3c534b of the unit branch (the same mask sets the red of `cover.png`)
+Prompt or command: `python3 assets-src/reveal/sky/make_weather.py [mask]`, from the root of the repo, after `make_cover.py` (the mask is the repo's own unless one is named; what is committed was made with the repo's own, as at d3c534b); `STORMS=1` or `2` before it sets how many storms the sea holds (2 is what is committed); no model and no prompt; the only noise is of fixed seeds
+Takes: 11 made (an even field of small cumulus; clusters with lanes; the comma of the far low with its dry slot and open cells; decks kept away from the body; then, after the lead's word that small marks read as an even speckle at 960 x 540, large patches with clear sea between; fewer of them; a third small storm; its arms left whole; the banks of the far coast thinner; then, after the ruling that only a crisp storm reads as weather, the painted front and the third storm taken out, the far low moved to open sea and the map cleared over the body's outline and the other land; then the far low moved again, to open sea south of the ribs, the map's border left clear and the sun's glare cleared); the eleventh is kept
 Why this one: at 960 x 540 the sea reads as large white patches and two storms with clear water between, and nothing of the map is over the body's outline or the other land
 Date: 2026-11-28
 
@@ -54,8 +54,8 @@ Used by: `src/places/reveal/shared/weather.ts` (`lowDepth`), read by the part `r
 - blue: the kind: 0.5 cumulus in chains, 1 a patch with a body (closed cells).
 
 The systems: large patches over the open sea, none over the body's outline nor over the other land (clear wherever land will be
-under the map as it travels, 95 px at the most); clear water round the far low (`LOW2`, px 400, 1560), which is drawn by its own
-sheet (`OTHER_STORMS` of `shared/weather.ts`, the cyclone's fragment in `sky/index.ts`); clear water 850 to 1450 px round the cyclone.
+under the map as it travels, 95 px at the most); clear water round the far low (`LOW2`, px 1750, 2800), which is drawn by its own
+sheet (`OTHER_STORMS` of `shared/weather.ts`, the cyclone's fragment in `sky/index.ts`); clear water 850 to 1450 px round the cyclone; clear sea at the map's border and in the sun's glare (1300 to 2000 px round px 5875, 703).
 
 The same script sets the red of `cover.png` (above); its green and blue are unchanged to the last bit.
 

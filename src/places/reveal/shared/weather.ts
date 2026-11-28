@@ -16,13 +16,13 @@ export const FOG_KM = 0.7;
 /** Km a second: staged far faster than weather, so the held frame is seen to live. */
 export const LOW_DRIFT: [number, number] = [5.4, 1.5];
 /** The small low far off toward the planet's edge, px of the master: the wind winds round it as round the cyclone, a quarter as wide. */
-export const LOW2 = { x: 400, y: 1560 };
+export const LOW2 = { x: 1750, y: 2800 };
 // How many storms the sea holds: 1 the cyclone alone, 2 with the far low. (The same number is given to
 // assets-src/reveal/sky/make_weather.py as STORMS, which clears the sea round each.)
 export const STORMS = 2;
 // The other storms, each drawn by the cyclone's sheet (sky/index.ts): where (px of the master), the half width of its sheet (the
 // cyclone's is 1250), how it is turned, where in the photographs its arms are taken from, and how much thinner it stands.
-export const OTHER_STORMS = [{ at: LOW2, half: 900, turn: 0.32, arms: [0.37, 0.61], thinner: 0.0 }] as const;
+export const OTHER_STORMS = [{ at: LOW2, half: 460, turn: 0.32, arms: [0.37, 0.61], thinner: 0.0 }] as const;
 // How far the weather systems travel down the wind for each unit of the weather's clock, km.
 export const SYSTEMS_RUN = 0.9;
 /** The rectangle the map of the weather systems lies on (sky/weather.png, assets-src/reveal/sky/make_weather.py), as COVER_RECT is given. */
@@ -296,15 +296,13 @@ float lowDepth(vec2 at) {
   lowWeigh = vec3(1.0, 0.55, density);
   // (A patch, a front or a storm has a body under its cells: the photograph of wind-drawn cloud itself, thick and thin as it
   // is, cracked where the cells part. It is the start's large soft patch, with tops on it.)
-  // (At the heart of a low, where the wind's map is wound too tight to hold a cell, the deck's cells are read on the ground.)
-  float whole = 0.8;
-  if (wound * closed > 0.0) whole = clamp(0.35 + 0.5 * cloudAt(uMatPopcorn, (at - systemsRun() - uWx * vec2(6.0, 2.0)) / 170.0 + vec2(0.21, 0.63), gAt / 170.0 * lowSoft, 0.34), 0.0, 1.0);
+  // (At the heart of a low, where the wind's map is wound too tight to hold a cell, no patch stands: the storm's own sheet is there.)
   // (A body is white and whole at its tops and has an edge: the wind-drawn photograph says where it is thick, the larger lay of
   // cumulus breaks it into tops a few pixels wide from orbit with the sea dark between them, and the smaller lay lumps each top.)
   float form = pow(max(chain - 0.4, 0.0), 1.3);
   float tops = form * (0.42 + 0.58 * smoothstep(0.45, 1.25, puff)) * (0.55 + 0.45 * smoothstep(0.35, 0.9, cell));
   float stood = smoothstep(0.16, 0.34, tops) * (1.0 + 2.6 * tops);
-  float dense = max(knots * (0.25 + 1.5 * density) - 1.0, 0.0) + closed * cluster * mix(stood, 1.4 * whole, wound);
+  float dense = max(knots * (0.25 + 1.5 * density) - 1.0, 0.0) + closed * cluster * stood * (1.0 - wound);
   return 1.5 * dense + drawn;
 }
 
