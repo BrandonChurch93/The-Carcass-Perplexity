@@ -42,7 +42,7 @@ const BREAK_BY_SHOT: readonly { shot: string; key: string; x: number; z: number;
   { shot: 'ribs-03', key: 'ribs-3', x: 196, z: -500, radius: 380, yaw: 16, bounce: 1.6, sky: 0.58, shade: 0.5, deck: 0.5, warm: -1 },
   { shot: 'ribs-04', key: 'ribs-2', x: -40, z: -500, radius: 380, yaw: 23, sky: 0.81, deck: 0.25, warm: 1 },
   { shot: 'ribs-05', key: 'ribs-1', x: -60, z: -420, radius: 220, yaw: 42, shaft: 2.4, deck: 0.1, warm: 0.5 },
-  { shot: 'ribs-06', key: 'ribs-4', x: 120, z: -1440, radius: 260, yaw: 31, sky: 0.8, heads: 0.4, shade: 1.25, deck: 0.2, warm: 0.4, dome: 0.24 },
+  { shot: 'ribs-06', key: 'ribs-4', x: 120, z: -1440, radius: 260, yaw: 31, sky: 0.8, heads: 0.4, shade: 1.25, deck: 0.2, warm: 0.6, dome: 0.24 },
 ];
 /** Where the break stands in the sky at the establishing key, degrees right of north: upper right of the strait's frame, left of the sun that burns through its edge. */
 const BREAK_YAW = 42;
@@ -705,7 +705,8 @@ export function createRig(): Rig {
       deckEdge.z = DECK.dome * (stagedBreak().deck ?? 1) + (stagedBreak().dome ?? 0);
       const warm = stagedBreak().warm ?? 0;
       // The cloud round the break takes the low sun's colour only where the shot's own light is warm: over the strait it stands white.
-      const glow = Math.min(1, Math.max(0, warm));
+      // Whole from half a shot's warmth.
+      const glow = Math.min(1, Math.max(0, 2 * warm));
       breakWarm.set(1 + (BREAK_WARM[0] - 1) * glow, 1 + (BREAK_WARM[1] - 1) * glow, 1 + (BREAK_WARM[2] - 1) * glow);
       if (warm !== 0) {
         skyWarm.set(1 + SKY_WARM[0] * warm, 1 + SKY_WARM[1] * warm, 1 + SKY_WARM[2] * warm);
