@@ -73,7 +73,7 @@ vec3 windowLight(vec3 p, vec3 n) {
   // what is turned to the mouth, a rim and never a fill.
   if (uStrikeTip.w > 0.0) {
     float turned = max(dot(n, dE), 0.0);
-    w += vec3(0.76, 0.68, 1.0) * (uStrikeTip.w * 0.6 * turned * turned * turned * 2600.0 / (dot(toExit, toExit) * 3.14159 + 2600.0));
+    w += vec3(0.76, 0.68, 1.0) * (uStrikeTip.w * 0.12 * turned * turned * turned * 2600.0 / (dot(toExit, toExit) * 3.14159 + 2600.0));
   }
   return w;
 }
