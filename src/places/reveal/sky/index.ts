@@ -6,7 +6,7 @@ import { AT, KM, LIMB, LIMB_FOLLOW, LIVE_FROM, RISE_FIRST, X, Z, driftAt } from 
 import { FPS } from '../../../config';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
-import { BANK_KM, FOG_KM, GROUND_RECT, HIGH_KM, LOW_KM, SHELL_KM, WEATHER_GLSL } from '../shared/weather';
+import { BANK_KM, FOG_KM, GROUND_RECT, HIGH_KM, LOW_KM, WEATHER_GLSL } from '../shared/weather';
 
 export const PARTS = ['cloud', 'cyclone', 'storm', 'vapour', 'space', 'atmosphere'] as const;
 
@@ -63,33 +63,6 @@ ${CLOUD_LIGHT_GLSL}
 uniform sampler2D uGround;
 uniform vec4 uGroundRect;
 varying vec3 vWorld;
-// The shell: a deck of cloud at its own height, six kilometres up, between the low field and the ice, on a wind of its own that
-// crosses the wind of the low field. It is the photograph of wind-drawn streets read as it is, a repeat 1700 km long, so a
-// street is a thing the eye can follow, and it stands in bodies some hundreds of kilometres across (where the photograph of the
-// veil, read very soft, is bright), with open sea between them. Held from orbit it is seen to slide over the land and the sea
-// under it, and its shadow goes with it.
-// Where the shell is carried to at a point of its height, in the repeat of its photograph.
-vec2 shellPlace(vec2 at) {
-  vec2 sv = at + uTime * vec2(-5.0, 3.0) + uWx * vec2(-36.0, 17.0);
-  return mat2(0.94, -0.34, 0.34, 0.94) * sv / vec2(1700.0, 1250.0) + vec2(0.37, 0.81);
-}
-// How much of a body of the shell stands at a point (0: open sky), from orbit only: nearer than that its streets are wider
-// than the photograph can draw them.
-float shellBody(vec2 at) {
-  float seen = smoothstep(780.0, 1300.0, uViewKm);
-  if (seen <= 0.0) return 0.0;
-  vec2 sv = at + uTime * vec2(-5.0, 3.0) + uWx * vec2(-36.0, 17.0);
-  vec2 bodies = mat2(0.5, 0.87, -0.87, 0.5) * sv / vec2(3900.0, 4300.0) + vec2(0.12, 0.44);
-  float gather = dot(textureLod(uMatVeil, bodies, 5.0).rgb, vec3(0.3, 0.55, 0.15)) / 0.264;
-  return seen * smoothstep(1.2, 1.66, gather);
-}
-// How thick the shell stands at a place of its photograph, in a body of it. (The streets are read only where a body stands, at a
-// fineness taken before this way out.)
-float shellDepth(vec2 uv, vec4 g, float body) {
-  if (body <= 0.0) return 0.0;
-  float depth = cloudAt(uMatStreaks, uv, g, 0.304) * (0.3 + 1.6 * body) - 0.95;
-  return (1.0 - exp(-1.2 * max(depth, 0.0))) * min(body * 8.0, 1.0);
-}
 void main() {
   vec2 xz = vWorld.xz;
   vec2 toSun = normalize(uSunDir.xz);
@@ -139,32 +112,10 @@ void main() {
   float under = 0.0;
   if (uViewKm < 1200.0) under = (1.0 - smoothstep(850.0, 1200.0, uViewKm)) * highDepth(xz + uSunDir.xz / max(uSunDir.y, 0.2) * ${(HIGH_KM - LOW_KM).toFixed(1)});
 
-  // The shell, where the ray meets it, and its shadow on what lies under it, thrown off it as far as it stands high.
-  vec2 shellAt = xz + lean * ${(SHELL_KM - LOW_KM).toFixed(1)};
-  vec2 shellUv = shellPlace(shellAt);
-  vec4 shellG = GRADS(shellUv);
-  // (A body of the shell is hundreds of kilometres across and its shadow falls some tens from it: one read of where the bodies
-  // stand serves the cloud and its shadow.)
-  float shellIs = shellBody(shellAt);
-  float shell = shellDepth(shellUv, shellG, shellIs);
-  float shellLift = mix(1.0, 3.0, smoothstep(150.0, 700.0, uViewKm));
-  vec2 shadeUv = shellPlace(xz - lean * ${LOW_KM.toFixed(1)} + uSunDir.xz / max(uSunDir.y, 0.2) * ${SHELL_KM.toFixed(1)} * shellLift);
-  vec4 shadeG = GRADS(shadeUv);
-  vec3 shellColour = vec3(0.0);
-  float c = 0.0;
-  float shadeA = 0.0;
-  // (Nothing of it is worked out under open sky.)
-  if (shellIs > 0.0) {
-    // (Its tops are level from this far: the thick of a street is lit, its thin edge is grey.)
-    shellColour = cloudLight(shellAt, 0.2 + 0.85 * (0.3 + 0.6 * shell), 0.4 + 0.6 * shell, 0.5) * (0.74 + 0.4 * shell);
-    // (By night the moon is on the shell and it is seen to the last frame, crossing the dark land.)
-    if (uDusk > 0.0) shellColour *= 1.0 + 0.7 * uEmber.x;
-    c = 0.62 * shell * uArrive;
-    shadeA = 0.45 * shellDepth(shadeUv, shadeG, shellIs) * (1.0 - c) * dayAt(xz) * uArrive;
-  }
-
   vec3 lowColour = cloudLight(xz, 0.12 + 0.95 * self, 0.35 + 0.65 * low.x, 0.0) * (0.72 + 0.5 * low.y) * (1.0 - 0.3 * under);
   vec3 highColour = cloudLight(up, 0.5 + 0.45 * highFlank, 0.5 + 0.5 * high, 1.0);
+  // (By night the moon is on the ice, and it is seen to the last frame crossing the dark land.)
+  if (uDusk > 0.0) highColour *= 1.0 + 0.6 * uEmber.x;
   vec3 bankColour = cloudLight(bankAt, 0.12 + 0.95 * bankSelf, 0.35 + 0.65 * bankA, 0.25) * (0.72 + 0.5 * clamp(bankIs / 3.5, 0.0, 1.0));
   // (Fog is seen from above as a level pale floor, a little blue, with no relief of its own.)
   // (Stratus has a top all the same: long low swells that the sun grazes, and it is thin and blue toward its edge.)
@@ -200,12 +151,17 @@ void main() {
   lowColour *= 1.0 - 0.4 * smoothstep(0.2, 0.7, exp(-pow(dot(sunOnSea, sunOnSea) / 55000.0, 0.463)));
   float a = low.x * 0.96;
   float b = min(high * 0.46, 0.32);
-  // (Held, the veil is seen: sheets of ice that cross the land against the wind of the low field.)
-  if (uLive > 0.0) b *= 1.0 + 0.35 * smoothstep(0.0, 12.0, uWx);
+  // (Held, the ice is the shell of cloud that is seen to slide over the land and the sea, ten kilometres over them and against
+  // the wind of the low field: veils and fibres of the photographs, thicker than at the titan frame, and the ground is read
+  // through them.)
+  if (uLive > 0.0) {
+    float heldUp = smoothstep(0.0, 6.0, uWx);
+    b = min(high * mix(0.46, 0.8, heldUp), mix(0.32, 0.52, heldUp));
+  }
   // From the ground up: the fog, the low field, the banks, the ice.
   vec3 colour = fogColour * fogA * (1.0 - a);
   colour = (colour + lowColour * a + beatOnCloud(xz) * a) * (1.0 - bankA) + bankColour * bankA;
-  colour = (colour * (1.0 - c) + shellColour * c) * (1.0 - b) + highColour * b;
+  colour = colour * (1.0 - b) + highColour * b;
   float heldA = 1.0 - (1.0 - fogA) * (1.0 - bankA);
   if (uDusk > 0.0) {
     // (Under a low sun and by night only the body of a cloud is seen, and its edge is soft: the thin of it and the veil of ice
@@ -225,12 +181,12 @@ void main() {
     fogA *= heldNight;
     colour = fogColour * fogA * (1.0 - aNight);
     colour = (colour + lowColour * aNight + exposed(beatOnCloud(xz)) * a) * (1.0 - bankA) + bankColour * bankA;
-    colour = (colour * (1.0 - c) + shellColour * c) * (1.0 - bNight) + highColour * bNight;
+    colour = colour * (1.0 - bNight) + highColour * bNight;
     heldA = 1.0 - (1.0 - fogA) * (1.0 - bankA);
     a = aNight;
     b = bNight;
   }
-  float alpha = 1.0 - (1.0 - a) * (1.0 - b) * (1.0 - heldA) * (1.0 - c) * (1.0 - shadeA);
+  float alpha = 1.0 - (1.0 - a) * (1.0 - b) * (1.0 - heldA);
   gl_FragColor = vec4(colour * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
 
@@ -268,22 +224,23 @@ float storm(vec2 p, float px, float shorter, float feed) {
   float out2 = smoothstep(0.3, 0.75, r);
   // (Cloud is fed in along the bands: the streaks slide inward along the winding as the storm is watched.)
   vec2 along = vec2(feed, 0.0);
+  // Where a band stands: the streaks read four levels softer, so a band is a gathering of streaks some hundreds of
+  // kilometres long, of its own width and length, and between two bands the sea is open.
+  float bands = lum(textureLod(uStreaks, wound + 0.5 * along + vec2(0.71, 0.09), max(level, 0.0) + 4.2).rgb) / 0.31;
+  // (Toward the eye the bands close into one wound body; outward fewer and fewer of them are left, the strongest longest.)
+  float reach = r * shorter;
+  float need = mix(0.96, 1.42, smoothstep(0.06, 0.9, reach));
+  float gate = smoothstep(need - 0.2, need + 0.16, bands);
+  float core = 1.0 - smoothstep(0.03, 0.115, r);
+  float body = max(gate, core * core);
+  // (Between two bands nothing more is read: every read sets its own fineness, so this way out costs no pixel its level.)
+  if (body <= 0.0) return 0.0;
   float a = lum(textureLod(uStreaks, wound + along + vec2(0.13, 0.41), max(level, 0.0)).rgb);
   float b = lum(textureLod(uStreaks, 2.0 * wound + 1.6 * along + vec2(0.57, 0.22), max(level + 1.0, 0.0)).rgb);
-    // (And once more as it is, not drawn out, twice as fine: the tufts a band is made of.)
+  // (And once more as it is, not drawn out, twice as fine: the tufts a band is made of.)
   vec2 square = vec2(8.0 * around + 0.63662 * lr, 4.0 * around - 1.27324 * lr);
   float tufts = lum(textureLod(uStreaks, square + 3.0 * along + vec2(0.21, 0.73), max(level + 1.0, 0.0)).rgb) / 0.304;
   float fine = mix(a, b, mix(0.25, 0.6, out2)) / 0.304 * mix(1.0, 0.45 + 0.55 * tufts, smoothstep(0.08, 0.3, r));
-  // Where a band stands: the same streaks read four levels softer, so a band is a gathering of streaks some hundreds of
-  // kilometres long, of its own width and length, and between two bands the sea is open.
-  float bandsWide = lum(textureLod(uStreaks, wound + 0.5 * along + vec2(0.71, 0.09), max(level, 0.0) + 4.2).rgb) / 0.31;
-  float bands = bandsWide;
-  // (Toward the eye the bands close into one wound body; outward fewer and fewer of them are left, the strongest longest.)
-  float reach = r * shorter;
-  float need = mix(0.8, 1.42, smoothstep(0.06, 0.9, reach));
-  float gate = smoothstep(need - 0.2, need + 0.16, bands);
-  float core = 1.0 - smoothstep(0.03, 0.17, r);
-  float body = max(gate, core * core);
   float depth = max(fine * (0.1 + 1.6 * body + 0.7 * core) - mix(0.7, 0.45, core), 0.0);
   // The wall round the eye stands thick and whole, and the eye itself is clear to the sea.
   float wall = smoothstep(0.01, 0.026, r) * (1.0 - smoothstep(0.03, 0.07, r));
