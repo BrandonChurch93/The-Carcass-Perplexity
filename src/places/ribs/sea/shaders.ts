@@ -468,6 +468,7 @@ void main() {
   // Round a wader's legs the water stays: its rings and its mirror need it.
   float waded = 1e3;
   vec2 ringSlope = vec2(0.0);
+#ifdef RIBS_RINGS
   for (int i = 0; i < ${rings}; i++) {
     if (i >= uRingCount) break;
     vec2 d = p - uRings[i].xy;
@@ -479,6 +480,7 @@ void main() {
     float wave = sin(lr * 17.0 - uTime * 10.0 + uRings[i].z) * exp(-l * 1.9) * packet * uRings[i].w;
     ringSlope += (d / l) * wave * 0.13;
   }
+#endif
   depth -= 0.16 * smoothstep(0.36, 0.62, barA.b + 0.5 * (barB.b - 0.5)) * (1.0 - smoothstep(0.0, 0.05, over)) * smoothstep(0.9, 2.4, waded);
   // No discard here: a picture read after a discard has no slope to pick its level by where a neighbour is gone, and the edge of every bar came out different on every render. The sheet is cut at the end.
   // The sheet is never still: thin water comes on and drains back round every stone and bar, a hand's breadth, each stretch in its own time.

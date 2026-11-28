@@ -223,6 +223,8 @@ vec3 skyDome(vec3 d) {
   vec2 low = vec2(abs(fract(0.5 * along) * 2.0 - 1.0), 0.34 + 0.9 * el) + 0.02 * work + (2.4 * a + 0.5 * b) * vec2(0.003, 0.005);
   vec3 scud = textureLod(tDome, low, 0.0).rgb;
   float body = smoothstep(0.54, 0.32, dot(scud, vec3(0.3, 0.5, 0.2))) * smoothstep(0.0, 0.07, el) * smoothstep(0.75, 0.3, el);
+  // Left out of the program where the frame is not the card loop's (RIBS_LOOP, air/index.ts): a branch not taken is still worked out.
+#ifdef RIBS_LOOP
   if (uScud.z > 0.0) {
     float along2 = uv.x * 0.55 + 0.23 - 0.0075 * uScud.y;
     vec2 low2 = vec2(abs(fract(0.5 * along2) * 2.0 - 1.0), 0.34 + 0.9 * el) + 0.02 * work + (2.4 * a + 0.5 * b) * vec2(0.003, 0.005);
@@ -232,6 +234,7 @@ vec3 skyDome(vec3 d) {
     scud = (scud * body * (1.0 - uScud.z) + scud2 * body2 * uScud.z) / max(body * (1.0 - uScud.z) + body2 * uScud.z, 1e-4);
     body = body * (1.0 - uScud.z) + body2 * uScud.z;
   }
+#endif
   // The break stands open: the scud thins toward it and is gone before it.
   body *= smoothstep(0.985, 0.9, dot(d, uSkyBreak));
   c = mix(c, scud * 0.85, 0.75 * body);

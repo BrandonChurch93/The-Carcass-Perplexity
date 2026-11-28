@@ -522,6 +522,8 @@ void main() {
   // On a wall of beds the weed hangs in clumps from each ledge and thins toward the next one down: between the clumps the wall is bare
   // wet rock with its barnacles, dark under the ledge it hangs from.
   float bare = 0.0;
+  // Left out of the program of a wall that has no bare rock (RIBS_BARE, index.ts): a branch not taken is still worked out, pixel by pixel.
+#ifdef RIBS_BARE
   if (uBare > 0.0) {
   float bedAt = (vWorld.y + 7.0 * vnoise(vec2(vUv.x / 31.0, 1.5)) + 9.0 * vnoise(vec2(vWorld.y / 26.0, 4.5))) / 6.5;
   float under = fract(bedAt);
@@ -538,6 +540,7 @@ void main() {
   rough = mix(rough, 0.3 + 0.3 * (1.0 - rn.z), bare);
   occ = mix(occ, (0.45 + 0.55 * smoothstep(0.15, 0.6, rn.z)) * (0.55 + 0.45 * smoothstep(1.0, 0.6, under)), bare);
   }
+#endif
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   vec3 above = skyIrradiance(vec3(0.0, 1.0, 0.0));
   c += thread * 0.035 * uDark * above * skyOpen(vWorld);

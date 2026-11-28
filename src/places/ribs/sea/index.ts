@@ -17,6 +17,7 @@ import { Spindrift } from './spindrift';
 import { Burst, STRIKE_CARDS, type Strike } from './strike';
 import type { Ring } from './tide';
 import { BORE_HEIGHT, BORE_SPEED, MAX_RINGS, RING_SOURCE, SWELL, boreFront } from './tide';
+import { variant } from '../shared/variant';
 
 export const PARTS: readonly string[] = ['sea', 'surf', 'runnels', 'bore'];
 
@@ -173,6 +174,8 @@ export function create(ctx: Context): Piece {
   const poolLoop = poolMaterial.clone();
   poolLoop.uniforms = poolMaterial.uniforms;
   poolLoop.fragmentShader = POOL_LOOP_FRAGMENT(MAX_RINGS);
+  // The rings round the waders' legs are in the film's program only while there are any (shared/variant.ts); the loop's keeps them.
+  poolLoop.defines = { RIBS_RINGS: 1 };
   pools.renderOrder = 1;
   // The rings round what stands in the pools, over the animals' mirror image (wings/, renderOrder 3). Not in the card loop: its seam is closed.
   const answers = contactRings({ ...rig.uniforms, ...shared, uPoolLevel: poolMaterial.uniforms.uPoolLevel as THREE.IUniform });
@@ -342,6 +345,7 @@ export function create(ctx: Context): Piece {
       front.value = frontZ;
 
       ringCount.value = staged >= feeding.from && staged <= feeding.to ? MAX_RINGS : 0;
+      variant(poolMaterial, { RIBS_RINGS: ringCount.value > 0 });
       for (const ring of ringList) {
         ring.strength = 0;
         ring.stand = undefined;

@@ -279,8 +279,12 @@ export function create(ctx: Context): Piece {
   const outLen = Math.hypot(hungOut[0] - hungAt[0], hungOut[2] - hungAt[2]) || 1;
   const wallAlong: [number, number] = [-(hungOut[2] - hungAt[2]) / outLen, (hungOut[0] - hungAt[0]) / outLen];
   const rillAt = new THREE.Vector4(hungAt[0] + wallAlong[0] * RILL_ALONG, hungAt[2] + wallAlong[1] * RILL_ALONG, wallAlong[0], wallAlong[1]);
-  const hangs = (proud: number, bare = 0, dark = 0.78): THREE.ShaderMaterial =>
-    material(WEED_VERTEX, WEED_FRAGMENT, { tWall: { value: wallC }, tWallN: { value: wallN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, tBare: { value: boulderC }, tBareN: { value: boulderN }, uProud: { value: proud }, uBare: { value: bare }, uDark: { value: dark }, uRill: { value: rillAt } });
+  const hangs = (proud: number, bare = 0, dark = 0.78): THREE.ShaderMaterial => {
+    const m = material(WEED_VERTEX, WEED_FRAGMENT, { tWall: { value: wallC }, tWallN: { value: wallN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, tBare: { value: boulderC }, tBareN: { value: boulderN }, uProud: { value: proud }, uBare: { value: bare }, uDark: { value: dark }, uRill: { value: rillAt } });
+    // The bare rock between clumps is in the program only of a wall that has any.
+    if (bare > 0) m.defines = { RIBS_BARE: 1 };
+    return m;
+  };
   // The near cliff's weed is cut fine enough to carry the hanks of the sheet; the others' is not.
   const weed = hangs(0.5);
   const weedNear = hangs(0.6, 0, 0.4);

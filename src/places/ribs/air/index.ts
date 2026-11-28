@@ -10,6 +10,7 @@ import { partAtHeight, ribByName, surface } from '../layout';
 import { loopPhase, stagedSeconds } from '../shared/stage';
 import { STRIKE, strikeAge } from '../shared/opening';
 import { RIG_GLSL } from '../shared/glsl';
+import { variant } from '../shared/variant';
 
 export const PARTS = ['sky', 'air', 'cloud'] as const;
 
@@ -48,6 +49,8 @@ void main() {
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
+// What a frame has no use for is left out of the program by a name (shared/variant.ts). RIBS_LOOP: the card loop's second sheet of
+// banks. RIBS_SOURCES: the columns of spray. RIBS_FOG: the opening's sea fog.
 const VOLUME_FRAGMENT = /* glsl */ `
 precision highp float;
 uniform highp sampler2D tDepth;
@@ -195,11 +198,13 @@ void main() {
       float bank = smoothstep(0.1, 0.42, banks * gusts);
       // uDrift: the seconds the banks stand at. In the card loop they go twice, a loop apart: the banks that leave thin as the ones
       // behind them come up (z their share), so mist goes down the strait all through the loop and its last frame meets its first.
+#ifdef RIBS_LOOP
       if (uDrift.z > 0.0) {
         float banks2 = textureLod(tCloudShade, p.xz / 640.0 - uDrift.y * vec2(0.011, 0.019), level).r;
         float gusts2 = textureLod(tCloudShade, p.xz / 410.0 + 0.37 - uDrift.y * vec2(0.049, 0.015), level).g;
         bank = mix(bank, smoothstep(0.1, 0.42, banks2 * gusts2), uDrift.z);
       }
+#endif
       // It pools where a blade's foot shuts the land's horizon, and the pool goes and comes with the banks that pass over it.
       vec4 land = landAt(p.xz);
       float foot = smoothstep(${glslFloat(AIR.poolFrom)}, ${glslFloat(AIR.poolTo)}, land.g) * (0.3 + 0.7 * bank);
@@ -227,6 +232,7 @@ void main() {
   }
 
   // Spray and mist: each source is a soft column, lit by the sky and by the sun where the sun reaches its foot.
+#ifdef RIBS_SOURCES
   for (int i = 0; i < ${MAX_SOURCES}; i++) {
     if (i >= uSourceCount) break;
     vec4 a = uSourceA[i];
@@ -248,9 +254,11 @@ void main() {
     sum = sum * (1.0 - cover * near) + light * (cover * near);
     trans *= 1.0 - cover;
   }
+#endif
   // The sea fog of the opening stands nearer than the haze: it is summed on its own, only while it is up. The march runs from the lens to
   // what the ray meets or to where it leaves the fog's height, in strides that lengthen with the distance; the fog's fall with height is
   // summed whole inside each stride, so it has no level top and no slab shows.
+#ifdef RIBS_FOG
   if (uFog.x > 0.0) {
     float t0 = 15.0;
     float t1 = min(reach, 2600.0);
@@ -291,6 +299,7 @@ void main() {
       trans *= fogTrans;
     }
   }
+#endif
   gl_FragColor = vec4(sum * uScatter.z, trans);
 }`;
 
@@ -373,7 +382,6 @@ export function create(ctx: Context): Piece {
   ctx.parts.effect('air', 'built');
   ctx.parts.effect('cloud', 'built');
 
-
   return {
     volume,
     setTime: (seconds) => {
@@ -412,6 +420,9 @@ export function create(ctx: Context): Piece {
         (sourceC[i] as THREE.Vector4).set(lit, s.kind === 'spray' ? 0.045 : 0.02, 0, 0);
       }
       count.value = n;
+      variant(volume, { RIBS_LOOP: driftAt.z > 0, RIBS_SOURCES: n > 0, RIBS_FOG: fog.x > 0 });
+      // The dome's second sheet of scud (shared/glsl.ts, skyDome) is the card loop's alone.
+      variant(sky, { RIBS_LOOP: (ctx.rig.uniforms.uScud as THREE.IUniform<THREE.Vector3>).value.z > 0 });
     },
     solo: (part) => {
       showAir.value = part === 'ribs/cloud' ? 0 : 1;
