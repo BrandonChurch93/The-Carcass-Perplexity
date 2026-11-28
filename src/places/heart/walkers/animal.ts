@@ -74,6 +74,11 @@ export interface Plan {
   weight?(seconds: number): number;
   /** How many times as deep as its build has it the body sinks on a pad that has just landed, at a given time. None: 1. */
   sink?(seconds: number): number;
+  /** How freely it throws its weight about at a given time, 0 to 1: the trunk goes farther over the pads that carry it, falls toward a pad
+   *  that is coming down, sinks on it and comes back up, and rocks back as the neck lifts. Nothing where a key frame looks. None: 0. */
+  heft?(seconds: number): number;
+  /** Metres the trunk stands higher than its habit at a given time, the legs straighter under it. None: 0. */
+  tall?(seconds: number): number;
   /** One that walks and rests re-places a fore pad in a long rest: when pad `j`, standing for the `n`th time, starts to lift, or -1. */
   halfStep(j: number, n: number): number;
   /** Its own slow thing: seconds for one sway of body and neck, and where in it the animal is at time zero. */
@@ -205,7 +210,7 @@ export class Animal {
   private readonly neckRad = new Float32Array(NECK_RINGS);
   private readonly frames = new Float32Array(NECK_RINGS * 9);
   private readonly rags: Rag[] = [];
-  private readonly grit: { tube: Tube; local: Float32Array; leg: number; when: number; ox: number; oz: number; size: number }[] = [];
+  private readonly grit: { tube: Tube; local: Float32Array; leg: number; when: number; beat: number; ox: number; oz: number; size: number }[] = [];
   private readonly shreds: (Rag & { leg: number; node: number })[] = [];
   private readonly roots: Float32Array;
   private readonly ankle: number;
@@ -390,7 +395,7 @@ export class Animal {
         }
         const turn = hash(n, seed + j * 7 + 72) * 6.283;
         const far = b.padR * Math.sqrt(hash(n, seed + j * 7 + 73));
-        this.grit.push({ tube, local, leg: j, when: 0.03 + 0.72 * Math.pow(hash(n, seed + j * 3 + 74), 1.5), ox: Math.cos(turn) * far, oz: Math.sin(turn) * far, size });
+        this.grit.push({ tube, local, leg: j, when: 0.03 + 0.72 * Math.pow(hash(n, seed + j * 3 + 74), 1.5), beat: hash(n, seed + j * 3 + 75), ox: Math.cos(turn) * far, oz: Math.sin(turn) * far, size });
       }
     }
 
@@ -828,7 +833,7 @@ export class Animal {
     const aim = plan.neck(seconds);
 
     // The pads.
-    const feet: { x: number; z: number; lift: number; age: number; hard: number; load: number; pitch: number; unload: number; land: number; fx: number; fz: number; w: number; from: [number, number]; to: [number, number]; high: number; dur: number }[] = [];
+    const feet: { x: number; z: number; lift: number; age: number; hard: number; load: number; pitch: number; unload: number; land: number; fx: number; fz: number; w: number; from: [number, number]; to: [number, number]; high: number; dur: number; ago: number[] | null }[] = [];
     const rate = (plan.sigma(seconds + 0.05) - plan.sigma(seconds - 0.05)) / 0.1;
     let shiftSide = 0;
     let shiftFore = 0;
@@ -836,6 +841,12 @@ export class Animal {
     let lean = 0;
     let landSide = 0;
     let landFore = 0;
+    const g = plan.heft ? plan.heft(seconds) : 0;
+    let fallSide = 0;
+    let fallFore = 0;
+    let hang = 0;
+    let spring = 0;
+    let twist = 0;
     let followX = 0;
     let followZ = 0;
     for (let j = 0; j < 4; j++) {
@@ -923,14 +934,47 @@ export class Animal {
       const world = env.drift(px, pz, seconds);
       // The weight comes onto a pad over a third of a second after it is down and goes off it before it lifts.
       const load = w >= 0 ? 0 : (1 - unload) * smooth(0, 0.32, age);
-      feet.push({ x: world[0], z: world[1], lift, age: w >= 0 ? 1e3 : age, hard, load, pitch, unload, land, fx, fz, w, from, to: goes, high, dur: plan.fidget > 0 || stepsOut ? STEP : (1 - DUTY) / Math.max(rate, 0.02) });
+      // How long ago a walking pad was at each eighth of the swing it has made so far, asked of the plan itself: the pace may have fallen
+      // to nothing since it lifted, and what fell from it then has long been on the crust.
+      let ago: number[] | null = null;
+      if (w >= 0 && plan.fidget <= 0 && !stepsOut) {
+        ago = [];
+        for (let q = 0; q <= 8; q++) {
+          const target = n + DUTY + ((w * q) / 8) * (1 - DUTY) - leg.offset;
+          let before = seconds - 12;
+          let after = seconds;
+          for (let pass = 0; pass < 13; pass++) {
+            const mid = 0.5 * (before + after);
+            if (plan.sigma(mid) < target) before = mid;
+            else after = mid;
+          }
+          ago.push(q === 8 ? 0 : seconds - after);
+        }
+      }
+      feet.push({ x: world[0], z: world[1], lift, age: w >= 0 ? 1e3 : age, hard, load, pitch, unload, land, fx, fz, w, from, to: goes, high, dur: plan.fidget > 0 || stepsOut ? STEP : (1 - DUTY) / Math.max(rate, 0.02), ago });
       const heavy = plan.weight ? plan.weight(seconds) : 1;
-      shiftSide -= leg.side * unload * heavy;
-      shiftFore -= leg.fore * unload * heavy;
+      // The trunk is not held while a pad is in the air: it has gone off the pad by the time the pad lifts, and from then on it travels back
+      // toward where the pad is coming down, so that the pad lands under a body already on its way to it.
+      const down = w >= 0 ? 1e3 : age;
+      const toward = w >= 0 ? smooth(0.1, 1, w) : 1 - smooth(0, 1.1, down);
+      const off = unload * heavy * (1 - 0.6 * g * toward);
+      shiftSide -= leg.side * off;
+      shiftFore -= leg.fore * off;
       dip += land * (plan.sink ? plan.sink(seconds) : 1);
       landSide += leg.side * land;
       landFore += leg.fore * land;
       lean = 1 - (1 - lean) * (1 - unload);
+      if (g > 0) {
+        // It goes on over the pad that has just landed and comes back; it sinks all the while a pad is up, drops on it as it lands,
+        // and springs back a little over where it rode.
+        const over = down < 1.5 ? Math.pow(Math.sin((Math.PI * down) / 1.5), 2) : 0;
+        fallSide += leg.side * over;
+        fallFore += (leg.fore > 0 ? 1 : 0.3) * leg.fore * over;
+        hang += w >= 0 ? smooth(0, 0.9, w) : 1 - smooth(0, 0.45, down);
+        if (down > 0.7 && down < 4) spring += hard * Math.sin((2 * Math.PI * (down - 0.7)) / 1.3) * Math.exp(-(down - 0.7) / 0.55);
+        // The shoulders swing away from a fore pad that lifts, the hips from a hind one.
+        twist += leg.fore * leg.side * off;
+      }
       if (plan.fidget > 0) {
         // The body of one that stands follows its pads: it rides over the middle of the four.
         const home = this.plant(j, Math.floor(sg), 0);
@@ -946,7 +990,7 @@ export class Animal {
     const turn = om * seconds + plan.habit.phase * 6.283;
     const idle = Math.sin(turn);
     const idle2 = Math.sin(turn * 0.62 + b.seed * 4);
-    const look = 0.09 * Math.sin(turn + 1.9) + 0.05 * idle2;
+    const look = 0.09 * Math.sin(turn + 1.9) + 0.05 * idle2 - 0.1 * g * twist;
     const fwd: V3 = [Math.sin(at.yaw + look), 0, -Math.cos(at.yaw + look)];
     const right: V3 = [-fwd[2], 0, fwd[0]];
     // The tuft works in the pool: it is lifted a little, set down beside where it was and pushed in, and the animal pulls back on it.
@@ -976,13 +1020,15 @@ export class Animal {
     // The shoulders answer the neck: the body starts to take the weight of the neck over its legs a little before the head moves.
     const lead = plan.neck(seconds + 0.6).down;
     // It is never still on its stilts: the weight goes from side to side and fore and aft by a good part of the trunk's width, in its own time.
-    const sideways = shiftSide * 0.8 * k + 0.5 * k * idle2;
-    const forwards = shiftFore * 0.4 * k + 0.45 * k * idle - 0.5 * k * lead * (plan.dip > 0 ? 1 : 0.3) - 0.6 * k * pull;
+    // One that feeds rocks back on its hips as its neck comes up out of the heat, and forward and down again as it lowers it.
+    const rock = plan.dip > 0 ? g * (1 - lead) : 0;
+    const sideways = (shiftSide * (1 + 0.3 * g) + 0.25 * g * fallSide) * 0.8 * k + 0.5 * k * idle2;
+    const forwards = (shiftFore * (1 + 0.55 * g) + 0.5 * g * fallFore) * 0.4 * k + 0.45 * k * idle - 0.5 * k * lead * (plan.dip > 0 ? 1 : 0.3) - 0.6 * k * pull - 1.0 * k * rock;
     const cx = centre[0] + right[0] * sideways + fwd[0] * forwards;
     const cz = centre[1] + right[2] * sideways + fwd[2] * forwards;
     // The corner of the trunk over a pad that has just come down sinks onto it; the corner over a pad that is lifting has nothing under it.
-    const pitch = b.tilt - 0.1 * lead - SAG.pitch * shiftFore - SAG.landPitch * landFore + 0.04 * idle2 + 0.05 * pull;
-    const roll = SAG.roll * shiftSide - SAG.landRoll * landSide + 0.045 * idle;
+    const pitch = b.tilt - 0.1 * lead - SAG.pitch * shiftFore * (1 + g) - SAG.landPitch * landFore * (1 + 1.5 * g) + 0.04 * idle2 + 0.05 * pull + 0.14 * rock;
+    const roll = SAG.roll * shiftSide * (1 + g) - SAG.landRoll * landSide * (1 + 1.5 * g) + 0.045 * idle;
     // The body stands on stilts: it rides as high as the leg that is most stretched lets it, and sinks when a pad goes out far.
     // A soft least of the four, so that it does not jerk when another leg becomes the one that holds it down.
     const span = (this.femur + this.tibia + this.meta) * 0.992;
@@ -1003,7 +1049,7 @@ export class Animal {
     for (const top of tops) soft += Math.exp(-(top - least) / (0.12 * k));
     const ride = least - 0.12 * k * Math.log(soft);
     // It rides at the height it had: it sinks from a little over it and comes back up.
-    const cy = ride + 0.09 * k - SAG.dip * k * dip - SAG.lean * k * lean - plan.dip * lead - 0.12 * k * (1 - Math.sin(turn + 0.9));
+    const cy = ride + 0.09 * k - SAG.dip * k * dip * (1 + 0.8 * g) - SAG.lean * k * lean - plan.dip * lead - 0.12 * k * (1 - Math.sin(turn + 0.9)) - 0.15 * k * g * hang + 0.22 * k * g * spring - 0.25 * k * rock + (plan.tall ? plan.tall(seconds) : 0);
     this.om = om;
     this.gulp = gulp;
     this.puff = puff;
@@ -1073,31 +1119,51 @@ export class Animal {
       const base: V3 = [end[0] - axis[0] * this.ankle, end[1] - axis[1] * this.ankle, end[2] - axis[2] * this.ankle];
       // The toes splay as the weight comes onto them and draw together as it goes off.
       this.writeLeg(table, [hip, knee, hock, end, base], fwd, 0.84 + 0.16 * foot.load, 0.8 + 0.2 * foot.load);
-      // Grit leaves the pad as it swings and falls to the crust.
+      // Grit leaves the pad all the time it is in the air and falls to the crust: each crumb's place under the pad drops one again and again,
+      // most of them in the first seconds, while the cake shakes loose, fewer after.
       for (const g of this.grit) {
         if (g.leg !== j) continue;
         let gx = foot.x;
         let gy = 0;
         let gz = foot.z;
         let big = 0;
-        if (foot.w > g.when) {
-          const e = smooth(0.05, 0.96, g.when);
-          const e2 = e * e * (3 - 2 * e) * 0.25 + e * 0.75;
-          const fell = (foot.w - g.when) * foot.dur;
-          // It falls through hot air that rises off the crust: a crumb is slowed by it, a clod hardly.
-          const slow = lerp(0.42, 0.9, smooth(0.06, 0.2, g.size));
-          // It leaves the pad where the pad was then, however high the step carried it.
-          const raised = plan.stepUp ? plan.stepUp(seconds - fell, j) * Math.pow(Math.sin(Math.PI * g.when), 2) : 0;
-          const y = foot.high * Math.pow(Math.sin(Math.PI * Math.pow(g.when, 0.85)), 1.3) + raised + 0.1 * k - 4.9 * slow * fell * fell;
-          if (y > 0) {
-            const left = env.drift(lerp(foot.from[0], foot.to[0], e2), lerp(foot.from[1], foot.to[1], e2), seconds);
-            gx = left[0] + g.ox;
-            gy = y;
-            gz = left[1] + g.oz;
-            big = 1;
+        if (foot.w >= 0) {
+          // Seconds the pad has been off the crust.
+          const up = foot.ago ? (foot.ago[0] as number) : foot.w * foot.dur;
+          const every = 0.55 + 0.9 * g.when;
+          const m = Math.floor(up / every - g.beat);
+          if (m >= 0 && hash(m + 0.5, g.beat * 91) < Math.exp(-((m + g.beat) * every) / 3.5)) {
+            const fell = up - (m + g.beat) * every;
+            // Where in its swing the pad was when this one left it.
+            let was = foot.w * (1 - fell / Math.max(up, 1e-3));
+            if (foot.ago) {
+              for (let q = 0; q < 8; q++) {
+                const a = foot.ago[q] as number;
+                const c = foot.ago[q + 1] as number;
+                if (fell <= a && fell >= c) {
+                  was = (foot.w * (q + (a - fell) / Math.max(a - c, 1e-6))) / 8;
+                  break;
+                }
+              }
+            }
+            const e = smooth(0.05, 0.96, was);
+            const e2 = e * e * (3 - 2 * e) * 0.25 + e * 0.75;
+            // It falls through hot air that rises off the crust: a crumb is slowed by it, a clod hardly.
+            const slow = lerp(0.42, 0.9, smooth(0.06, 0.2, g.size));
+            // It leaves the pad where the pad was then, however high the step carried it.
+            const raised = plan.stepUp ? plan.stepUp(seconds - fell, j) * Math.pow(Math.sin(Math.PI * was), 2) : 0;
+            const y = foot.high * Math.pow(Math.sin(Math.PI * Math.pow(was, 0.85)), 1.3) + raised - 4.9 * slow * fell * fell;
+            if (y > 0) {
+              const left = env.drift(lerp(foot.from[0], foot.to[0], e2), lerp(foot.from[1], foot.to[1], e2), seconds);
+              gx = left[0] + g.ox;
+              gy = y;
+              gz = left[1] + g.oz;
+              big = 1;
+            }
           }
         }
-        for (let i = 0; i < 3; i++) skin.ring(g.tube, i, gx, gy + (i - 1) * g.size * 0.6, gz, 1, 0, 0, 0, 0, 1, g.local, i * 6, big);
+        for (let i = 0; i < 3; i++) // The ring turns the way that leaves the crumb's faces outward: the skin is drawn from its outside only.
+        skin.ring(g.tube, i, gx, gy + (i - 1) * g.size * 0.6, gz, 0, 0, 1, 1, 0, 0, g.local, i * 6, big);
         skin.normals(g.tube);
       }
       for (const shred of this.shreds) {
