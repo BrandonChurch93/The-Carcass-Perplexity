@@ -24,25 +24,25 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 210, 2026-11-28 06:51 UTC:
+Status 211, 2026-11-28 07:08 UTC:
 
-- `01-s210-ribs-keys.jpg`: The Ribs' five keys beside their approved pictures, from the team's last report in the third wave: one sheet made by the team at draft quality, five rows, the approved picture at left and the team's branch at right, drawn at its third report, before its last versions and the cost cut, so not yet in the film. Row 1, the shore: approved, a wet flat with weed clumps and reflecting pools, a dark weed cliff at left with a pale carcass hung on it, giant pale ribs standing as arches in the sea under a storm sky, small waders with red-orange wings; the branch has the same view, with banded pale ribs, scattered dark stones and one foam line, but a smoother, emptier foreground and a weed wall that is one combed brown surface. Row 2, the hung body: approved, a pale wasted carcass head down on wet weed with water trickling beside it and small rib cages caught in the weed; the branch, a pale carcass with its ribs showing on a wall of long parallel brown strands. Row 3, the feeders at 0:29: approved, three long-legged animals with red-orange wing fans, their long necks ending in a brush of tendrils dipped in the shallows with splashes; the branch, the same three in near the same poses, the near one with its brush in the water and a small splash at the middle one, paler, on flatter water with less spray. Row 4, the colony: approved, pale animals perched with folded wings on ledges of dark rock streaked white and orange; the branch, many pale animals with orange-brown wings on a grey banded cliff stepped in even terraces. Row 5, the wave at 0:40: approved, one white wall of spray between two dark cliffs with waders running before it; the branch, white broken water in torn patches over grey-green water between two dark cliffs, the giant ribs behind, waders at right. Nothing is broken in any row; none is at the bar.
-- `02-s210-ribs-opening-spray.jpg`: The opening at the Ribs, the spray at the cliff in two frames a little under half a second apart (frames 70 and 95, about 0:01), from the Ribs team's last report in the third wave, at draft quality, from the team's branch, not yet in the film. Left: a dark storm sky over a dark sea; giant pale ribs stand in the water, one tall curved one at left, two smaller in the middle, one of them an arch, and one leaning in from the right; many dark flyers with brown wings, one large near the top centre, and a swarm of tiny pale specks; at the right edge a dark cliff with white spray thrown up against it. Right: the same view a moment later, the cliff almost out of frame; the spray is a wide soft grey veil over the feet of the right ribs and the lower right, and the flyers have moved. In both the spray is soft and without body, which the team itself lists as still computer made.
+- `01-s211-eye-8761.jpg`: The Eye at 2:26 (frame 8761) in two versions, one picture made by the Eye team for its last report in the third wave, each panel drawn at HD size; by the order of the team's pairs the left is the version before and the right is the team's branch at its last report, which is in the film since 11:58 PM. Left: a lake under pale layered cliffs lit warm from the left, a thin band of mist at their foot and the cliffs mirrored in dark water; a pale shallow at left; an orange-brown mat of fine strands runs from the lower left to the middle with grey rock showing through; on it lies a pale skeleton with a long skull, a cage of thick curved ribs, a spine, a hip and two long leg bones; right of the mat the water is clear teal-green over a pale sloping bed and goes dark blue. Right: the same view; the mat is paler and yellower with pale grey patches; the skeleton is whiter, its ribs thin and standing as open arcs, its limbs shorter and broken up; right of it a wall of long parallel green strands sweeps from the mat's edge down into dark blue water. That wall reads as combed, like a curtain, and the team itself lists it as still computer made. The panels carry no labels, so which one is the version before is the team's order and not something seen.
+- `02-s211-eye-8412-stones.jpg`: The Eye's shore at 2:20 (frame 8412) in two versions of its stones, one picture made by the Eye team for its last report in the third wave, at draft quality; by the order of the team's pairs the right is the last version, which is in the film since 11:58 PM. Left: a wide view over a lake ringed by pale layered cliffs with caves, warm light from the left, a pale sky with two thin streaks of cloud and a thin band of mist at the cliff's foot; the lake is dark blue in the middle and mirrors the cliffs, with wide mats around it in orange, rust and yellow patches and blue pools between; in front a dark grey shore with large grey boulders and jointed bedrock at left, many rounded grey stones scattered thickly and evenly, and a tan sloping wedge of banded rock at the lower right; about fifteen small pale long-necked animals stand along the water's edge. Right: the same view with the same cliffs, lake, mats, boulders, wedge and herd; the shore has far fewer stones, in a few small groups with bare dark ground between. The animals are about 20 pixels tall here, too small to judge their heads. The panels carry no labels.
 
+Status 210, 2026-11-28 06:51 UTC, showed: The Ribs' five keys beside their approved pictures, from the team's last report in the third wave: one sheet made by the team at draft...
 Status 209, 2026-11-28 06:27 UTC, showed: The Reveal at 2:47, the titan frame (frame 10027): the approved picture at left, the film at right from the Reveal team's key sheet of its...
 Status 208, 2026-11-28 05:55 UTC, showed: The Breath with the last versions of the third wave, the lead's own looks at draft quality: one sheet made by the team, two rows of two...
-Status 207, 2026-11-28 04:57 UTC, showed: The Reveal's four keys beside their approved pictures, from the team's last report: one sheet made by the team at draft quality, four rows...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-28T06:51:16Z
-phase 6: 7.00 h used of 24.00 h
-build: 7.00 h used of 24.00 h
+2026-11-28T07:08:23Z
+phase 6: 7.28 h used of 24.00 h
+build: 7.28 h used of 24.00 h
 extra rounds: no
-minutes since the last status: 24
+minutes since the last status: 17
 ```
 
 ## Phases
