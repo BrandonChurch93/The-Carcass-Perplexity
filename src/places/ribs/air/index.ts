@@ -3,7 +3,8 @@
 // and the cloud's light in that air (shafts: the sun reaches the haze only through the gaps of the cloud and between the blades).
 import * as THREE from 'three';
 import { QUAD_VERTEX, volumeUniforms } from '../../../core/engine';
-import { WIND, shotSpan } from '../shared/anchors';
+import { config } from '../../../config';
+import { T0, WIND, shotSpan } from '../shared/anchors';
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { partAtHeight, ribByName, surface } from '../layout';
 import { loopPhase, stagedSeconds } from '../shared/stage';
@@ -68,6 +69,7 @@ uniform vec3 uFeet[${FOG_FEET.length}];
 uniform vec3 uFogHole;
 // The colony's shot: how many times thicker the haze stands past the colony's rock (0 elsewhere).
 uniform float uFarAir;
+uniform vec3 uDrift;
 ${RIG_GLSL}
 
 // The sea fog goes with the wind as water goes round a pile: the field is read in the coordinates of the flow itself (how far along the
@@ -186,11 +188,18 @@ void main() {
       // some ten seconds): thick under a bank and taller there, nearly gone between two. Each is summed whole along the stride by its
       // own fall with height, so neither has a top that shows, and the bank is read at the level a stride can follow.
       float level = clamp(log2(dt) - 2.6, 3.5, 9.0);
-      float banks = textureLod(tCloudShade, p.xz / 640.0 - uTime * vec2(0.011, 0.019), level).r;
+      float banks = textureLod(tCloudShade, p.xz / 640.0 - uDrift.x * vec2(0.011, 0.019), level).r;
       // The gusts cross the strait faster than the banks go down it: where the two meet the mist stands up, and it works as it goes,
       // so no bank keeps its shape for longer than a few seconds.
-      float gusts = textureLod(tCloudShade, p.xz / 410.0 + 0.37 - uTime * vec2(0.049, 0.015), level).g;
+      float gusts = textureLod(tCloudShade, p.xz / 410.0 + 0.37 - uDrift.x * vec2(0.049, 0.015), level).g;
       float bank = smoothstep(0.1, 0.42, banks * gusts);
+      // uDrift: the seconds the banks stand at. In the card loop they go twice, a loop apart: the banks that leave thin as the ones
+      // behind them come up (z their share), so mist goes down the strait all through the loop and its last frame meets its first.
+      if (uDrift.z > 0.0) {
+        float banks2 = textureLod(tCloudShade, p.xz / 640.0 - uDrift.y * vec2(0.011, 0.019), level).r;
+        float gusts2 = textureLod(tCloudShade, p.xz / 410.0 + 0.37 - uDrift.y * vec2(0.049, 0.015), level).g;
+        bank = mix(bank, smoothstep(0.1, 0.42, banks2 * gusts2), uDrift.z);
+      }
       // It pools where a blade's foot shuts the land's horizon, and the pool goes and comes with the banks that pass over it.
       vec4 land = landAt(p.xz);
       float foot = smoothstep(${glslFloat(AIR.poolFrom)}, ${glslFloat(AIR.poolTo)}, land.g) * (0.3 + 0.7 * bank);
@@ -287,6 +296,8 @@ void main() {
 
 /** How much thicker the air stands at the middle of the card loop than at its ends. */
 const LOOP_MIST = 0.7;
+/** How many times faster than in the film the banks go down the strait in the card loop. */
+const LOOP_BANKS = 3;
 
 export function create(ctx: Context): Piece {
   const picture = ctx.assets.texture('air/sky.jpg');
@@ -326,6 +337,7 @@ export function create(ctx: Context): Piece {
   });
   const fogHole = new THREE.Vector3(STRIKE.foot[0], STRIKE.foot[2], 2.4 * STRIKE.half);
   const farAir = { value: 0 };
+  const driftAt = new THREE.Vector3(0, 0, 0);
   const openingShot = shotSpan('ribs-01');
   // Staged for the colony's shot only: the air itself stands thicker, so that the blade behind the colony's rock is a pale shape far off
   // and the roosts read against it. (It was a column of mist round that blade, which read as a flat card.)
@@ -347,6 +359,7 @@ export function create(ctx: Context): Piece {
       uFeet: { value: feet },
       uFogHole: { value: fogHole },
       uFarAir: farAir,
+      uDrift: { value: driftAt },
       uSourceCount: count,
       uSourceA: { value: sourceA },
       uSourceB: { value: sourceB },
@@ -381,6 +394,8 @@ export function create(ctx: Context): Piece {
       const phase = loopPhase();
       const mist = phase === null ? 1 : 1 + LOOP_MIST * (1 - Math.cos(phase * Math.PI * 2)) * 0.5;
       farAir.value = thick ? AIR.colony - 1 : 0;
+      if (phase === null) driftAt.set(seconds, 0, 0);
+      else driftAt.set(T0 + LOOP_BANKS * config.deliver.cardLoop.seconds * phase, T0 + LOOP_BANKS * config.deliver.cardLoop.seconds * (phase - 1), phase);
       air.set(AIR.haze * mist, AIR.high, AIR.mist * mist, AIR.low);
       const steam = ctx.sources.steam;
       // In the card loop what travels one way stands where the loop's first frame has it.

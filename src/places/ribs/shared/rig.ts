@@ -19,6 +19,8 @@ export const CLOUD = { height: 1500, repeat: 5200, shade: 0.12, size: 512 };
  * gap stands whole, `under` the share of the sky's own light a surface keeps under the shut deck, `dome` how much further the dome's white is shut than a mirror's, `from` and `to` the field's values a gap's edge runs between, `whole` how far the break is cut by the gaps (0 is the
  * smooth pool of the first two waves). The gaps go with the cloud, so the lit patches cross blades, flats and water at the wind's pace.
  */
+/** How many times faster than in the film the scud crosses the dome in the card loop, where the lens is held on the arches. */
+export const LOOP_SCUD = 2.5;
 export const DECK = { shut: 0.3, open: 1.05, from: 0.36, to: 0.6, whole: 1, under: 0.4, dome: 0.2 };
 export const MAX_EMITTERS = 8;
 /** The fine relief of the floor, laid over the bed twice from one tiling picture: metres of a repeat and metres of relief, wide and small. */
@@ -497,6 +499,7 @@ export function createRig(): Rig {
   };
 
   const loopAt = new THREE.Vector2(T0, 0);
+  const scud = new THREE.Vector3(0, 0, 0);
   const skyZenith = new THREE.Vector3(...SKY_LIGHT.zenith);
   const skyHorizon = new THREE.Vector3(...SKY_LIGHT.horizon);
   const skyGround = new THREE.Vector3(...SKY_LIGHT.ground);
@@ -509,6 +512,8 @@ export function createRig(): Rig {
     uTime: { value: 0 },
     // Read by the card loop's shaders alone: the seconds of its first frame, and its phase.
     uLoop: { value: loopAt },
+    // The scud's seconds: its own, a second sheet's in the card loop, and that sheet's share (glsl.ts, skyDome).
+    uScud: { value: scud },
     uSolo: { value: 0 },
     tLand: { value: null },
     uLandRect: { value: rect(LAND) },
@@ -642,6 +647,10 @@ export function createRig(): Rig {
     setTime: (seconds) => {
       (uniforms.uTime as THREE.IUniform<number>).value = seconds;
       loopAt.y = loopPhase() ?? 0;
+      // In the film the scud goes with the world. In the card loop it goes LOOP_SCUD times as fast, as two sheets a loop apart.
+      const round = loopPhase();
+      if (round === null) scud.set(seconds, 0, 0);
+      else scud.set(T0 + LOOP_SCUD * config.deliver.cardLoop.seconds * round, T0 + LOOP_SCUD * config.deliver.cardLoop.seconds * (round - 1), round);
       const sky = skySeconds(seconds);
       const d = drift(sky);
       cloudShade.x = d[0];

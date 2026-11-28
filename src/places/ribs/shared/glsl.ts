@@ -35,6 +35,7 @@ uniform vec4 uCloudBreak;
 uniform vec4 uCloudBreak2;
 uniform vec4 uDeck;
 uniform vec3 uDeckEdge;
+uniform vec3 uScud;
 uniform vec4 uHeads;
 uniform vec3 uSkyZenith;
 uniform vec3 uSkyHorizon;
@@ -210,10 +211,22 @@ vec3 skyDome(vec3 d) {
   // Scud: lower, nearer shreds of the same storm cross before it three times as fast, so cloud goes across the blades' heads while
   // a lens is held. They are the picture's own dark bodies read larger (a nearer cloud is a larger one), laid end to end mirrored;
   // the picture is larger than the frame there at every size, so its finest level is named.
-  float along = uv.x * 0.55 + 0.23 - 0.0075 * uTime;
+  // uScud: the seconds the scud stands at. In the card loop it goes twice: one sheet leaves as the loop opens and is gone by its end,
+  // the other comes up behind it and stands at the end where the first stood at the start (z its share), so the scud crosses the
+  // arches all through the loop and the last frame meets the first.
+  float along = uv.x * 0.55 + 0.23 - 0.0075 * uScud.x;
   vec2 low = vec2(abs(fract(0.5 * along) * 2.0 - 1.0), 0.34 + 0.9 * el) + 0.02 * work + (2.4 * a + 0.5 * b) * vec2(0.003, 0.005);
   vec3 scud = textureLod(tDome, low, 0.0).rgb;
   float body = smoothstep(0.54, 0.32, dot(scud, vec3(0.3, 0.5, 0.2))) * smoothstep(0.0, 0.07, el) * smoothstep(0.75, 0.3, el);
+  if (uScud.z > 0.0) {
+    float along2 = uv.x * 0.55 + 0.23 - 0.0075 * uScud.y;
+    vec2 low2 = vec2(abs(fract(0.5 * along2) * 2.0 - 1.0), 0.34 + 0.9 * el) + 0.02 * work + (2.4 * a + 0.5 * b) * vec2(0.003, 0.005);
+    vec3 scud2 = textureLod(tDome, low2, 0.0).rgb;
+    float body2 = smoothstep(0.54, 0.32, dot(scud2, vec3(0.3, 0.5, 0.2))) * smoothstep(0.0, 0.07, el) * smoothstep(0.75, 0.3, el);
+    // Each sheet keeps its own darks: the two are laid one over the other by their shares, not averaged to a grey.
+    scud = (scud * body * (1.0 - uScud.z) + scud2 * body2 * uScud.z) / max(body * (1.0 - uScud.z) + body2 * uScud.z, 1e-4);
+    body = body * (1.0 - uScud.z) + body2 * uScud.z;
+  }
   // The break stands open: the scud thins toward it and is gone before it.
   body *= smoothstep(0.985, 0.9, dot(d, uSkyBreak));
   c = mix(c, scud * 0.85, 0.75 * body);
