@@ -210,6 +210,7 @@ uniform float uMud;
 varying float vRaise;
 varying vec2 vBlade;
 uniform float uTileGain;
+uniform vec3 uShade;
 #ifdef CRUSTED
 uniform sampler2D tRime;
 uniform sampler2D tRimeNh;
@@ -418,6 +419,8 @@ void main() {
   // The claws of the feet are never clean: they are black with the mud they stand in.
   albedo = mix(albedo, vec3(0.03, 0.017, 0.013) * (0.6 + 0.8 * grain), 0.85 * horn * vInfo.z);
   albedo = mix(albedo, albedo * vec3(0.6, 0.46, 0.41), damp * (1.0 - wet) * (1.0 - uMudded));
+  // (One of the herd, seen from far off: darker than the salt it walks on, or it is one more pale stone on it.)
+  albedo *= uShade;
   // The stuck one's head is the wettest of it: it has been under and come up again.
   float headWet = uMudded * smoothstep(0.5, 0.82, vRest.x / uPic.x) * (1.0 - horn);
   albedo = mix(albedo, vec3(0.15, 0.09, 0.07) * (0.5 + 0.8 * grain), 0.55 * headWet);
@@ -579,11 +582,11 @@ void main() {
   // (A line and not a band: bands of dark and pale read as the stripes of a tiger.)
   float folds = 1.0 - smoothstep(0.86, 0.98, sin(s * 150.0 + 14.0 * vnoise(vec2(vLook.y * 1.1 + vLook.z * 20.0, s * 9.0))));
   folds = mix(1.0, folds, wade * smoothstep(0.3, 0.6, vnoise(vec2(vLook.y * 0.9 + vLook.z * 11.0, s * 6.0)) + 0.1));
-  albedo = mix(albedo, mix(vec3(0.19, 0.142, 0.108) * (0.5 + 0.55 * groove + 0.3 * ring) * (0.72 + 0.28 * grown) * (0.6 + 0.4 * folds) * (1.0 - 0.45 * min(crease, 1.0)), vec3(0.058, 0.026, 0.017) * (0.75 + 0.6 * groove), wet), wade);
+  albedo = mix(albedo, mix(vec3(0.125, 0.096, 0.073) * (0.5 + 0.55 * groove + 0.3 * ring) * (0.72 + 0.28 * grown) * (0.6 + 0.4 * folds) * (1.0 - 0.45 * min(crease, 1.0)), vec3(0.058, 0.026, 0.017) * (0.75 + 0.6 * groove), wet), wade);
   n = normalize(n + 0.45 * (vec3(ring, groove, vnoise(vec2(s * 31.0 + vLook.z * 13.0, vLook.y * 2.0))) - 0.5));
   // (On one that wades they are wet with mud, not with water: no white sheen stands on them.)
   float rough = mix(0.95, mix(0.9, mix(0.93, 0.58, smoothstep(0.6, 0.9, uTint)), clamp(groove * ring * 2.0, 0.0, 1.0)), wet);
-  rough = mix(rough, 0.62, 0.6 * wade);
+  rough = mix(rough, 0.92, wade);
   rough = mix(rough, 1.0, wade * 0.8 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 2.0));
   float occ = (0.5 + 0.5 * smoothstep(0.0, 0.3, s)) * (0.55 + 0.45 * smoothstep(-0.9, 0.3, n.y));
   // The head stands over them and shuts off most of the sky: darkest at the lip, more open toward the tips.
@@ -628,6 +631,8 @@ export interface Look {
   wet: number;
   /** 1 for the one stuck in grey mud. */
   mudded?: number;
+  /** What the dry hide is darkened by, red green blue; nothing when not given. For the herd in the wide views. */
+  shade?: [number, number, number];
   /** 0 a live one. A dead one is grown over with salt, the hide dark and dried where it shows through. */
   crust?: number;
   /** How many thin feelers hang from its lip in place of the hand of thick ones. */
@@ -711,6 +716,7 @@ export class Beast {
         tHideNh: { value: ctx.assets.texture(look.tile === 'hair' ? 'mat/hairhide-nh.png' : look.tile === 'mud' ? 'mat/mudhide-nh.png' : 'mat/hide-nh.png', { kind: 'data', anisotropy: 4 }) },
         uTile: { value: look.tile ? (look.cover ?? 0.8) : 0 },
         uTileGain: { value: look.tile === 'mud' ? 0.8 : 1.0 },
+        uShade: { value: new THREE.Vector3(...(look.shade ?? [1, 1, 1])) },
         uPic: { value: new THREE.Vector4(2.5 * lx, -2.14 * lx, 0.76 * lx, -1.24 * lx) },
         uBones: { value: this.bones },
         uK: { value: b.k },
@@ -793,7 +799,7 @@ export class Beast {
     geometry.setAttribute('iShape', new THREE.InstancedBufferAttribute(shape, 4));
     geometry.instanceCount = lip.length;
     this.feelerMaterial = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? (look.hang ?? 1) : 0 }, uDroop: { value: look.droop ?? 0 }, uSalted: { value: look.crust ? 1 : 0 }, uTint: { value: look.coat ? (look.tint ?? 0.3) : 1 } },
+      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? (look.hang ?? 1) : 0 }, uDroop: { value: look.droop ?? 0 }, uSalted: { value: look.crust ? 1 : 0 }, uTint: { value: look.coat ? (look.tint ?? 0.3) : look.shade ? 0.75 : 1 } },
       vertexShader: FEELER_VERTEX,
       fragmentShader: FEELER_FRAGMENT,
     });

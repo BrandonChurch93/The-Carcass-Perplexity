@@ -64,14 +64,14 @@ export function great(plan: Plan, b: Build, seconds: number, t: number, near: nu
   const w = walk(out, plan, b, stand, stand, push(t), pace);
   trod[0].s = stand;
   trod[0].pace = pace;
-  // It blows: two breaths and more in the shot, the flanks going out and in, and the last of each a little deeper.
-  out.breath = 1.7 * Math.sin(seconds * 2.7 + b.seed * 9) + 0.5 * Math.sin(seconds * 1.1 + b.seed * 2);
+  // It blows: three slow breaths in the shot, the flanks going out a hand and in, and the back rising with each. (Quick and shallow it was not seen at all.)
+  out.breath = 2.5 * Math.sin(seconds * 1.75 + b.seed * 9) + 0.5 * Math.sin(seconds * 0.8 + b.seed * 2);
   out.pitch += -0.03 * up + 0.03 * shove * (1 - back) + 0.007 * out.breath;
   // Its weight goes from one side to the other as it stands and roots: the trunk leans over the legs that carry it and sinks on them.
   const lean = Math.sin(seconds * 1.45 + b.seed * 13) + 0.35 * Math.sin(seconds * 2.3 + b.seed * 5);
-  out.roll += 0.045 * lean;
-  out.sway += k * 0.06 * lean;
-  out.bob += k * (0.008 * out.breath - 0.035 * lean * lean);
+  out.roll += 0.075 * lean;
+  out.sway += k * 0.13 * lean;
+  out.bob += k * (0.012 * out.breath - 0.05 * lean * lean);
   out.bend += near * (0.017 + 0.07 * swing * (1 - 0.6 * ease(2.0, 3.2, t)) - 0.03 * (1 - ease(-2.3, -0.3, t)));
   const rooting = (1 - up) * (1 - 0.6 * pulse(0.15, 2.6, t));
   // It roots with the side of its face to the lens, and works the lip from side to side through the mud: a slow sweep with a quicker one on it.
@@ -100,12 +100,12 @@ export function young(plan: Plan, b: Build, seconds: number, t: number, toward: 
   const w = walk(out, plan, b, stand, stand, k * 0.1 * dig(t), pace);
   trod[1].s = stand;
   trod[1].pace = pace;
-  out.breath = 1.6 * Math.sin(seconds * 4.3 + b.seed * 9);
+  out.breath = 2.3 * Math.sin(seconds * 3.4 + b.seed * 9);
   const lean = Math.sin(seconds * 2.6 + b.seed * 13);
-  out.roll += 0.05 * lean;
-  out.sway += k * 0.05 * lean;
+  out.roll += 0.08 * lean;
+  out.sway += k * 0.11 * lean;
   out.pitch += 0.04 * shove - 0.03 * up + 0.006 * out.breath;
-  out.bob += k * 0.01 * out.breath;
+  out.bob += k * (0.014 * out.breath - 0.04 * lean * lean);
   out.bend += 0.1 * turn * toward + 0.03 * (1 - up) * Math.sin(seconds * 1.5 + b.seed * 21);
   // (With its head up it looks about: a slow turn one way and the other, away from the great one first.)
   const about = (1 - ease(-1.6, -0.6, t)) * Math.sin(seconds * 1.3 + b.seed * 4);
