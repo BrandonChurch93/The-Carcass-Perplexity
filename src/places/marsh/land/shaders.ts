@@ -530,7 +530,7 @@ void main() {
     // (A plate sags in its middle, one plate much and the next not at all: a hair of grey water lies in the sag and gives back the
     // sky, the plate is damp and dark round it, and only its lifted lip stands dry.)
     float sag = smoothstep(0.42, 0.8, 0.4 * mid.b + 0.6 * textureLod(tGrain, p.xz / 3.7 + 0.43, 3.0).g + (0.5 - plateR) * 0.3) * smoothstep(0.03, 0.2, ep) * (1.0 - tipped);
-    colour = mix(colour, mix(mudCol, mix(greyed(colour, 0.6) * vec3(0.58, 0.52, 0.48) * (0.7 + 0.5 * plateR) * (1.0 - 0.3 * sag) * mix(0.84, mix(0.55, 1.5, up), lip) * (1.0 - 0.35 * up * smoothstep(lipW, lipW * 1.4, ep) * smoothstep(lipW * 2.4, lipW * 1.4, ep) * (1.0 - tipped)), colour, rim * 0.45) * mix(vec3(1.0), vec3(0.6, 0.36, 0.31), 0.9 * seep * smoothstep(0.7, 0.35, sh + (nS.b - 0.5) * 0.5)), slab), k);
+    colour = mix(colour, mix(mudCol, mix(greyed(colour, 0.6) * vec3(0.58, 0.52, 0.48) * (0.7 + 0.5 * plateR) * (1.0 - 0.3 * sag) * mix(0.9, mix(0.55, 1.5, up), lip) * (1.0 - 0.35 * up * smoothstep(lipW, lipW * 1.4, ep) * smoothstep(lipW * 2.4, lipW * 1.4, ep) * (1.0 - tipped)), colour, rim * 0.45) * mix(vec3(1.0), vec3(0.6, 0.36, 0.31), 0.9 * seep * smoothstep(0.7, 0.35, sh + (nS.b - 0.5) * 0.5)), slab), k);
     // (The wallow itself is liquid: all of it stands under the level, and the mud the stuck one has thrown up lies on it in clods.)
     hgt = mix(hgt, mix(mix(0.08 + 0.3 * mudH - 0.3 * sunk, 0.6, wall), max(hgt, 0.5) - 0.34 * sag, slab), k);
     bend = mix(bend, mix(grain, bend - tilt * 4.0, slab), k);
