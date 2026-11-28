@@ -104,14 +104,14 @@ export function restruck(rng: Rng, site: StrikeSite, first: Line[]): Line[] {
     const dir: Vec3 = [rng.range(-1, 1), rng.range(-0.9, -0.3), rng.range(-1, 1)];
     lines.push({ points: crooked(rng, a, add(a, dir, reach / len(dir)), 4 + fine, 0.2), width: 0.3, gain: 0.3, from: i / (path.length - 1), to: 1, branch: 1 });
   }
-  // And it forks as the first did, by ways of its own: two branches off its upper part that die in the air, each with a twig.
-  for (let f = 0; f < 2; f++) {
+  // And it forks as the first did, by ways of its own: three branches off its upper part that die in the air, each with a twig.
+  for (let f = 0; f < 3; f++) {
     const i = Math.min(path.length - 3, Math.max(1, Math.floor(rng.range(0.22, 0.7) * (path.length - 1))));
     const a = path[i] as Vec3;
-    const reach = site.rise * rng.range(0.16, 0.34);
+    const reach = site.rise * rng.range(0.24, 0.46);
     const dir: Vec3 = [rng.range(-1, 1), rng.range(-0.8, -0.35), rng.range(-1, 1)];
     const fork = crooked(rng, a, add(a, dir, reach / len(dir)), 5 + fine, 0.2);
-    lines.push({ points: fork, width: 0.42, gain: 0.5, from: i / (path.length - 1), to: 1, branch: 1 });
+    lines.push({ points: fork, width: 0.42, gain: 0.7, from: i / (path.length - 1), to: 1, branch: 1 });
     const j = Math.floor(rng.range(0.3, 0.7) * (fork.length - 1));
     const c = fork[j] as Vec3;
     const dir2: Vec3 = [rng.range(-1, 1), rng.range(-0.8, -0.3), rng.range(-1, 1)];
@@ -195,7 +195,11 @@ const SWELL_OVER = 0.15;
 /** One strike at seconds since its frame. `light`: what it throws on the land, the sea and the storm, one rise and one fall.
  * `channel` and `branch`: how bright the channel and its branches are drawn. `glow`: the cloud about the channel, lit from inside.
  * `rise`: the cloud coming up before the stroke, 0 to 1. `cloud`: one cloud lit from inside before the stroke (fore), or 0. */
-export function envelope(s: Strokes, age: number): { light: number; channel: number; branch: number; glow: number; rise: number; cloud: number } {
+/** What a held strike's own frame gives the land and the deck, and the cloud, over the light they sink from: the frame jumps once.
+ * The cloud's share is small: given the land's, the sky behind the long lens went to one pale sheet. */
+const HELD_PEAK = 2.5;
+const HELD_PEAK_SKY = 1.4;
+export function envelope(s: Strokes, age: number): { light: number; land: number; sky: number; channel: number; branch: number; glow: number; rise: number; cloud: number } {
   const on = pulse(age);
   // While the channel burns on, its light goes on with it and sinks slower: no second rise.
   const light = on + (s.hold > 0 ? fall(age, HELD_LIGHT, HELD_LIGHT_OVER, HELD_LIGHT_END) : fall(age, LIGHT_KEEPS, LIGHT_OVER, LIGHT_END));
@@ -206,7 +210,9 @@ export function envelope(s: Strokes, age: number): { light: number; channel: num
   } else channel = on + fall(age, 0.3, 0.014, 0.05);
   const glow = Math.max(on + fall(age, GLOW_KEEPS, GLOW_OVER, GLOW_END), s.hold > 0 ? 0.6 * channel : 0);
   const rise = age < 0 ? Math.max(0, 1 + age / (s.swell ?? RISE_OVER)) ** 2 * (1 - on) : 0;
-  return { light, channel, branch: s.hold > 0 ? 0.85 * channel : channel, glow, rise, cloud: s.fore === null ? 0 : inner(age - s.fore) };
+  // (The frames after a held strike's own were judged: only its own frame stands over them.)
+  const held = s.hold > 0 ? on : 0;
+  return { light, land: light + (HELD_PEAK - 1) * held, sky: light + (HELD_PEAK_SKY - 1) * held, channel, branch: s.hold > 0 ? 0.85 * channel : channel, glow, rise, cloud: s.fore === null ? 0 : inner(age - s.fore) };
 }
 
 export interface Flash {

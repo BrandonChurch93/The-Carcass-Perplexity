@@ -152,26 +152,6 @@ Takes: 1 made, take 1 kept.
 Why this one: the ridge-runner whole in side view, for the shape under the coat.
 Date: 2026-11-26
 
-## `public/assets/spine/mat/lock.jpg` and `public/assets/spine/mat/lock-h.png`
-
-Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
-From: `assets-src/spine/mat/src/lock.png`, the generated picture, and `assets-src/spine/mat/src/lock-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/5-spine/spine-4-inside-the-canal.jpg`, `references/drafts/working/real/ref-dusk-1.jpg`.
-Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs spine`.
-
-```
-Eight separate hanging locks of long matted fur side by side in one row, each with its root at the top and ending in a point at the bottom, each about 35 centimetres long and 6 to 10 centimetres wide, each different, with black between them. Cream-white and pale grey coarse wet hair, clumped and twisted, darker at the root, with beads of rime ice on the tips. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
-```
-
-The prompt of the relief:
-
-```
-The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
-```
-
-Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
-Why this one: locks of the coat, for hair cards (asked for by `spine_storm_owner_2`).
-Date: 2026-11-26
-
 ## `public/assets/spine/mat/scorchfield.jpg` and `public/assets/spine/mat/scorchfield-h.png`
 
 Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
@@ -510,20 +490,6 @@ A photograph of one lightning stroke at night on a pure black background, taken 
 
 Takes: 1 made, take 1 kept.
 Why this one: a third stroke, forked near its foot (asked for by `spine_storm_owner_3`).
-Date: 2026-11-26
-
-## `public/assets/spine/mat/lock-b.jpg` and `public/assets/spine/mat/lock-b-a.png`
-
-Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
-From: `assets-src/spine/mat/src/lock-b.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/5-spine/spine-4-inside-the-canal.jpg`, `references/drafts/working/real/ref-dusk-1.jpg`.
-Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs spine`.
-
-```
-Twelve separate hanging locks of long coarse hair in two rows of six, each lock alone with black between it and its neighbours, each with its root at the top and hanging straight down, each about 35 centimetres long and only 3 centimetres wide, each different. Cream-white coarse hair, nearly straight, the strands lying side by side and drawn out to a few fine single strands at the tip. White frost lies on the upper third of every lock. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
-```
-
-Takes: 1 made, take 1 kept.
-Why this one: twelve thin straight locks for the coat, where the built coat reads as fern or feather cards (asked for by `spine_storm_owner_3`).
 Date: 2026-11-26
 
 ## `public/assets/spine/mat/materials.json`
