@@ -325,14 +325,21 @@ void main() {
     vec2 qy = snowQy;
     // On a steep face a level picture would be pulled long: there the snow keeps its tone and loses its ripple.
     float level = smoothstep(0.45, 0.8, min(min(n0.y, smoothN.y), flat_));
-    float lodP = lodAt(qx / 9.0, qy / 9.0, 1536.0);
+    // (Seen low across the plain a pixel is many times longer than it is wide: read at the size of its length the pack is a smooth
+    // sheet, so it is read half way to its width, a level at most.)
+    float longQ = max(dot(qx, qx), dot(qy, qy));
+    float lodP = lodAt(qx / 9.0, qy / 9.0, 1536.0) - min(1.0, 0.25 * log2(longQ / max(min(dot(qx, qx), dot(qy, qy)), 1e-12)));
     Tap A = tap(tPack, tPackNh, q / vec2(9.0, 6.0), lodP);
+    // Every wind-cut edge of the pack throws its shade down the side of it that looks away from the low light: the pack's own height
+    // read once more a hand toward the light. Without it the pack had only its tone, and lay as a sheet.
+    vec2 toKey = normalize(vec2(0.98 * KEY_DIR.x - 0.2 * KEY_DIR.z, 0.2 * KEY_DIR.x + 0.98 * KEY_DIR.z));
+    float shade = smoothstep(0.045, 0.22, textureLod(tPackNh, (q + 0.13 * toKey) / vec2(9.0, 6.0), lodP).b - A.h);
     vec2 r = vec2(0.77 * q.x - 0.64 * q.y, 0.64 * q.x + 0.77 * q.y);
     Tap B = tap(tPack, tPackNh, r / vec2(38.0, 25.0) + 0.43, lodP - 2.08);
     float field = smoothstep(0.35, 0.65, vnoise(vWorld.xz / 29.0 + 4.4));
     vec2 g = rippled * (A.s * 0.5 * (1.0 - 0.8 * field) + vec2(0.77 * B.s.x + 0.64 * B.s.y, -0.64 * B.s.x + 0.77 * B.s.y) * 0.6 * (0.35 + 0.65 * field));
     snowTint = mix(vec3(1.0), mix(vec3(1.0), A.c / PACK_MEAN, 1.0 - 0.8 * field) * mix(vec3(1.0), B.c / PACK_MEAN, 0.3 + 0.5 * field), 0.7 * level);
-    snowOcc = mix(1.0, 0.72 + 0.28 * smoothstep(0.15, 0.6, 0.5 * A.h + 0.5 * B.h), level);
+    snowOcc = mix(1.0, (0.72 + 0.28 * smoothstep(0.15, 0.6, 0.5 * A.h + 0.5 * B.h)) * (1.0 - 0.4 * rippled * (1.0 - 0.6 * field) * shade), level);
     // In the fine field of the crest the sastrugi are in the mesh: the scoured pack between them is glazed and in their shade.
     if (ground) {
       snowOcc *= 1.0 + (1.0 - onBed) * clamp(1.5 * vRelief, -0.2, 0.1);
@@ -350,7 +357,8 @@ void main() {
     if (seen > 0.0) {
       vec3 p = prints(vSL);
       g += 1.6 * p.yz * seen;
-      snowOcc *= 1.0 + 0.85 * min(p.x, 0.0) * seen;
+      snowOcc *= 1.0 + 0.75 * min(p.x, 0.0) * seen;
+      snowTint *= mix(vec3(1.0), vec3(0.86, 0.93, 1.05), clamp(-p.x, 0.0, 1.0) * seen);
     }
 #endif
     // (The pack's slopes are on its own two level ways: back to the world's.)
