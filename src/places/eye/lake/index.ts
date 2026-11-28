@@ -656,7 +656,8 @@ void main() {
     refl *= mix(vec3(1.0), vec3(0.36, 0.39, 0.46), staged);
     refl = mix(refl, dot(skyRadiance(normalize(vec3(rd.x, 0.85, rd.z))), vec3(0.3, 0.5, 0.2)) * uMirror.rgb, 0.9 * staged * smoothstep(uMirrorSpan.y * 0.45, uMirrorSpan.y * 1.5, away));
 #else
-    refl *= mix(vec3(1.0), uMirror.rgb, staged);
+    // Where the tone cools the water, the wall's lit gold stays gold in it: it is the shade and the sky that go to slate.
+    refl *= mix(vec3(1.0), mix(uMirror.rgb, vec3(1.0), step(uMirror.r, uMirror.b) * smoothstep(1.45, 2.2, refl.r / max(refl.b, 1e-4))), staged);
 #endif
     // Under the long lens the wall's gold lies on the water in long broken streaks, and the water between them is dark.
     if (uPlateTone.w > 1.5) {
@@ -902,6 +903,8 @@ export function create(ctx: Context): Piece {
   const lapRingsFar = ringsOf([1.1, 1.9, 3.1], [0.03, 0.035, 0.03], 0.75);
   // From the rim a ring is told only if it is some metres from crest to crest, and a ring round a leg only if it is a metre or more.
   const ringsRim = ringsOf([9, 14, 22, 34, 60, 110], [0.018, 0.018, 0.017, 0.015, 0.012, 0.012], 1);
+  // From the shore the drinkers stand ten metres off: their rings are told a size up, steeper, and run further.
+  const lapRingsShore = ringsOf([0.5, 0.9, 1.6], [0.055, 0.055, 0.045], 0.75);
   const lapRingsRim = ringsOf([2.2, 3.6, 5.8], [0.15, 0.16, 0.14], 0.75);
   const ringsLake = ringsOf([3.2, 6, 11, 21, 48, 97], [0.013, 0.012, 0.011, 0.011, 0.012, 0.012], 1);
   // Under the long lens of the climb the short lengths are finer than its pixels: the train is of longer ones.
@@ -989,7 +992,7 @@ void main() {
       // Staged for the wide shot: the lip is drawn 270 m nearer the centre at the sides, so that the dark of the deep is an oval the frame holds whole.
       (material.uniforms.uLipIn as THREE.IUniform<number>).value = during('eye-01') ? 270 : 0;
       const mirrorTone = material.uniforms.uMirror as THREE.IUniform<THREE.Vector4>;
-      if (during('eye-04')) mirrorTone.value.set(0.56, 0.78, 1.0, 0.3);
+      if (during('eye-04')) mirrorTone.value.set(0.46, 0.68, 0.98, 0.3);
       else if (during('eye-05')) mirrorTone.value.set(0.76, 0.78, 0.8, 1);
       // Over the mats the far water is the pool: ruffled, it holds the high sky and the wall's shade more than the wall's gold, and is dark and blue.
       // It comes on where the mats end, a few metres out, and against the far shore the wall is given back as it is.
@@ -999,6 +1002,7 @@ void main() {
       (material.uniforms.uRuffle as THREE.IUniform<number>).value = during('eye-02') ? 0.0009 : 0;
       const span = material.uniforms.uMirrorSpan as THREE.IUniform<THREE.Vector4>;
       if (during('eye-02')) span.value.set(4, 16, 90, 300);
+      else if (during('eye-04')) span.value.set(3, 26, 1e6, 2e6);
       else span.value.set(12, 90, 1e6, 2e6);
       // Beside the edge the wall is near enough to be rock (EYE_EDGE), and it falls more steeply than the wide shot draws it.
       (material.uniforms.uWallFall as THREE.IUniform<number>).value = during('eye-03') ? 1.2 : 1;
@@ -1015,8 +1019,8 @@ void main() {
       centre.z = during('eye-05') ? 0.55 * (1 - over) : 0;
       centre.w = during('eye-05') ? 1.6 * (1 - over) : 0;
       (material.uniforms.uRing as THREE.IUniform<THREE.Vector4[]>).value = during('eye-05') ? ringsClimb : during('eye-01') ? ringsRim : ringsLake;
-      (material.uniforms.uLapRing as THREE.IUniform<THREE.Vector4[]>).value = during('eye-01') ? lapRingsRim : during('eye-02') ? lapRingsFar : lapRingsNear;
-      (material.uniforms.uLapReach as THREE.IUniform<number>).value = during('eye-01') ? 2.2 : 1;
+      (material.uniforms.uLapRing as THREE.IUniform<THREE.Vector4[]>).value = during('eye-01') ? lapRingsRim : during('eye-02') ? lapRingsFar : during('eye-04') ? lapRingsShore : lapRingsNear;
+      (material.uniforms.uLapReach as THREE.IUniform<number>).value = during('eye-01') ? 2.2 : during('eye-04') ? 1.7 : 1;
       (material.uniforms.uWake as THREE.IUniform<number>).value = during('eye-05') ? 0.9 : 0;
       // The camera leaves: from the frame it begins to look down, the water is drawn as it is from over it.
       leave.set(during('eye-05') ? smooth(rise + LEAVE_FROM, rise + LEAVE_FROM + 1.2, t) : 0, t - (rise + 1.0), during('eye-05') ? 0 : 0, 0);
