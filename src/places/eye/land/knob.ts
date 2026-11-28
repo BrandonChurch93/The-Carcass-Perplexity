@@ -51,15 +51,15 @@ function talus(at: [number, number], to: [number, number], wide: number, count: 
       lean: [(rnd(i, seed + 6) - 0.5) * 0.9, (rnd(i, seed + 7) - 0.5) * 0.9],
       size: [s * (0.8 + 0.5 * rnd(i, seed + 8)), sy, s * (0.8 + 0.5 * rnd(i, seed + 9))],
       kind,
-      cut: s > 0.2 ? 22 : 12,
+      cut: s > 0.2 ? 14 : 8,
     });
   }
   return out;
 }
 
 export const KNOBS: Knob[] = [
-  { along: 82, across: -39, lift: 2.4, turn: -1.6, lean: [0.1, -0.22], size: [2.0, 2.0, 2.0], kind: 0, cut: 110 },
-  { along: 113, across: 29, lift: 3.4, turn: 4.5, lean: [-0.06, 0.1], size: [2.4, 2.3, 2.4], kind: 1, cut: 84 },
+  { along: 82, across: -39, lift: 2.4, turn: -1.6, lean: [0.1, -0.22], size: [2.0, 2.0, 2.0], kind: 0, cut: 72 },
+  { along: 113, across: 29, lift: 3.4, turn: 4.5, lean: [-0.06, 0.1], size: [2.4, 2.3, 2.4], kind: 1, cut: 56 },
   ...talus([88, -27], [76, -24], 9, 14, 3, 0.34),
   ...talus([110, 17], [70, 44], 12, 34, 11, 0.4),
 ];
