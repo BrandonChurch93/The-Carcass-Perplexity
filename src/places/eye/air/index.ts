@@ -34,7 +34,7 @@ const MIST: Record<'wide' | 'low' | 'edge' | 'shore' | 'centre' | 'over', { a: F
   edge: { a: [560, 2.4, 44, 320], b: [0.25, 1.3, 0.5, 0.4], c: [0, 0, 0.1, 0.3], d: [1, 0, 0, 0], e: [1, 0.8, 0.6, 2.4], tone: 0.6 },
   shore: { a: [520, 3.0, 30, 320], b: [0.35, 1.2, 0.9, 0.3], c: [0, 0, 0.1, 1], d: [1, 0, 0, 0] },
   // The last shot is seen from the water and then from straight above. From the water it is a low torn bank at the foot of the far wall.
-  centre: { a: [520, 3.5, 12, 200], b: [1.5, 2.6, 0.6, 0.35], c: [0, 0, 0.15, 0.6], d: [0.8, 1, 1, 1], e: [1, 1, 0.8, 0.7] },
+  centre: { a: [520, 3.5, 12, 200], b: [2.4, 3.0, 0.6, 0.35], c: [0, 0, 0.15, 0.6], d: [0.8, 1, 1, 1], e: [1, 1, 0.8, 0.7] },
   // From above the same bank has to be seen down through a dozen metres of itself and not along a thousand, and what the lens holds is
   // the shallows and the pool, not the foot of the wall: so as the camera climbs the bank is drawn thicker and stands farther out over
   // the shallows, in heaps as deep as they are long (d.w), without the threads that would lie as white strokes.
