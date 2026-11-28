@@ -13,6 +13,18 @@ uniform sampler2D uBodyLight;
 #endif
 // How strongly the relief of the body is lit from orbit, how long its ranges' shadows are drawn, and how much finer it is read.
 uniform vec4 uBodyRelief2;
+// The plate of the hips from orbit: the heights between which its salt ends, and how much thinner the red mark is drawn.
+// The view heights, km, between which the old maps give way to the body's pictures: low, while the rise is still fast, and
+// done before it slows, so the change is under the motion and nothing dissolves on a frame that stands.
+#define JOIN_FROM 700.0
+#define JOIN_TO 1150.0
+// How bright the surf line stands from orbit.
+#define SURF_SEEN 1.0
+#define PAN_LOW 0.135
+#define PAN_HIGH 0.165
+#define PAN_THIN 0.12
+// How strong the light of the vents lies on the rock round them, from orbit and by day.
+#define VENT_LIGHT 0.8
 `;
 
 /** The body's pictures are worked at the size the picture holds: from orbit they are read nearly at their own grain. */
@@ -25,7 +37,7 @@ export const BODY_BIAS = /* glsl */ `
 /** After the maps are read: how far the body has come together, and its own colour, relief and light. */
 export const BODY_READ = /* glsl */ `
 #ifdef BODY
-  float joined = smoothstep(940.0, 1380.0, uViewKm);
+  float joined = smoothstep(JOIN_FROM, JOIN_TO, uViewKm);
   vec3 body = ground;
 #ifndef BODYONLY
   body = readWide(uBodyMap, clamp(uvWide, 0.0, 1.0), orbitBias).rgb;
@@ -64,7 +76,11 @@ export const BODY_GROUND = /* glsl */ `
   ground = mix(ground, body, joined);
   // (By night the bones are broad pale ranges under the moon, each in its whole body, as the high ground stands: not their crest lines alone.)
   float boneBody = joined * land * smoothstep(0.25, 0.45, height) * smoothstep(0.14, 0.32, dot(coarseGround, vec3(0.3, 0.55, 0.15)));
-  ground = mix(ground, vec3(0.62, 0.59, 0.52), 0.35 * uEmber.x * boneBody);
+#ifdef BODYONLY
+  // (The limbs are thin ranges: read no coarser than they are broad, they keep the skull's value under the moon.)
+  if (uEmber.x > 0.0) boneBody = joined * land * smoothstep(0.2, 0.4, height) * smoothstep(0.14, 0.3, max(dot(coarseGround, vec3(0.3, 0.55, 0.15)), dot(readWide(uMapWide, clamp(uvWide, 0.0, 1.0), 3.0).rgb, vec3(0.3, 0.55, 0.15))));
+#endif
+  ground = mix(ground, vec3(0.62, 0.59, 0.52), 0.55 * uEmber.x * boneBody);
 #endif
 `;
 
@@ -81,7 +97,7 @@ export const BODY_LIGHT = /* glsl */ `
   ground *= 1.0 - 0.45 * saltFlat * uEmber.x * joined;
   // (By night the moon lights the ranges in their whole body, broad, as it does the high ground of any land seen from orbit: the
   // body of a bone stands toward it, and the fine relief is a grain on that, not a wire drawing.)
-  slope = mix(slope, 0.7 * slope, uEmber.x * joined) - uBodyRelief2.w * boneBody * uEmber.x * normalize(uMoonDir.xz);
+  slope = mix(slope, 0.5 * slope, uEmber.x * joined) - uBodyRelief2.w * boneBody * uEmber.x * normalize(uMoonDir.xz);
 #endif
 `;
 
@@ -106,6 +122,46 @@ mix(0.34, 0.045, smoothstep(940.0, 1380.0, uViewKm))
  *  round it, broken by their headlands, and nothing of it lies as a haze on the country beyond. */
 export const BODY_PAN = /* glsl */ `
 #ifdef BODY
-  panAt = mix(panAt, smoothstep(0.3, 0.5, panAt) * (1.0 - smoothstep(0.13, 0.19, height)), joined);
+  // (From orbit the plate of the hips is the floor of its basin and no ellipse: salt lies where the ground is level, out along the
+  // valleys that open on it, and the ranges stand into it as headlands. The red is a branching mark on it, thinner than the plate.)
+  if (joined > 0.0) {
+    float reach = length(fromPan / vec2(212.0, 168.0)) + 0.55 * (vnoise(xz / 95.0 + 3.0) - 0.5) + 0.25 * (vnoise(xz / 31.0 + 9.0) - 0.5);
+    float plate = (1.0 - smoothstep(0.8, 1.3, reach)) * (1.0 - smoothstep(PAN_LOW, PAN_HIGH, height)) * land;
+    panAt = mix(panAt, plate, joined);
+    rawBrine -= PAN_THIN * joined;
+  }
 #endif
 `;
+
+/** From orbit each vent is a point of light that lights the rock round it: the slopes that face it, by the rock's own colour, and
+ * under the light of the day on the crests. As the day ends it goes, and by night the fire's own drawing stands as it was. */
+export const BODY_VENTS = /* glsl */ `
+#ifdef BODY
+  if (joined > 0.0 && uDusk < 0.5 && d0 < 160000.0) {
+    float lit = exp(-d0 / 4200.0) * 1.3 * swell * clamp(0.18 + 3.0 * dot(slope, fromLava / (sqrt(d0) + 1.0)), 0.0, 2.0);
+    for (int i = 0; i < 6; i++) {
+      vec3 vent = VENTS[i];
+      vec2 q = fromLava - vent.xy;
+      float dd = dot(q, q);
+      float answer = 0.72 + 0.2 * vnoise(vec2(uTime * (0.17 + 0.06 * float(i)), 31.0 + 7.3 * float(i)));
+      lit += exp(-dd / (2600.0 * vent.z)) * 1.6 * vent.z * answer * clamp(0.18 + 3.0 * dot(slope, q / (sqrt(dd) + 1.0)), 0.0, 2.0);
+    }
+    glow += vec3(1.0, 0.36, 0.08) * VENT_LIGHT * lit * land * joined * (1.0 - smoothstep(0.0, 0.5, uDusk)) * (0.25 + 2.2 * dot(ground, vec3(0.3, 0.6, 0.1)));
+  }
+#endif
+`;
+
+/** From orbit the surf is a white line that can be seen: broader than a pixel, bright, on the reaches the open sea beats on (headlands and straight
+ *  coasts, not the heads of bays) and not on the others, never up a river or on shut water. */
+export const BODY_SURF = /* glsl */ `
+#ifdef BODY
+  if (joined > 0.0 && high && coastKm <= 0.0 && -coastKm < 2.4 * lineKm) {
+    float beaten = (1.0 - smoothstep(0.25, 0.31, broadB)) * smoothstep(0.42, 0.64, readTile(uCloudTile, xz / 230.0 + vec2(0.63, 0.21) + uTime * vec2(0.0004, 0.0003), 1.0 / 230.0, 0.0).b) * smoothstep(0.3, 0.55, vnoise(xz / 9.0 + uTime * 0.05));
+    float breaker = (1.0 - smoothstep(0.6 * lineKm, 2.2 * lineKm, -coastKm)) * (1.0 - land) * (1.0 - river) * (1.0 - drowned) * beaten * coastSeen * (1.0 - shut) * smoothstep(1.3, 1.8, lakeFar);
+    surf = max(surf, SURF_SEEN * breaker * joined);
+  }
+#endif
+`;
+
+/** The view height, km, from which the program that crosses to the body's pictures draws (JOIN_FROM above). */
+export const BODY_FROM = 700;
