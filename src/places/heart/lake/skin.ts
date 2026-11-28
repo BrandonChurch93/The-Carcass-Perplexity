@@ -216,7 +216,7 @@ void main() {
   if (rf > 0.0) {
     roughC = roughAt(qg, ROUGH_C, fpS, 3.0);
     roughF = roughAt(qg, ROUGH_F, fpS, 41.0);
-    if (fpS < 0.02) roughG = mix(roughAt(qg, ROUGH_G, fpS, 67.0), roughG, smoothstep(0.008, 0.02, fpS));
+    if (fpS < 0.013) roughG = mix(roughAt(qg, ROUGH_G, fpS, 67.0), roughG, smoothstep(0.006, 0.013, fpS));
   }
   // A plate is paler than its joints, a lump paler than the pit beside it, a crumb than its shadow: about the mean of the stone.
   float roughTone = clamp(0.2 + 1.6 * roughC.z, 0.25, 1.9) * clamp(2.0 * roughF.z, 0.3, 2.0) * clamp(0.4 + 1.2 * roughG.z, 0.5, 1.6);
@@ -337,7 +337,8 @@ void main() {
   // That floor is cool dark basalt and nothing on it is pale: its brights are the fire's, not ash on the tops of plates.
   albedo *= mix(vec3(1.0), vec3(0.95, 0.99, 1.05), fresh) * mix(1.0, min(1.0, 0.045 / max(dot(albedo, vec3(0.3, 0.5, 0.2)), 1e-3)), fresh);
   // The tone of the rough floor lies about that dark mean: its plates and crumbs are told from its joints and pits.
-  albedo *= mix(1.0, 1.35 * roughTone, rf);
+  // It is dark grey, a shade to the blue of neutral: no tan in it, and no pale dust on its plates.
+  albedo = mix(albedo, vec3(0.93, 0.99, 1.08) * dot(albedo, vec3(0.3, 0.5, 0.2)) * min(0.98 * roughTone, 1.45), rf);
   // Satin only where fresh glass faces the sky, on the tops of ropes and on the smooth slabs: everything else is dead matte.
   float glass = (1.0 - steep) * (1.0 - smoothstep(mix(0.3, 0.6, crest), mix(0.75, 1.0, crest), age)) * (1.0 - spall) * (1.0 - dust) * (1.0 - rubble) * max(crest, 0.35 * (1.0 - smoothstep(0.08, 0.35, fpLong)));
   glass *= (1.0 - vesicle) * (1.0 - crackle) * (1.0 + 0.6 * chip);
@@ -480,13 +481,17 @@ void main() {
     float pocket = smoothstep(0.35, 0.75, vnoise(q / 13.0 + 91.0));
     // On the rough floor the plates stand apart by two fingers and more, and more of their borders are open: the thread is
     // crooked with the broken edge of the plate, and it is hotter, since the melt under so thin a floor is near.
-    float sown = (0.003 + 0.002 * vnoise(q / 2.1 + 13.0) + 0.006 * pocket) * mix(1.0, 1.7, rf);
+    // No two are of one width: a hair here, three fingers there.
+    float sown = (0.003 + 0.002 * vnoise(q / 2.1 + 13.0) + 0.006 * pocket) * mix(1.0, mix(0.5, 2.8, pow(vnoise(q / 3.3 + 5.0), 2.0)), rf);
     float swide = max(sown, 0.3 * fpS);
-    float some = smoothstep(0.5 - 0.07 * rf, 0.64 - 0.07 * rf, 0.7 * vnoise(q / 9.0 + 23.0) + 0.3 * vnoise(q / 2.3 + 61.0)) * seamOn;
+    // On the rough floor the open ones lie in runs, a few plates long and one wide, with dark floor between the runs.
+    vec2 qr = vec2(0.8 * q.x + 0.6 * q.y, 0.8 * q.y - 0.6 * q.x) + 4.0 * vnoise(q / 17.0 + 9.0);
+    float runs = 0.75 * vnoise(vec2(qr.x / 19.0, qr.y / 3.2) + 23.0) + 0.25 * vnoise(q / 2.3 + 61.0);
+    float some = mix(smoothstep(0.5, 0.64, 0.7 * vnoise(q / 9.0 + 23.0) + 0.3 * vnoise(q / 2.3 + 61.0)), smoothstep(0.6, 0.67, runs), rf) * seamOn;
     float edge = max(gPourEdge + rf * 0.03 * (roughF.z - 0.5), 0.0);
     float seam = (1.0 - smoothstep(0.4 * swide, swide, edge)) * min(1.0, sown / swide) * some;
     // What glows, lights: the crust beside a crack is warm for a hand, on the rough floor for two, and its crumbs catch it.
-    c += albedo * blackbody(1150.0) * (mix(0.3, 0.7 * clamp(2.0 * roughF.z, 0.4, 1.8), rf) * some * (1.0 - seam) * exp(-max(edge - swide, 0.0) / mix(0.03, 0.07, rf)));
+    c += albedo * blackbody(1150.0) * (mix(0.3, 0.45 * clamp(2.0 * roughF.z, 0.4, 1.8), rf) * some * (1.0 - seam) * exp(-max(edge - swide, 0.0) / mix(0.03, 0.07, rf)));
     c *= 1.0 - seam;
     hot += blackbody(mix(1120.0, 1360.0, pocket * some) + 90.0 * rf + 40.0 * (2.0 * vnoise(q / 0.4 + 3.0) - 1.0)) * seam;
   }
