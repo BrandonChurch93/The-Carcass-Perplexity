@@ -233,6 +233,13 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
     return smooth(0.5, 1.7, least);
   };
 
+  // Each throws its weight about freely but where a key frame looks: there it stands as its picture has it.
+  const heft = (seconds: number): number => {
+    let least = 1e9;
+    for (const t of Object.values(KEY_TIMES)) least = Math.min(least, Math.abs(seconds - t));
+    return smooth(0.2, 1.2, least);
+  };
+
   if (!walksOn) {
     const x = (a[0] + z[0]) / 2;
     const zz = (a[1] + z[1]) / 2;
@@ -321,7 +328,10 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
     const stepUp = index === 1 ? (s: number, j: number): number => (j === 2 ? 2.4 * pulse(s, 7.2, 8.0, 10.4, 10.8) : j === 1 ? 3.2 * pulse(s, 10.9, 11.9, 14.6, 15.2) : 0) : undefined;
     const weight = index === 1 ? (s: number): number => 1 + 0.3 * pulse(s, 10.83, 11.5, 14.6, 15.4) : undefined;
     const sink = index === 1 ? (s: number): number => 1 + 3 * pulse(s, 9.9, 10.2, 10.45, 10.8) : undefined;
-    return { sigma, body, neck, fidget, lag, early, stepUp, weight, sink, halfStep: none, habit, dig: c.role === 'tastes' || c.role === 'stands' ? 0 : dig, dip: c.role === 'tastes' || c.role === 'stands' ? 0 : 0.3 * k, range: turning ? 1.3 * k : 1.0 * k };
+    // Once the hind pad has taken its weight the hero straightens its legs and stands to its full height over its pool, as the picture has it,
+    // and gives that height up again as it leans off the fore pad that goes next.
+    const tall = index === 1 ? (s: number): number => 0.5 * pulse(s, 10.25, 10.8, 11.3, 12.0) : undefined;
+    return { sigma, body, neck, fidget, lag, early, stepUp, weight, sink, heft, tall, halfStep: none, habit, dig: c.role === 'tastes' || c.role === 'stands' ? 0 : dig, dip: c.role === 'tastes' || c.role === 'stands' ? 0 : 0.3 * k, range: turning ? 1.3 * k : 1.0 * k };
   }
 
   // One that walks: on a line on the crust, a few steps and a rest, so that its mean speed is the staged one.
@@ -418,5 +428,5 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
   };
   // The second of the feeding picture lifts the pad of its first step in that shot high, so that it is seen in mid stride. That pad swings once, 7.2 to 9.4 s.
   const stepUp = index === 2 ? (s: number, j: number): number => (j === 3 ? 2.6 * pulse(s, 7.15, 7.6, 9.4, 9.6) : 0) : undefined;
-  return { sigma, body, neck, fidget: 0, lag: 0, stepUp, halfStep, habit, dig, dip: 0.25 * k, range: 0.4 * stride + 0.55 * k };
+  return { sigma, body, neck, fidget: 0, lag: 0, stepUp, heft, halfStep, habit, dig, dip: 0.25 * k, range: 0.4 * stride + 0.55 * k };
 }
