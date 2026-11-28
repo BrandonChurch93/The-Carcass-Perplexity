@@ -203,20 +203,21 @@ vec3 puckers(vec2 p) {
   float d = hash12(i + vec2(1.0, 1.0)) - a - b - c;
   return vec3(a + b * u.x + c * u.y + d * u.x * u.y, 6.0 * f * (1.0 - f) * vec2(b + d * u.y, c + d * u.x));
 }
-// Drops of water, one to a cell at most (share: how many cells of ten hold one), each round and of its own size, and anywhere in its
-// cell that it fits: drops that keep to the middles of their cells stand in rows.
+// Drops of water, one to a cell at most (share: how many cells of ten hold one), each round and anywhere in its cell that it fits:
+// drops that keep to the middles of their cells stand in rows. Most are small and a few are fat: drops of one size are a grain.
 float drops(vec2 p, float share) {
   vec2 i = floor(p);
   vec2 h = hash22(i);
-  float big = 0.14 + 0.2 * h.y;
+  float big = 0.09 + 0.27 * h.y * h.y * h.y;
   return (h.x < share ? 1.0 : 0.0) * smoothstep(big, 0.4 * big, length(p - i - big - (1.0 - 2.0 * big) * fract(h * vec2(41.0, 67.0))));
 }
 #define PUCK_ACROSS 30.0
 #define PUCK_ALONG 20.0
-#define PUCK_DEEP 0.6
-#define PUCK_TONE 0.5
-#define PUCK_SHADE 0.45
+#define PUCK_DEEP 0.85
+#define PUCK_TONE 0.65
+#define PUCK_SHADE 0.55
 #define DROP_SKY 0.28
+#define RIM_SKY 0.2
 void main() {
   vec3 n0 = normalize(vNormal);
   if (!gl_FrontFacing) n0 = -n0;
@@ -232,6 +233,7 @@ void main() {
   float puck = 0.0;
   float rib = 0.0;
   float frill = 0.0;
+  float rim = 0.0;
   float close = 1.0 - smoothstep(2500.0, 4900.0, dot(toLens, toLens));
   if (close > 0.0) {
     vec2 at = vec2(vUv.x * 2.3 + vTone.x * 37.0, vUv.y * 11.0 + vTone.x * 91.0);
@@ -246,8 +248,11 @@ void main() {
     frill = close * smoothstep(0.03, 0.008, abs(vOff) * (1.0 - edge) / max(edge, 0.05));
     puck = close * (0.4 + 0.6 * smoothstep(0.15, 0.7, edge)) * (1.0 - rib);
     // The wet stands on a broad blade in drops, here on it and not there: points in no row. A thread of weed holds none: drops down a thread are a string of beads.
-    float wetHere = smoothstep(0.35, 0.65, wr2) * smoothstep(0.05, 0.1, abs(vOff) / max(edge, 0.03));
-    if (wetHere > 0.0) bead = close * wetHere * (1.0 - rib) * drops(vec2(vOff * 24.0 + vTone.x * 23.0, vUv.y * vTone.w * 17.0 + vTone.x * 71.0) + 1.7 * vec2(wr, wr2), 0.4);
+    float broad = smoothstep(0.05, 0.1, abs(vOff) / max(edge, 0.03));
+    float wetHere = smoothstep(0.47, 0.62, wr2) * broad;
+    // The very margin of a broad blade is wet where its frill stands up: a thin line of the sky, broken as the frill is crinkled.
+    rim = close * broad * smoothstep(0.018, 0.006, abs(vOff) * (1.0 - edge) / max(edge, 0.05)) * smoothstep(0.45, 0.7, pk.x);
+    if (wetHere > 0.0) bead = close * wetHere * (1.0 - rib) * drops(vec2(vOff * 24.0 + vTone.x * 23.0, vUv.y * vTone.w * 17.0 + vTone.x * 71.0) + 1.7 * vec2(wr, wr2), 0.3);
   }
   // A frond is no flat strap: it is ruffled at its edges and troughed along its midrib, so the wet light on it is a line and not a face.
   vec3 du = dFdx(vWorld) * dFdy(vUv.y) - dFdy(vWorld) * dFdx(vUv.y);
@@ -261,7 +266,7 @@ void main() {
   float gold = (0.22 + 0.78 * vTone.y) * thin;
   // From far off the curtain is one dark mass: each frond stands in the shade of the rest, and no day comes through it.
   // A blister's crown is thin and the day comes through it; its foot is thick and dark.
-  vec3 albedo = mix(olive, amber, gold) * (0.7 + 0.6 * wr2) * mix(0.24, 1.0, close) * (1.0 + PUCK_TONE * puck * (pk.x - 0.5)) * (1.0 - 0.45 * rib);
+  vec3 albedo = mix(olive, amber, gold) * (0.7 + 0.6 * wr2) * mix(0.24, 1.0, close) * (1.0 + PUCK_TONE * puck * (pk.x - 0.62)) * (1.0 - 0.45 * rib);
   albedo = mix(albedo, amber * (0.45 + 0.8 * pk.x), 0.55 * frill);
   // What lies under other fronds is in their shade; the gap by the midrib is dark.
   float occ = vTone.z * mix(0.25 + 0.75 * vTone.z, 1.0, close) * (0.55 + 0.45 * smoothstep(0.0, 0.5, edge + wr - 0.5)) * (1.0 - PUCK_SHADE * puck * smoothstep(0.55, 0.2, pk.x));
@@ -273,6 +278,7 @@ void main() {
   // No bead, no glint asked of it (the term was times nought).
   // A drop is a lens: whichever way the blade under it faces, it holds a point of the sky, and is no brighter on a pale blade than on a dark one.
   if (bead > 0.0) c = mix(c, max(c, above * (DROP_SKY * (0.25 + 0.75 * occ))), bead);
+  if (rim > 0.0) c = mix(c, max(c, above * (RIM_SKY * (0.25 + 0.75 * occ))), rim);
   // The day through a frond that hangs free of the wall.
   c += amber * above * (0.07 * close * thin * smoothstep(0.45, 0.95, vTone.z) * occ);
   // The low sun through a thin wet frond.
