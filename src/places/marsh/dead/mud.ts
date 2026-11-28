@@ -62,7 +62,7 @@ void main() {
   float h0 = 0.62 * wide.b + 0.38 * fine.b + (grit.b - 0.5) * 0.14;
   vec2 sF = fine.rg - 0.5;
   vec2 sG = grit.rg - 0.5;
-  vec2 slope = (textureLod(tMudNh, p / 2.0, max(lW, 2.5)).rg - 0.5) * 0.9 + (wide.rg - 0.5) * mix(0.25, 1.1, live) + mix(sF * 0.1, vec2(0.8 * sF.x + 0.6 * sF.y, 0.8 * sF.y - 0.6 * sF.x) * 0.9, live) + vec2(0.28 * sG.x - 0.96 * sG.y, 0.96 * sG.x + 0.28 * sG.y) * 0.8 + (r > 0.001 ? q / r : vec2(0.0)) * fold * 0.9;
+  vec2 slope = (textureLod(tMudNh, p / 2.0, max(lW, 2.5)).rg - 0.5) * 0.9 + (wide.rg - 0.5) * mix(0.25, 1.1, live) + vec2(0.8 * sF.x + 0.6 * sF.y, 0.8 * sF.y - 0.6 * sF.x) * mix(0.5, 0.9, live) + vec2(0.28 * sG.x - 0.96 * sG.y, 0.96 * sG.x + 0.28 * sG.y) * 0.8 + (r > 0.001 ? q / r : vec2(0.0)) * fold * 0.9;
   float low = smoothstep(0.5, 0.34, h0);
   slope *= 1.0 - 0.85 * low * (1.0 - live);
   vec3 n = normalize(vec3(-slope.x, 1.0, slope.y));
@@ -77,8 +77,13 @@ void main() {
   // Trodden by a live one it is wet through, and red brine stands level in every pit of it, with a hard edge against the clod.
   float brim = mix(0.52 + 0.12 * uWetness, 0.44, live);
   float foot = mix(0.42 + 0.1 * uWetness, 0.415, live);
-  float pool = uWetness * smoothstep(brim, foot, h0) * smoothstep(0.1, 0.4, vEdge);
-  albedo = mix(albedo, vec3(0.085, 0.012, 0.01), 0.9 * pool);
+  float pool = uWetness * smoothstep(brim, foot, h0) * smoothstep(0.1, 0.4, vEdge) * live;
+  // Mud thrown up by one that is stuck lies in clods on the liquid of its wallow (the land's, which gives back the sky): pushed up
+  // most in a ring round the body, in islands further out, and dark and wet where each clod goes under.
+  float stand = 0.8 * textureLod(tMudNh, p / 2.0, max(lW, 3.5)).b + 0.2 * h0 + 0.2 * exp(-pow((vEdge - 0.62) / 0.2, 2.0)) - 0.14 * smoothstep(0.5, 0.1, vEdge);
+  float isle = mix(smoothstep(0.5, 0.52, stand), 1.0, live);
+  albedo *= mix(0.6 + 0.4 * smoothstep(0.51, 0.6, stand), 1.0, live);
+  albedo = mix(albedo, mix(vec3(0.085, 0.012, 0.01), vec3(0.03, 0.007, 0.006), live), 0.9 * pool);
   n = normalize(mix(n, vec3(0.0, 1.0, 0.0), mix(0.9, 0.97, live) * pool));
   albedo = mix(albedo, albedo * vec3(0.55, 0.36, 0.32), low * (1.0 - 0.6 * live));
   // Salt trodden in: a few pale crumbs on the tops of the clods, dirty, never a drift.
@@ -91,19 +96,21 @@ void main() {
   // The wall of a pit is dark down to the brine in it.
   occ = mix(occ, mix(0.3 + 0.7 * smoothstep(0.42, 0.62, h0), 1.0, pool), live);
   // (Told the view is square on where a live one treads, as the land's trodden mud is: the wet is given below, clod by clod.)
-  vec3 c = rigShade(vWorld, n, normalize(mix(v, n, 0.9 * live)), albedo, rough, occ);
+  vec3 c = rigShade(vWorld, n, normalize(mix(v, n, mix(0.75, 0.9, live))), albedo, rough, occ);
+  // (The stuck one's clods are wet too: a duller, broader glint.)
+  c += skyRadiance(vec3(-0.6, 0.63, 0.35)) * vec3(1.0, 0.9, 0.85) * (1.0 - live) * occ * 0.22 * pow(max(dot(n, normalize(v + normalize(vec3(-0.86, 0.9, 0.5)))), 0.0), 40.0);
   if (live > 0.0) {
     // A pit's brine gives back a part of the sky, red through; a clod throws a small sharp glint from the face it turns to the light.
     vec3 rm = reflect(-v, n);
     rm.y = abs(rm.y);
-    c += skyRadiance(rm) * vec3(1.0, 0.6, 0.54) * live * pool * (0.012 + 0.07 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 4.0));
+    c += skyRadiance(rm) * vec3(1.0, 0.6, 0.54) * live * pool * (0.02 + 0.1 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 4.0));
     vec3 hc = normalize(v + normalize(vec3(-0.86, 0.9, 0.5)));
     c += skyRadiance(vec3(-0.6, 0.63, 0.35)) * vec3(1.0, 0.86, 0.8) * live * (1.0 - pool) * (1.0 - crumb) * occ * 0.6 * pow(max(dot(n, hc), 0.0), 70.0);
   }
   // Wet mud drinks the light: it does not hold the sky as the crust does.
   c *= 0.75;
   // Its edge is not a line: it thins out over the crust it has run onto, clod by clod.
-  float a = smoothstep(0.04, 0.3, vEdge + 0.3 * (h0 - 0.5)) * smoothstep(0.0, 0.06, vEdge) * (1.0 - uSolo);
+  float a = smoothstep(0.04, 0.3, vEdge + 0.3 * (h0 - 0.5)) * smoothstep(0.0, 0.06, vEdge) * isle * (1.0 - uSolo);
   gl_FragColor = vec4(rigOut(c) * (1.0 - uSolo), a);
 }`;
 

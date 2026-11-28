@@ -58,12 +58,14 @@ void main() {
     float yy = vAt.y - clamp(vAt.y, -vB.y, 0.0);
     float body = length(vec2(vAt.x, yy)) / hw;
     float up = clamp(vAt.y / max(vB.z, 1e-4), 0.0, 1.0);
-    float thread = abs(vAt.x) / (hw * mix(0.55, 0.12, up));
+    // (Broad where it leaves the hide, a hair in its middle, and broad again where it runs into the drop.)
+    float thread = abs(vAt.x) / (hw * (0.2 + 0.4 * pow(1.0 - up, 4.0) + 0.5 * pow(up, 5.0)));
     float d = min(body, vAt.y > 0.0 ? thread : 9.0);
     if (d > 1.0) discard;
     float ux = clamp(vAt.x / hw, -1.0, 1.0);
     vec3 n = normalize(vRight * ux + v * sqrt(max(0.0, 1.0 - ux * ux)) + vec3(0.0, 0.25, 0.0));
-    vec3 c = rigShade(vWorld, n, v, vec3(0.085, 0.022, 0.017), 0.16, 1.0);
+    // (Mud and not water: it is dark against the lit sheet behind it, with one small light down its side.)
+    vec3 c = rigShade(vWorld, n, v, vec3(0.06, 0.018, 0.013), 0.42, 1.0);
     gl_FragColor = vec4(rigOut(c), 1.0);
     return;
   }
@@ -153,8 +155,11 @@ export class Wet {
     this.b[o + 3] = seed;
   }
 
-  /** The drops and rings of animal `i`, standing as `stood` at `seconds`. `alive` 0 leaves it dry. One caked in mud does not drip: `drips` false. */
-  set(i: number, stood: Stood, k: number, seconds: number, alive = 1, drips = true): void {
+  /**
+   * The drops and rings of animal `i`, standing as `stood` at `seconds`. `alive` 0 leaves it dry. One caked in mud does not drip: `drips` false.
+   * One that stands in a wallow drips onto its sheet, at `floor` in the world, and the mud leaves its belly in strings: `strings` true.
+   */
+  set(i: number, stood: Stood, k: number, seconds: number, alive = 1, drips = true, floor = -1e9, strings = false): void {
     const land = this.ctx.rig.land;
     const fx = Math.cos(stood.yaw);
     const fz = -Math.sin(stood.yaw);
@@ -169,28 +174,32 @@ export class Wet {
       const from = chin ? stood.muzzle : stood.belly;
       const x = from.x + fx * along * (chin ? 0.18 : 1.15) * k - fz * across * (chin ? 0.25 : 0.32) * k;
       const z = from.z + fz * along * (chin ? 0.18 : 1.15) * k + fx * across * (chin ? 0.25 : 0.32) * k;
-      const y0 = from.y + (chin ? 0.02 : 0.1 * along * along) * k;
+      const y0 = from.y + (chin ? 0.02 : 0.1 * along * along + (strings ? 0.02 : 0)) * k;
       const brine = land.shore(x, z) < 0;
-      const level = brine ? 0 : land.height(x, z);
+      const level = Math.max(brine ? 0 : land.height(x, z), floor);
       const drop = y0 - level;
       const c = fract(seconds / period + (this.drops[q + 3] as number));
-      const SWELL = 0.3;
+      const SWELL = strings && !chin ? 0.86 : 0.3;
+      // A string: it is drawn out of the belly slowly, hangs with its bead, and parts.
+      const long = strings && !chin ? Math.min((0.06 + 0.2 * (this.drops[q + 3] as number)) * k, drop - 0.03) : 0;
       if (alive < 0.5 || !drips || drop < 0.06) {
         this.put(o, 0, -1000, 0, 0, 0, 0, 0, 0);
         this.put(o + 4, 0, -1000, 0, 0, 1, 0, 0.05, 0);
       } else if (c < SWELL) {
         // It gathers and hangs.
         const g = c / SWELL;
-        this.put(o, x, y0 - width * 0.5 * g, z, width * (0.35 + 0.65 * g), 0, width * 0.3 * g, 0.012, 0);
+        const out = Math.max(0, long) * Math.min(1, g / 0.35) ** 2 * (0.85 + 0.15 * g);
+        this.put(o, x, y0 - width * 0.5 * g - out, z, width * (0.35 + 0.65 * g) * (long > 0 ? 1.8 : 1), 0, width * 0.3 * g, long > 0 ? out : 0.012, 0);
         this.put(o + 4, 0, -1000, 0, 0, 1, 0, 0.05, 0);
       } else {
         const t = (c - SWELL) * period;
-        const hit = Math.sqrt((2 * drop) / 9.0);
+        const fall = Math.max(0.02, drop - Math.max(0, long));
+        const hit = Math.sqrt((2 * fall) / 9.0);
         if (t < hit) {
           const speed = 9.0 * t;
           // The brine is thick: it draws a thread behind it that parts a tenth of a second on.
-          const thread = Math.min(0.5 * 9.0 * t * t, 0.14) * Math.max(0, 1 - t / 0.16);
-          this.put(o, x, y0 - 0.5 * 9.0 * t * t, z, width, 0, speed / 120, thread, 0);
+          const thread = Math.max(Math.min(0.5 * 9.0 * t * t, 0.14), Math.max(0, long)) * Math.max(0, 1 - t / 0.16);
+          this.put(o, x, y0 - Math.max(0, long) - 0.5 * 9.0 * t * t, z, width * (long > 0 ? 1.8 : 1), 0, speed / 120, thread, 0);
           this.put(o + 4, 0, -1000, 0, 0, 1, 0, 0.05, 0);
         } else {
           const age = Math.min(1, (t - hit) / Math.max(0.2, (1 - SWELL) * period - hit));
