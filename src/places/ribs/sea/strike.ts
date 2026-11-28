@@ -339,12 +339,14 @@ export class Burst {
         if (y < -2) continue;
         const [bx, bz] = base(j, id);
         // It tears as it goes: whole as it leaves the sea, holes by its top, strings on the way down.
-        const gone = clot ? 0.1 + 0.08 * a : Math.min(1, 0.12 + (slam ? 0.24 : 0.3) * a + 0.2 * rand(id, 8));
-        const fade = Math.min(1, a / 0.1) * Math.min(1, Math.max(0, (y + 2) / 5)) * (1 - 0.6 * Math.max(0, gone - 0.6) / 0.4);
+        // A slam's body comes apart on its way down: from a second and a quarter on it is holes and strings, not one soft mass.
+        const apart = slam ? Math.min(1, Math.max(0, (a - 1.25) / 0.9)) : 0;
+        const gone = clot ? 0.1 + 0.08 * a : Math.min(slam ? 0.9 : 1, 0.12 + (slam ? 0.24 : 0.3) * a + 0.2 * rand(id, 8) + 0.2 * apart * apart * (3 - 2 * apart));
+        const fade = Math.min(1, a / 0.1) * Math.min(1, Math.max(0, (y + 2) / 5)) * (1 - (slam ? 0.25 : 0.6) * Math.max(0, gone - 0.6) / 0.4);
         // The low third of a slam is its body: dense and white, thinning upward into the torn water.
         const low = slam ? Math.min(1, Math.max(0, 1 - y / (0.22 * s.height))) : 0;
         // The body holds whole for its first two seconds, then opens into holes and strings as it comes down.
-        const whole = slam ? Math.max(0, 1 - a / 2.2) : 0;
+        const whole = slam ? Math.max(0, 1 - a / 2.2) * (1 - Math.min(1, apart * 1.5)) : 0;
         const size = big * (1.5 + 1.5 * Math.min(a, 2.5)) * (0.6 + 0.8 * rand(id, 9)) * (0.6 + 0.5 * j.power) * (clot ? 0.5 : slam ? 1.7 + 0.5 * low : 1);
         this.put(bx + dx, y, bz + dz, size, vx, vy, vz, flag + (clot ? 0.4 * whole : slam ? (0.2 + 0.2 * low) * whole : 0), 0.92 * fade * still, rand(id, 10), gone * (1 - 0.6 * low * whole), sunward(j.along, id));
       }
@@ -418,13 +420,15 @@ export class Burst {
           const y = 0.3 + 2.2 * lump + (1 + 9 * lump * (0.3 + 0.7 * peak)) * Math.sin(Math.min(1, a / (1.2 + rand(id, 12))) * Math.PI) * Math.exp(-a / 2.5);
           const x = s.x + tx * along * s.width * 1.1 + s.out[0] * o;
           const z = s.z + tz * along * s.width * 1.1 + s.out[1] * o;
-          const fade = Math.min(1, a / 0.15) * Math.pow(1 - a / life, 1.2);
+          // Once a slam's water is coming down, the low heads are the white line where its foot meets the sea: they hold, dense and lit.
+          const line = slam ? Math.min(1, Math.max(0, (a - 1.1) / 0.6)) * (1 - lump) : 0;
+          const fade = Math.min(1, a / 0.15) * Math.pow(1 - a / life, 1.2 - 0.8 * line);
           // Seen from close the heads of a slam's boil do not stand as a wall along the foot: they heap where the sea struck square, and
           // each goes down flat into the foam as it ages.
           const flat = slam ? Math.max(0.22, Math.min(1, 1 - (a - 1.4) / 2.2)) : 1;
           const heap = slam ? 0.25 + 0.75 * peak * (0.5 + rand(id, 16)) : 1;
           // While the sea is still coming in, the heap at the foot is the burst's white body: a few big heads, one over another.
-          this.put(x, y * (slam ? flat * (1 + 1.6 * heap) : 1), z, big * (0.5 + 4.5 * lump) * (0.6 + 0.4 * Math.min(a, 2)) * (slam ? 0.7 + 1.0 * heap : 1), 0, 0, 0, 3 + (slam ? 0.05 + 0.4 * heap * flat : 0), (0.25 + 0.7 * rand(id, 9)) * (slam ? 0.45 + 0.55 * heap : 1) * fade * still, rand(id, 10), 0, (0.7 + 0.6 * rand(id, 15)) * flat);
+          this.put(x, y * (slam ? flat * (1 + 1.6 * heap) : 1), z, big * (0.5 + 4.5 * lump) * (0.6 + 0.4 * Math.min(a, 2)) * (slam ? 0.7 + 1.0 * heap : 1), 0, 0, 0, 3 + (slam ? 0.05 + 0.4 * Math.max(heap * flat, 0.9 * line) : 0), (0.25 + 0.7 * Math.max(rand(id, 9), 0.85 * line)) * (slam ? 0.45 + 0.55 * Math.max(heap, line) : 1) * fade * still, rand(id, 10), 0, (0.7 + 0.6 * rand(id, 15)) * flat);
         }
       }
     }
