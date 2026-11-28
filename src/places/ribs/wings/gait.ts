@@ -63,6 +63,8 @@ export interface Step {
   yaw: number;
   /** 0 standing; 0 to 1 through its carry. */
   carry: number;
+  /** Standing: below 0 just set down and settling, 0 flat under the weight, to 1 as the body goes off it and the ankle comes up over the toes. */
+  roll: number;
 }
 
 /**
@@ -91,11 +93,15 @@ export function footAt(way: Way, leg: number, s: number, step: number, half: num
     o.z += Math.sin(o.yaw) * side;
   };
   place(from, at);
+  out.roll = 0;
   if (u <= 0) {
     out.x = at.x;
     out.z = at.z;
     out.yaw = at.yaw;
     out.carry = 0;
+    const late = Math.min(1, Math.max(0, (d / step - 0.18) / (STANDS - 0.18)));
+    const early = Math.min(1, Math.max(0, (-d / step - STANDS + 0.2) / 0.2));
+    out.roll = late * late * (3 - 2 * late) - early * early;
     return;
   }
   const to: At = { x: 0, z: 0, yaw: 0 };
