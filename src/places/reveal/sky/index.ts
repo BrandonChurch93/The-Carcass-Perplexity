@@ -76,12 +76,12 @@ vec2 shellPlace(vec2 at) {
 // How much of a body of the shell stands at a point (0: open sky), from orbit only: nearer than that its streets are wider
 // than the photograph can draw them.
 float shellBody(vec2 at) {
-  float seen = smoothstep(500.0, 1200.0, uViewKm);
+  float seen = smoothstep(780.0, 1300.0, uViewKm);
   if (seen <= 0.0) return 0.0;
   vec2 sv = at + uTime * vec2(-5.0, 3.0) + uWx * vec2(-36.0, 17.0);
   vec2 bodies = mat2(0.5, 0.87, -0.87, 0.5) * sv / vec2(3900.0, 4300.0) + vec2(0.12, 0.44);
   float gather = dot(textureLod(uMatVeil, bodies, 5.0).rgb, vec3(0.3, 0.55, 0.15)) / 0.264;
-  return seen * smoothstep(1.12, 1.62, gather);
+  return seen * smoothstep(1.2, 1.66, gather);
 }
 // How thick the shell stands at a place of its photograph, in a body of it. (The streets are read only where a body stands, at a
 // fineness taken before this way out.)
@@ -158,8 +158,8 @@ void main() {
     // (Its tops are level from this far: the thick of a street is lit, its thin edge is grey.)
     shellColour = cloudLight(shellAt, 0.2 + 0.85 * (0.3 + 0.6 * shell), 0.4 + 0.6 * shell, 0.5) * (0.74 + 0.4 * shell);
     // (By night the moon is on the shell and it is seen to the last frame, crossing the dark land.)
-    if (uDusk > 0.0) shellColour *= 1.0 + 0.3 * uEmber.x;
-    c = 0.82 * shell * uArrive;
+    if (uDusk > 0.0) shellColour *= 1.0 + 0.7 * uEmber.x;
+    c = 0.62 * shell * uArrive;
     shadeA = 0.45 * shellDepth(shadeUv, shadeG, shellIs) * (1.0 - c) * dayAt(xz) * uArrive;
   }
 
