@@ -539,6 +539,23 @@ void main() {
 #endif
     float down = 0.3 + 3.2 * rimEye + uWallFall * (mix(1.7, 0.22, rimEye) * inside + mix(0.16, 0.004, rimEye) * inside * inside);
     vec2 b = p.xz + rf.xz * (min(down, 12.0) / fall) * 0.4;
+#if EYE_EDGE
+    // Beside the edge the wall is sheer. The look is followed down through the water to where it meets the face, which stands out in
+    // buttresses and back in gullies; where the look runs out over the shaft it meets nothing, and the water is black-blue.
+    float round = atan(p.x, p.z) * 480.0;
+    float towards = dot(rf.xz, vec2(lip.z, -lip.y)) / fall;
+    float sheer = 4.2 * (0.4 + 1.2 * vnoise(vec2(round / 7.5, 3.0)) + 0.35 * (vnoise(vec2(round / 1.9, 11.0)) - 0.5));
+    float meets = 1.0 + sheer * towards;
+    // Under the lip a ledge of the shelf's own stone stands out a little way, here a stride and there three, before the face drops.
+    float ledgeOut = 0.5 + 3.4 * vnoise(vec2(round / 5.3, 9.0)) * vnoise(vec2(round / 23.0, 4.0));
+    float ledgeMeets = 1.0 + 0.7 * towards;
+    float onLedge = ledgeMeets > 0.05 ? (0.25 + 0.7 * inside) / ledgeMeets : 400.0;
+    float lipDeep = 0.25 + 0.7 * ledgeOut;
+    float outAt = (inside - towards * onLedge) / ledgeOut;
+    // The ledge rounds off into the drop: its outer half goes down faster than it goes out.
+    down = outAt < 1.0 ? onLedge + 7.0 * smoothstep(0.35, 1.0, outAt) * outAt : meets > 0.05 ? (lipDeep + 7.0 + sheer * (inside - ledgeOut)) / meets : 400.0;
+    b = p.xz + rf.xz * (min(down, 60.0) / fall);
+#endif
     vec3 at = vec3(p.x, 0.0, p.z);
     // Out over the deep the whole sky is overhead: the land map's own count of it is coarse there and would draw its steps on the water.
     float open = mix(skyOpen(at), 0.92, smoothstep(4.0, 60.0, inside));
@@ -560,6 +577,30 @@ void main() {
       Bed bed = wallAt(b, down, inside, falls * vec2(dot(square, fx), dot(square, fy)));
       deep += bed.albedo * e * (bed.occ / 3.14159) * through;
     }
+#if EYE_EDGE
+    // Far down in the shaft a few pale things stand upright, each on its own, seen only as far as the water lets them be.
+    {
+      float cellAt = floor(round / 8.0);
+      for (int i = -1; i <= 1; i++) {
+        float cell = cellAt + float(i);
+        vec2 rnd = hash22(vec2(cell, 7.3));
+        float turnAt = (cell + 0.2 + 0.6 * rnd.x) * 8.0 / 480.0;
+        vec2 dirAt = vec2(sin(turnAt), cos(turnAt));
+        vec2 o = p.xz - dirAt * (lipRadius(dirAt * 480.0) - 14.0 - 30.0 * rnd.y);
+        float wide = 0.22 + 0.4 * rnd.x;
+        float qa = max(dot(rf.xz, rf.xz), 1e-5);
+        float qb = dot(o, rf.xz);
+        float disc = qb * qb - qa * (dot(o, o) - wide * wide);
+        if (disc <= 0.0) continue;
+        float t = (-qb - sqrt(disc)) / qa;
+        float sunk = t * fall;
+        float top = 6.0 + 9.0 * rnd.x;
+        if (t <= 0.0 || sunk < top || sunk > down) continue;
+        float body = sqrt(disc) / (wide * sqrt(qa));
+        deep += vec3(0.5, 0.54, 0.5) * e * (0.45 / 3.14159) * body * body * (0.4 + 0.9 * vnoise(vec2(sunk / 2.2, cell))) * smoothstep(top, top + 4.0, sunk) * exp(-uAbsorb * 0.5 * (sunk + t));
+      }
+    }
+#endif
     // What rises: a pale shape under the dome, never the whole of it.
     float du = clamp(r / (uDome.y * 0.8), 0.0, 1.0);
     float pale = clamp((uDome.x - 1.5) / 4.0, 0.0, 1.0) * (1.0 - du * du) * (0.55 + 0.45 * vnoise(p.xz / 9.0 + 3.0));
@@ -1015,12 +1056,14 @@ void main() {
       // Over the mats the far water is the pool: ruffled, it holds the high sky and the wall's shade more than the wall's gold, and is dark and blue.
       // It comes on where the mats end, a few metres out, and against the far shore the wall is given back as it is.
       else if (during('eye-02')) mirrorTone.value.set(0.06, 0.14, 0.3, 0.8);
-      else if (during('eye-03')) mirrorTone.value.set(1.4, 1.26, 1.12, 1);
+      else if (during('eye-03')) mirrorTone.value.set(0.62, 0.6, 0.58, 1);
       else mirrorTone.value.set(1, 1, 1, 1);
       (material.uniforms.uRuffle as THREE.IUniform<number>).value = during('eye-02') ? 0.0009 : 0;
       const span = material.uniforms.uMirrorSpan as THREE.IUniform<THREE.Vector4>;
       if (during('eye-02')) span.value.set(4, 16, 90, 300);
       else if (during('eye-04')) span.value.set(3, 26, 1e6, 2e6);
+      // Beside the edge the water over the shelf is in the wall's shade for a way out, and under the far wall it is given back as it is.
+      else if (during('eye-03')) span.value.set(4, 22, 150, 500);
       else span.value.set(12, 90, 1e6, 2e6);
       // Beside the edge the wall is near enough to be rock (EYE_EDGE), and it falls more steeply than the wide shot draws it.
       (material.uniforms.uWallFall as THREE.IUniform<number>).value = during('eye-03') ? 1.2 : 1;
