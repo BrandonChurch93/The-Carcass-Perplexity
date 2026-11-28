@@ -465,8 +465,8 @@ export function create(ctx: Context): Piece {
         b.fumeDie.set(0, held ? 1 : 0);
         const within = e.cloud;
         // The key and the fill of a strike: full on the stroke's frame, sinking after it, with one short rise in the cloud before it.
-        const land = Math.max(e.light, (timing.swell ? SWELL_LAND : LAND_RISE) * e.rise);
-        const sky = Math.max(e.light, PRE_CLOUD * e.rise);
+        const land = Math.max(e.land, (timing.swell ? SWELL_LAND : LAND_RISE) * e.rise);
+        const sky = Math.max(e.sky, PRE_CLOUD * e.rise);
         // The glow in the cloud about the channel, which the round lights and the picture at the root draw: gone within a few frames.
         const glow = Math.max(e.glow, PRE_CLOUD * e.rise);
         const round = glow * (ROUND_OF[of] as number);
