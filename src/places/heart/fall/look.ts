@@ -952,10 +952,6 @@ void main() {
   float more = 1.0 + 1.2 * smoothstep(uSurge.x + 4.0, uSurge.x - 12.0, aFrom.w) * uSurge.y;
   // Before the dark of the opening a puff would stand as a pale disc: by the height of the lip it has thinned to nothing.
   float below = smoothstep(${f(TUBE.floor - 0.5)}, ${f(TUBE.floor - 10)}, centre.y + 0.6 * size);
-  // At the lip itself the fume stands before the dark of the mouth with the melt's light full on it: it is thin there, and the
-  // surge does not thicken it, or it stands as one pale ball over the lip.
-  float atLip = (1.0 - smoothstep(6.0, 16.0, aFrom.w)) * (aWind.y > 1.6 ? 0.0 : 1.0);
-  more = mix(more, 1.0, atLip) * (1.0 - 0.7 * atLip);
   vPuff = vec4(k, aSeed.z, smoothstep(0.0, aWind.y > 1.6 ? 0.3 : 0.14, k) * pow(1.0 - k, 1.4) * more * aSeed.w * below, age);
   vCentre = centre;
   // A veil is lit by the fall it drifts before, less the higher it stands and less while crust passes under it.

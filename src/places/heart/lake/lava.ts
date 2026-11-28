@@ -611,6 +611,9 @@ void main() {
       float gash = smoothstep(0.6, 0.7, 0.75 * vnoise(vec2(sk.x * 2.4, sk.y * 0.8) + 37.0) + 0.25 * vnoise(sk * 6.5 + 3.0));
       thick -= 0.7 * gash * (1.0 - smoothstep(0.5, 1.1, leanN));
       thick = clamp(thick, 0.0, 1.0) * (1.0 - 0.9 * sheared);
+      // The open melt is no flat pale field: a film of new skin lies on all of it, drawn out in lines along the stream, and
+      // the melt is yellow where the film is thinnest and orange under the rest.
+      thick = max(thick, clamp(0.01 + 0.12 * lines + 0.08 * film + 0.08 * (creased - 0.45), 0.0, 0.25) * (1.0 - sheared));
       // Fragments torn from the skin ride the open melt: those in mid stream fast, those nearer the banks slower, so that
       // one overtakes the next.
       for (int lane = 0; lane < 3; lane++) {
@@ -619,7 +622,10 @@ void main() {
         float off = abs(leanN - 0.12 - 0.26 * fl) / 0.2;
         vec2 fp = vec2(here.x - pace * uTime, here.y);
         float piece = 0.7 * vnoise(fp * vec2(1.3, 3.4) + 19.0 + 23.0 * fl) + 0.3 * vnoise(fp * vec2(4.1, 8.3) + 5.0 + 11.0 * fl) - 0.16 * off * off;
-        thick = max(thick, (0.7 + 0.25 * creased) * smoothstep(0.6, 0.68, piece));
+        // No fragment is a cut-out: its rim is torn, and thin enough there for the melt to show red through it, and the
+        // furrows of its creases stay alight across it.
+        piece += 0.08 * (vnoise(fp * vec2(9.0, 21.0) + 3.0 + 7.0 * fl) - 0.5);
+        thick = max(thick, (0.5 + 0.7 * creased) * pow(smoothstep(0.57, 0.75, piece), 0.6) * (1.0 - 0.5 * gash));
       }
       float through = (1.0 - thick) * (1.0 - thick);
       heat = mix(0.03, 1.0, through * mix(0.75, 1.0, mid));
