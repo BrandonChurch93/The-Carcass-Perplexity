@@ -35,13 +35,14 @@ export const BREAK = { x: 60, z: -560, radius: 760, gain: 0.8, cover: 0.62, boun
  * bore's spray in the gate. `sky` is what the cloud's own brightness is given in the shot: the bore comes in under a heavier sky.
  * `deck` is how far the deck's gaps cut the light in the shot (1 where no row names it): the feeders stand in the break's open middle.
  * `warm` is how far the sky's light and the air go to the low sun's colour: the feeders' water is warm grey under a pale warm break.
+ * `dome` is how much further the picture's white is shut on the dome itself, and not in what mirrors it: the bore comes in under a dark sky with one small break.
  * `shade` is what the sky's own light on things is given: the colony's rock keeps its folds dark under a sun that only tops its ledges.
  */
-const BREAK_BY_SHOT: readonly { shot: string; key: string; x: number; z: number; radius: number; yaw: number; bounce?: number; shaft?: number; sky?: number; heads?: number; shade?: number; deck?: number; warm?: number }[] = [
+const BREAK_BY_SHOT: readonly { shot: string; key: string; x: number; z: number; radius: number; yaw: number; bounce?: number; shaft?: number; sky?: number; heads?: number; shade?: number; deck?: number; warm?: number; dome?: number }[] = [
   { shot: 'ribs-03', key: 'ribs-3', x: 196, z: -500, radius: 380, yaw: 16, bounce: 1.6, sky: 0.58, shade: 0.5, deck: 0.5, warm: -1 },
   { shot: 'ribs-04', key: 'ribs-2', x: -40, z: -500, radius: 380, yaw: 23, sky: 0.81, deck: 0.25, warm: 1 },
   { shot: 'ribs-05', key: 'ribs-1', x: -60, z: -420, radius: 220, yaw: 42, shaft: 2.4, deck: 0.1, warm: 0.5 },
-  { shot: 'ribs-06', key: 'ribs-4', x: 120, z: -1440, radius: 260, yaw: 22, sky: 0.6, heads: 0.4, deck: 0.2 },
+  { shot: 'ribs-06', key: 'ribs-4', x: 120, z: -1440, radius: 260, yaw: 31, sky: 0.8, heads: 0.4, shade: 1.25, deck: 0.2, warm: 0.4, dome: 0.24 },
 ];
 /** Where the break stands in the sky at the establishing key, degrees right of north: upper right of the strait's frame, left of the sun that burns through its edge. */
 const BREAK_YAW = 42;
@@ -459,7 +460,7 @@ export function createRig(): Rig {
   const straitSpan = shotSpan('ribs-02');
   const staging = BREAK_BY_SHOT.map((b) => ({ ...b, span: shotSpan(b.shot), at: keySeconds(b.key) }));
   /** The break's staging for the shot the camera stands in: its own, or the strait's. */
-  const stagedBreak = (): { x: number; z: number; radius: number; yaw: number; at: number; bounce?: number; shaft?: number; sky?: number; heads?: number; shade?: number; deck?: number; warm?: number } => {
+  const stagedBreak = (): { x: number; z: number; radius: number; yaw: number; at: number; bounce?: number; shaft?: number; sky?: number; heads?: number; shade?: number; deck?: number; warm?: number; dome?: number } => {
     const staged = stagedSeconds();
     const own = loopPhase() === null ? staging.find((b) => staged >= b.span.from && staged < b.span.to) : undefined;
     return own ?? { x: BREAK.x, z: BREAK.z, radius: BREAK.radius, yaw: BREAK_YAW, at: T0, bounce: BREAK.bounce };
@@ -697,7 +698,7 @@ export function createRig(): Rig {
       deck.z = DECK.whole * (stagedBreak().deck ?? 1);
       const share = stagedBreak().deck;
       deck.w = share === undefined ? DECK.under : 1 - (1 - DECK.staged) * share;
-      deckEdge.z = DECK.dome * (stagedBreak().deck ?? 1);
+      deckEdge.z = DECK.dome * (stagedBreak().deck ?? 1) + (stagedBreak().dome ?? 0);
       const warm = stagedBreak().warm ?? 0;
       if (warm !== 0) {
         skyWarm.set(1 + SKY_WARM[0] * warm, 1 + SKY_WARM[1] * warm, 1 + SKY_WARM[2] * warm);
