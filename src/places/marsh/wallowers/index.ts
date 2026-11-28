@@ -59,7 +59,7 @@ export function create(ctx: Context): Piece {
     const wet = sink > 0.5 ? (herd.length === 2 ? rng.range(1.0, 1.4) : 0.4 * rng.range(1.0, 1.4) - 0.05) * b.k : Math.max(0.5 * b.k, stand + 0.85 * b.k) * rng.range(0.9, 1.1);
     herd.push({
       // The one that lies in the brine before the lens of the wallowers is wet all over its back: skin, with the mud of the brine low on it.
-      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: hero ? 1.6 : near ? 1.3 : 1, ...(hero ? { droop: 2.1 } : herd.length === 1 ? { droop: 1.8, strand: 0.5 } : {}), ...(near ? { coat: (herd.length === 2 ? [1.45, 9, 1, 0] : [0.7, 1.95, 0, 0]) as [number, number, number, number], tendrils: 10, hang: 0, ...(herd.length === 2 ? { tint: 0.4, skip: 2 } : {}), thick: hero ? 7.0 : herd.length === 2 ? 4.4 : 6.4, long: hero ? 0.72 : herd.length === 1 ? 0.7 : 0.8 } : {}) }),
+      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: hero ? 1.6 : near ? 1.3 : 1, ...(near || sink > 0.75 ? {} : { shade: [0.58, 0.55, 0.53] as [number, number, number] }), ...(hero ? { droop: 2.1 } : herd.length === 1 ? { droop: 1.8, strand: 0.5 } : {}), ...(near ? { coat: (herd.length === 2 ? [1.45, 9, 1, 0] : [0.7, 1.95, 0, 0]) as [number, number, number, number], tendrils: 10, hang: 0, ...(herd.length === 2 ? { tint: 0.4, skip: 2 } : {}), thick: hero ? 7.0 : herd.length === 2 ? 4.4 : 6.4, long: hero ? 0.72 : herd.length === 1 ? 0.7 : 0.8 } : {}) }),
       plan: { at: [x, z], when, dir, speed, ground: stand, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang, look: LOOKS[herd.length] ?? 1.7 + herd.length * 2.9 },
       onBank: sink <= 0.15,
       sunk: sink > 0.75,
@@ -142,6 +142,9 @@ export function create(ctx: Context): Piece {
         // The one Drive serves them all in turn: what only an acted one sets is put back for the rest.
         drive.acted = 0;
         drive.under = 0;
+        // STAGED for the lens of the wallowers: the great one stands a hand higher out of its wallow than the bed has it, its legs seen to the knee as the approved picture has them.
+        const lifted = acted && i === 0 ? 0.11 * h.beast.b.k : 0;
+        h.plan.ground += lifted;
         if (acted && i === 0) great(h.plan, h.beast.b, seconds, t, cast[0] as number, drive);
         else if (acted && i === 1) young(h.plan, h.beast.b, seconds, t, toGreat, drive);
         else if (acted) lying(h.plan, h.beast.b, seconds, t, cast[2] as number, drive);
@@ -149,7 +152,8 @@ export function create(ctx: Context): Piece {
         const raised = i === 0 && !acted ? 0.2 * h.beast.b.k : 0;
         h.plan.ground += raised;
         const driven = acted ? drive : roam(h.plan, h.beast.b, seconds, h.sunk, drive);
-        h.plan.ground -= raised;
+        h.plan.ground -= raised + lifted;
+        if (lifted > 0) driven.headPitch += 0.07;
         driven.floor = h.floor;
         // STAGED for the lens of the wallowers: the great one's feelers are turned down and spread into the mud like the fingers of a hand, as the approved picture has them.
         if (i === 0) driven.splay += 0.3;
