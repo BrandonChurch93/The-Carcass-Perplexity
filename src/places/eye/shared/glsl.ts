@@ -157,7 +157,11 @@ uniform vec4 uMistC;
 uniform vec4 uMistD;
 // How much of the sky's light the mist of the shot stands in: under a near wall less than out on the open water.
 uniform float uMistTone;
-uniform float uMistOn;`;
+uniform float uMistOn;
+// E: x, how far the bank has no top but thins out upward (0 a heaped top, 1 none); y, how unequal it is along the whole shore, tall and
+// thick over one stretch and low and thin over the next; z, how much of the low bright sky it holds (the glow of a bank seen against the
+// evening); w, the level of its picture the wall behind the bank is softened to at the water, half of it above the bank.
+uniform vec4 uMistE;`;
 
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
@@ -194,7 +198,27 @@ vec3 skyIrradiance(vec3 n);
 // The light of the sky in the mist. The bank lies in the shade of the rim, so most of it is the cool light from overhead and only a
 // little is the warm low sky behind it.
 vec3 mistSkyLight(vec3 low) {
-  return uMistTone * (0.34 * skyIrradiance(vec3(0.0, 1.0, 0.0)) * vec3(0.84, 0.95, 1.12) + 0.09 * low);
+  return uMistTone * (0.34 * skyIrradiance(vec3(0.0, 1.0, 0.0)) * vec3(0.84, 0.95, 1.12) + (0.09 + 0.3 * uMistE.z) * low);
+}
+
+// The bank is not one thing along the shore. x: how tall it stands over this stretch, y: how thick it is there (both about 1), z: the
+// clock of this stretch, w: how far it has lifted. Vapour in still air: each stretch thickens, thins and lifts at a slow rate of its own,
+// one nearly at rest beside one that climbs, so the bank never changes everywhere at once and nothing crosses it. The clocks run ahead
+// of and behind the film's by a bounded span, not at fixed unequal rates, which would shear the bank more the later the frame.
+// along is metres along the far shore. Worked out and not read from a picture. A mirror does not ask for it: this renderer pays for
+// every line of every look of every mirror whether its branch is taken or not, and the bank in the water is soft.
+vec2 mistStands(float along) {
+  if (uMistE.y <= 0.0) return vec2(1.0);
+  float a = along / 1000.0;
+  float s = smoothstep(0.15, 0.85, 0.5 + 0.3 * sin(a * 1.13 + 1.3 + uTime * 0.011) + 0.2 * sin(a * 2.9 + 4.1 - uTime * 0.017));
+  return mix(vec2(1.0), vec2(0.6 + 0.9 * s, 0.6 + 0.7 * s), uMistE.y);
+}
+vec4 mistStretch(float along) {
+  if (uMistE.y <= 0.0) return vec4(1.0, 1.0, uTime, uTime);
+  float a = along / 1000.0;
+  float pace = 0.5 * sin(a * 2.1 + 0.7 + uTime * 0.021) + 0.5 * sin(a * 4.3 + 2.9 - uTime * 0.013);
+  float lift = 0.5 * sin(a * 2.3 + 5.2 - uTime * 0.016) + 0.5 * sin(a * 5.3 + 1.1 + uTime * 0.024);
+  return vec4(mistStands(along), uTime + uMistE.y * (35.0 * pace - 0.3 * uTime), uTime + uMistE.y * (40.0 * lift - 0.2 * uTime));
 }
 
 // How high on the far shore a mirror at ro would read if the water lay still: the mist is soft and stands low, so the water gives it
@@ -213,18 +237,19 @@ vec4 mistInMirror(vec3 rd, float along, float up, vec3 wall) {
   float stands = mix(0.3, 1.0, smoothstep(0.3, 0.6, 0.55 * big.a + 0.45 * mid.g + 0.25 * (1.0 - uMistB.z)));
   stands = mix(stands, 1.0, 0.6);
   cover = mix(cover, 1.0, 0.5);
-  float top = uMistA.z * stands * (0.35 + 1.5 * mid.r) + sheetTop;
+  float swell = 0.35 + 0.3 * uMistE.x + (1.5 - 0.6 * uMistE.x) * mid.r;
+  float sun = smoothstep(0.06, 0.34, (wall.r - wall.b) / max(wall.r + wall.b, 1e-3)) * smoothstep(0.04, 0.2, wall.r);
+  float top = uMistA.z * stands * (1.0 + uMistE.y * (0.4 * sun - 0.1)) * swell + sheetTop;
   vec4 g = texture(tMistNoise, vec3(along / 130.0, up / 50.0 - uTime * 0.01, 60.0 / 1100.0 + uTime * 0.004));
   float heap = 0.05 + 1.9 * pow(smoothstep(0.3, 0.72, mix(g.g, g.r, 0.4)), 1.5);
   // A bank that is not torn stands in the mirror as one soft bank, not as a row of heaps.
   // And water that is never quite flat gives back no single heap: in the mirror the bank is nearly whole, with a soft top.
   heap = mix(1.0, heap, 0.3 * uMistB.z);
   float h = up / (top * heap);
-  float bank = uMistB.y * cover * stands * 0.6 * min(uMistA.w, 320.0) * pow(clamp(1.0 - h, 0.0, 1.0), 2.4);
+  float bank = uMistB.y * cover * stands * 0.6 * min(uMistA.w, 320.0) * pow(clamp(1.0 - h / (1.0 + 1.2 * uMistE.x), 0.0, 1.0), 2.4 + 2.6 * uMistE.x);
   float sheet = uMistB.x * cover * min(sheetTop / max(rd.y, 1e-3), 0.5 * uMistA.x) * exp(-up / max(sheetTop, 0.05));
   float a = (1.0 - exp(-0.006 * (bank + sheet))) * uMistOn * uMistC.w * (1.0 - uSolo);
   float toSun = dot(rd, uSunDir);
-  float sun = smoothstep(0.06, 0.34, (wall.r - wall.b) / max(wall.r + wall.b, 1e-3)) * smoothstep(0.04, 0.2, wall.r);
   vec3 lit = mistSkyLight(skyRadiance(normalize(vec3(rd.x, 0.05, rd.z))))
     + uSunColour * (0.2 * 0.8 * sun * (0.62 + 0.9 * pow(max(toSun, 0.0), 3.0) + 0.38 * toSun * toSun));
   return vec4(lit * (2.5 / 3.14159), a);
@@ -299,6 +324,9 @@ vec3 farRadianceAt(vec3 ro, vec3 rd, float bias, vec4 at, vec2 gx, vec2 gy) {
   float fa = dot(fx, fx);
   float fb = dot(fy, fy);
   float level = 0.5 * log2(max(max(min(fa, fb), 0.25 * max(fa, fb)), 1e-8));
+  // Seen straight, the wall stands behind the bank of mist and the damp air over it, and what is seen through them is soft: softest at
+  // the water. A level of the picture and not of the frame, so that the wall is as soft at every size the film is drawn at.
+  if (bias <= 0.0 && uMistE.w > 0.0) level = max(level, uMistE.w * uMistOn * (0.5 + 0.5 * clamp(1.0 - q.y / max(2.0 * uMistA.z, 1.0), 0.0, 1.0)));
   vec3 plate = ungrade(textureLod(tPlate, vec2(u, clamp(vv, 0.004, 0.996)), level + bias + uPlateSoft + 2.5 * over + 2.0 * drawn).rgb) * uPlateTone.rgb;
   // In the water under a long lens the wall is drawn out up and down: three looks one above another, the outer two soft, so that it runs in soft streaks.
   if (tall) {

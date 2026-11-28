@@ -14,17 +14,55 @@ const SIZES: [number, number, number][] = [
   [4.6, 3.0, 4.0],
 ];
 
-/** A knob: where its middle stands in the frame of the axis, how far its middle lies over the ground there, its turn, its size and which crag of the map it is. */
+/** A knob: where its middle stands in the frame of the axis, how far its middle lies over the ground there, its turn and lean, its size, which crag of the map it is, and how finely its ball is cut. */
 export interface Knob {
   along: number;
   across: number;
   lift: number;
   turn: number;
-  size: number;
+  lean: [number, number];
+  size: [number, number, number];
   kind: number;
+  cut: number;
 }
 
-export const KNOBS: Knob[] = [{ along: 82, across: -39, lift: 2.4, turn: -1.6, size: 2.0, kind: 0 }];
+const frac = (v: number): number => v - Math.floor(v);
+const rnd = (i: number, s: number): number => frac(Math.sin(i * 127.1 + s * 311.7) * 43758.5453);
+
+/** The talus: pieces of the same crags, small, lying where they fell at the foot of a knob and down the slope from it. */
+function talus(at: [number, number], to: [number, number], wide: number, count: number, seed: number, large: number): Knob[] {
+  const out: Knob[] = [];
+  for (let i = 0; i < count; i++) {
+    const t = Math.pow(rnd(i, seed), 1.4);
+    const side = (rnd(i, seed + 1) - 0.5) * 2 * wide * (0.35 + 0.65 * t);
+    const dx = to[0] - at[0];
+    const dz = to[1] - at[1];
+    const l = Math.hypot(dx, dz);
+    // The largest lie nearest the crag, and the small ones have run furthest.
+    const s = large * (0.3 + 0.7 * Math.pow(rnd(i, seed + 2), 2.2)) * (1 - 0.45 * t);
+    const kind = rnd(i, seed + 3) < 0.5 ? 0 : 1;
+    const base = SIZES[kind] as [number, number, number];
+    const sy = s * (0.75 + 0.7 * rnd(i, seed + 5));
+    out.push({
+      along: at[0] + dx * t - (dz / l) * side,
+      across: at[1] + dz * t + (dx / l) * side,
+      lift: 0.12 * base[1] * sy,
+      turn: rnd(i, seed + 4) * 6.283,
+      lean: [(rnd(i, seed + 6) - 0.5) * 0.9, (rnd(i, seed + 7) - 0.5) * 0.9],
+      size: [s * (0.8 + 0.5 * rnd(i, seed + 8)), sy, s * (0.8 + 0.5 * rnd(i, seed + 9))],
+      kind,
+      cut: s > 0.2 ? 22 : 12,
+    });
+  }
+  return out;
+}
+
+export const KNOBS: Knob[] = [
+  { along: 82, across: -39, lift: 2.4, turn: -1.6, lean: [0.1, -0.22], size: [2.0, 2.0, 2.0], kind: 0, cut: 110 },
+  { along: 113, across: 29, lift: 3.4, turn: 4.5, lean: [-0.06, 0.1], size: [2.4, 2.3, 2.4], kind: 1, cut: 84 },
+  ...talus([88, -27], [76, -24], 9, 14, 3, 0.34),
+  ...talus([110, 17], [70, 44], 12, 34, 11, 0.4),
+];
 
 const ATLAS_GLSL = /* glsl */ `
 // Where a direction lies in the map: two crags side by side, each on an octahedral map.
@@ -131,7 +169,7 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
 
   // Pale limestone, bed by bed of its own tone, the sheet giving it its mottle about its own mean.
-  vec3 tone = mix(vec3(0.5, 0.47, 0.43), vec3(0.74, 0.69, 0.61), form.b);
+  vec3 tone = mix(vec3(0.6, 0.48, 0.36), vec3(0.86, 0.7, 0.52), form.b);
   vec3 albedo = tone * mix(vec3(1.0), skin / vec3(0.34, 0.33, 0.31), 0.75) * (0.72 + 0.56 * broad);
   // Broad stains in the crag's own frame, so that a large face is not one tone, and the dark that rain leaves down a standing face.
   float stain = vnoise(q.xy * 0.5 + q.z * 0.4) * 0.6 + vnoise(q.zy * 1.7 + 5.0) * 0.4;
@@ -165,19 +203,41 @@ void main() {
 export function createKnobs(ctx: Context, depthFragment: string, sheets: Record<string, THREE.IUniform>): { meshes: THREE.Mesh[]; dispose: () => void } {
   const data = (file: string): THREE.Texture => ctx.assets.texture(file, { kind: 'data', repeat: false });
   const maps = { tKnobR: { value: data('land/knob-r.png') }, tKnobN: { value: data('land/knob-n.jpg') }, tKnobM: { value: data('land/knob-m.jpg') } };
-  const ball = mergeVertices(new THREE.IcosahedronGeometry(1, 110).deleteAttribute('uv').deleteAttribute('normal'), 1e-5);
+  const balls = new Map<number, THREE.BufferGeometry>();
+  const ballOf = (cut: number): THREE.BufferGeometry => {
+    let ball = balls.get(cut);
+    if (!ball) {
+      ball = mergeVertices(new THREE.IcosahedronGeometry(1, cut).deleteAttribute('uv').deleteAttribute('normal'), 1e-5);
+      balls.set(cut, ball);
+    }
+    return ball;
+  };
   const materials: THREE.ShaderMaterial[] = [];
+  const owned: THREE.BufferGeometry[] = [];
   const meshes = KNOBS.map((k, i) => {
     const [x, z] = onAxis(k.along, k.across);
     const ground = landHeight(x, z);
-    const e = 3;
+    const e = Math.max(0.6, 1.5 * k.size[0]);
     const gx = (landHeight(x + e, z) - landHeight(x - e, z)) / (2 * e);
     const gz = (landHeight(x, z + e) - landHeight(x, z - e)) / (2 * e);
-    const size = SIZES[k.kind] as [number, number, number];
-    const mesh = new THREE.Mesh(ball);
+    const base = SIZES[k.kind] as [number, number, number];
+    const size = new THREE.Vector3(base[0] * k.size[0], base[1] * k.size[1], base[2] * k.size[2]);
+    // The ball is shared, and what it is raised to is not: each knob has the bounds of its own crag, so that a camera that looks
+    // away from it does not pay for raising it.
+    const ball = ballOf(k.cut);
+    const own = new THREE.BufferGeometry();
+    own.setAttribute('position', ball.getAttribute('position'));
+    own.setIndex(ball.getIndex());
+    own.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 2.2 * Math.max(size.x, size.y, size.z));
+    owned.push(own);
+    const mesh = new THREE.Mesh(own);
     mesh.position.set(x, ground + k.lift, z);
-    mesh.rotation.set(0.1, k.turn, -0.22);
+    mesh.rotation.set(k.lean[0], k.turn, k.lean[1]);
     mesh.updateMatrixWorld();
+    // The map's normals are those of the crag at its own shape: a piece pressed flatter or drawn longer turns them by the inverse.
+    const m = k.size[1] / k.size[0];
+    const n = k.size[1] / k.size[2];
+    const turn = new THREE.Matrix3().setFromMatrix4(mesh.matrixWorld).multiply(new THREE.Matrix3().set(m, 0, 0, 0, 1, 0, 0, 0, n));
     const material = new THREE.ShaderMaterial({
       uniforms: {
         ...ctx.rig.uniforms,
@@ -185,11 +245,11 @@ export function createKnobs(ctx: Context, depthFragment: string, sheets: Record<
         tFace: sheets.tFace as THREE.IUniform,
         tFaceNh: sheets.tFaceNh as THREE.IUniform,
         tGrit: sheets.tGrit as THREE.IUniform,
-        uKnob: { value: new THREE.Vector4(k.kind, 0.31 + 0.17 * i, 0.77 - 0.21 * i, 0.13 + 0.4 * i) },
-        uKnobSize: { value: new THREE.Vector3(size[0] * k.size, size[1] * k.size, size[2] * k.size) },
+        uKnob: { value: new THREE.Vector4(k.kind, rnd(i, 21), rnd(i, 22), rnd(i, 23)) },
+        uKnobSize: { value: size },
         uKnobSeat: { value: new THREE.Vector4(ground, 0, gx, gz) },
         uKnobAt: { value: new THREE.Vector3(x, ground, z) },
-        uKnobTurn: { value: new THREE.Matrix3().setFromMatrix4(mesh.matrixWorld) },
+        uKnobTurn: { value: turn },
       },
       vertexShader: KNOB_VERTEX,
       fragmentShader: KNOB_FRAGMENT,
@@ -197,13 +257,13 @@ export function createKnobs(ctx: Context, depthFragment: string, sheets: Record<
     material.userData.depthFragment = depthFragment;
     mesh.material = material;
     materials.push(material);
-    mesh.frustumCulled = false;
     return mesh;
   });
   return {
     meshes,
     dispose: () => {
-      ball.dispose();
+      for (const g of owned) g.dispose();
+      for (const b of balls.values()) b.dispose();
       for (const m of materials) m.dispose();
     },
   };

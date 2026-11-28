@@ -386,6 +386,7 @@ export function createRig(): Rig {
     uMistB: { value: new THREE.Vector4() },
     uMistC: { value: new THREE.Vector4() },
     uMistD: { value: new THREE.Vector4() },
+    uMistE: { value: new THREE.Vector4() },
     uMistTone: { value: 1 },
     uMistOn: { value: 0 },
   };
