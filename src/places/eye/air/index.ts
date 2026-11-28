@@ -187,7 +187,15 @@ vec3 mistShape(vec3 q, vec4 big, float tongueRead) {
     // Its patches are as wide one way as the other: they are looked down on, and no lens draws them out.
     vec4 round2 = texture(tMistNoise, vec3(lie.x / 560.0 + 0.11, lie.y / 560.0 + 0.37, 0.3 + stretch.z * 0.004));
     float lying = smoothstep(0.42, 0.88, 0.5 * big.r + 0.5 * round2.g);
-    sheet += uMistRound * 3.8 * lying * smoothstep(290.0, 520.0, ROUND - q.z) * exp(-q.y / 6.0);
+    float rim = smoothstep(290.0, 520.0, ROUND - q.z);
+#ifdef VEIL_STRANDS
+    // In the shot that climbs over it the veil is not in puffs: each patch is drawn out in strands a few metres across that bend
+    // round one another, and the thinnest of them reach in over the rim of the pool.
+    vec4 strand = texture(tMistNoise, vec3(lie.x / 330.0 + 0.5 * (round2.b - 0.5), lie.y / 190.0 + 0.5 * (round2.a - 0.5), 0.7 + stretch.z * 0.006));
+    lying = smoothstep(0.34, 0.86, 0.5 * big.r + 0.5 * round2.g) * (0.45 + 1.3 * smoothstep(0.25, 0.85, 0.6 * strand.g + 0.4 * strand.b));
+    rim = mix(0.3 * smoothstep(120.0, 400.0, ROUND - q.z), 1.0, rim);
+#endif
+    sheet += uMistRound * 3.8 * lying * rim * exp(-q.y / 6.0);
   }
   return vec3(sheet, top, uThin * cover * ramp * stands * stretch.y);
 }
@@ -216,8 +224,8 @@ float mistAt(vec3 q, out float h) {
     // is seen of them turns over and is never the same shape carried sideways.
     // From above (uMistD.w) the same heaps are as deep as they are long, since the lens then looks down on them and not through them.
     // Each stretch is carried up by its own lift (stretch.w), one at rest beside one that climbs, and turns over by its own clock.
-    vec4 g = texture(tMistNoise, vec3(lie.x / 130.0, q.y / 50.0 - stretch.w * 0.01, lie.y / mix(1100.0, 150.0, uMistD.w) + stretch.z * 0.004));
-    vec4 fine = texture(tMistNoise, vec3(lie.x / 37.0 + 0.4, q.y / 21.0 - stretch.w * 0.022, lie.y / mix(420.0, 44.0, uMistD.w) - stretch.z * 0.007));
+    vec4 g = texture(tMistNoise, vec3(lie.x / 130.0, q.y / 50.0 - stretch.w * 0.02, lie.y / mix(1100.0, 150.0, uMistD.w) + stretch.z * 0.008));
+    vec4 fine = texture(tMistNoise, vec3(lie.x / 37.0 + 0.4, q.y / 21.0 - stretch.w * 0.04, lie.y / mix(420.0, 44.0, uMistD.w) - stretch.z * 0.012));
     float heap = 0.05 + 1.9 * pow(smoothstep(0.3, 0.72, mix(g.g, g.r, 0.4)), 1.5);
     // A bank without a top is not a row of heaps either: it swells and sinks along the shore by half its height.
     heap = mix(heap, 0.72 + 0.3 * heap, uMistE.x);
@@ -443,6 +451,11 @@ export function create(ctx: Context): Piece {
         show.uMistRound.value = smooth(0.45, 1, over) * (1 - smooth(end - 0.9, end - 0.2, t));
       }
       (rig.uMistOn as THREE.IUniform<number>).value = show.uThin.value;
+      // The strands of the veil are a program of their own, as the layers of the wall are: only the shot that climbs over it pays.
+      if ('VEIL_STRANDS' in volume.defines !== during('eye-05')) {
+        volume.defines = during('eye-05') ? { VEIL_STRANDS: 1 } : {};
+        volume.needsUpdate = true;
+      }
       // The evening shade over the south shore and the spur is laid for the wide shot alone.
       (rig.uShade as THREE.IUniform<THREE.Vector4>).value.w = during('eye-01') ? 0.55 : 0;
       (rig.uPlateShade as THREE.IUniform<THREE.Vector2>).value.x = during('eye-01') ? 1 : 0;
