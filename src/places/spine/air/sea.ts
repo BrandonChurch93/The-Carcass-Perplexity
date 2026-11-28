@@ -388,7 +388,7 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     // before it and takes the air's pale haze as they do. Dark as the wall's foot, it stood between them as a notch of blue water.)
     float intoDusk = dot(rd.xz, vec2(cos(DUSK_AZ), sin(DUSK_AZ))) * inversesqrt(max(dot(rd.xz, rd.xz), 1e-6));
     float wallAt = smoothstep(150.0, 1400.0, ridgeAt(p.x).x - p.z) * smoothstep(500.0, 2000.0, t);
-    float inWall = wallAt * (1.0 - smoothstep(0.3, 0.75, intoDusk));
+    float inWall = wallAt * (1.0 - smoothstep(0.6, 0.9, intoDusk));
     float inStorm = max(stormSide(rd), inWall);
     float head = mix(smoothstep(-0.2, 0.55, seaHead), 0.45, 0.5 * inWall);
     // The way a face of it looks, from the heights a little way off on two hands: wider with the distance, as the lens sees less of it.
