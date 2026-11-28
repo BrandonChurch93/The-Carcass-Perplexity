@@ -28,6 +28,7 @@ uniform float uMud;
 // w: the grey of the mud it is in, 0 the red of the vein, 1 the grey slurry of the thin crust.
 uniform vec4 uCoat;
 uniform float uStrand;
+uniform vec3 uShade;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 const vec3 HIDE_MEAN = vec3(0.163, 0.103, 0.075);
@@ -132,6 +133,8 @@ void main() {
   float graze = pow(1.0 - clamp(dot(ng, v), 0.0, 1.0), mix(2.5, 1.1, leg));
   vec3 n = normalize(mix(normalize(r * nb), ng, 0.9 * graze));
 
+  // (A young one is paler all over, hide and mud: its legs are no dark smear.)
+  albedo *= uShade;
   // Wet mud shows the sky on the top of every fold; the skin is dull, the cake dead.
   float rough = mix(mix(0.9, 0.78, damp), 1.0, dry);
   rough = mix(rough, mix(0.88, 0.76, smoothstep(0.5, 0.85, skinH)), mud);
