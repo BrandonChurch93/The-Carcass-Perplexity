@@ -44,8 +44,6 @@ const RIM_GROWTH: ReadonlyArray<readonly [number, number, number, number]> = [
 const HANG: ReadonlyArray<readonly [number, number, number, number, number]> = [
   [-18.3, 24.8, 7.9, -9.1, 19.5],
   [-19.9, 22.0, 7.0, -11.1, 16.7],
-  // A lower one: the mass goes on down the left edge of that frame, as key breath-4 has it, and no nearer its middle.
-  [-16.5, 28.0, 5.9, -11.0, 26.6],
 ];
 
 const HOLDFAST_FRAGMENT = /* glsl */ `
