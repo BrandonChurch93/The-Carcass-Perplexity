@@ -124,10 +124,10 @@ ${INSECT_PANES}
     vec3 skin = mix(vec3(0.15, 0.12, 0.08), vec3(0.22, 0.16, 0.09), cell) * (0.7 + 0.3 * smoothstep(0.0, 0.5, vUv.x));
     vec3 rib = vec3(0.1, 0.06, 0.035);
     vec3 albedo = mix(skin, rib, vein);
-    c = rigShade(vWorld, n, v, albedo, mix(0.55, 0.7, vein), 1.0);
+    c = rigShade(vWorld, n, v, albedo, 0.92, 1.0);
     c += (1.0 - 0.6 * vein) * 0.4 * rigShade(vWorld, -n, v, skin * vec3(1.0, 0.9, 0.75), 0.9, 1.0);
     vec3 r = reflect(-v, n);
-    c += (1.0 - vein) * skyRadiance(vec3(r.x, abs(r.y), r.z)) * (0.02 + 0.12 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 4.0));
+    c += (1.0 - vein) * skyRadiance(vec3(r.x, abs(r.y), r.z)) * (0.015 + 0.05 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 4.0));
   } else {
     // Amber and brown, darker on the back than beneath, with a dark seam where one segment meets the next; legs and tails are darker still.
     float seam = smoothstep(0.66, 0.94, abs(fract(vUv.x) - 0.5) * 2.0);

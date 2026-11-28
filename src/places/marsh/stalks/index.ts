@@ -592,11 +592,11 @@ export function create(ctx: Context): Piece {
         const sees = seesOf[shot.id] ?? ((): boolean => true);
         // Across a pool a head is a mop of threads, not a fan of blades: there its strands are kept thin. Further off it is a soft red tuft
         // and keeps its breadth; the lens of the wide shot sees a head as a few pixels and keeps them as they were.
-        const slim = (w: Wild): number => (shot.id === 'marsh-01' || from(w) < 14 || from(w) >= 36 ? 1 : 0.6);
+        const slim = (w: Wild): number => (shot.id === 'marsh-01' || from(w) < 14 || from(w) >= 36 ? 1 : 0.75);
         const fineIn = (w: Wild): number => (shot.id === 'marsh-01' ? wideFine(from(w)) : fineOf(from(w)));
         // A head outside the wedge is still grown, into a list that is never drawn, so that every head that is seen keeps its own strands.
         const unseen = new Fronds();
-        for (const w of wilds) crownOf(from(w) < 22 ? nearF : !sees(w) ? unseen : from(w) < 60 ? midF : farF, w, own, fineIn(w), broadOf(from(w)) * slim(w), false);
+        for (const w of wilds) crownOf(from(w) < 22 ? nearF : !sees(w) ? unseen : from(w) < 60 ? midF : farF, w, own, fineIn(w), broadOf(from(w)) * slim(w), false, 0, shot.id !== 'marsh-01' && from(w) >= 12 ? 1 : 0);
         // The stems the same way: by the lens of the shot the ledges of the bark are the mesh, far off a stem is a plain tube.
         const closeW = wilds.filter((w) => from(w) < 7);
         const nearW = wilds.filter((w) => from(w) >= 7 && from(w) < 22);

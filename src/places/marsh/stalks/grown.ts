@@ -402,8 +402,8 @@ void main() {
   // A strap: narrow where it leaves the sheath, widest a fifth of the way out, and drawn out to a point.
   float shape = (0.35 + 0.65 * smoothstep(0.0, 0.2, s)) * (1.0 - pow(s, 2.6));
 #ifdef BLUNT
-  // Far off the end of a strand is lost among the strands beside it: there a lock ends blunt, not in a point.
-  shape = (0.35 + 0.65 * smoothstep(0.0, 0.2, s)) * (1.0 - 0.6 * pow(s, 6.0));
+  // Far off the end of a strand is lost among the strands beside it: there a lock ends blunt, not in a point, and is no wider for it.
+  shape = 0.8 * (0.35 + 0.65 * smoothstep(0.0, 0.2, s)) * (1.0 - 0.6 * pow(s, 6.0));
 #endif
   float halfW = max(half0 * shape, 0.55 * px * (1.0 - pow(s, 6.0))) * step(0.001, kept);
   p += side * (position.x * halfW);
@@ -552,9 +552,10 @@ export function trunkOf(w: Wild): number {
  * The head of a line. On a stalk that stands it is a fan: one to three sparse sprays of long thin straps that leave the line upward and to one
  * side, like spread fingers, and only curve over at their ends. No head is round and none droops evenly all round. The cards a stalk was dressed
  * with (index.ts and stands.ts) say which way the fan is swept, how big it is, and how much of it is ragged or spent.
- * `hung` is the old leaf that hangs down a stem. `fine` is how many straps a card is worth, by how near a lens ever comes.
+ * `hung` is the old leaf that hangs down a stem. `fine` is how many straps a card is worth, by how near a lens ever comes. `spray` is 1
+ * for a head behind the near ones of a shot.
  */
-export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: number, hung: boolean, swept = 0): void {
+export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: number, hung: boolean, swept = 0, spray = 0): void {
   if (w.cards.length === 0) return;
   const { end, aim } = endOf(w);
   if (!hung) {
@@ -573,9 +574,8 @@ export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: nu
     const u = (w.seed * 7.31) % 1;
     const v = (w.seed * 13.7) % 1;
     const q = (w.seed * 29.3) % 1;
-    // The taller the stalk that stands alone the fuller its head: a tall one under a small tuft is a post.
-    const share = Math.min(1.25, Math.max(swept === 0 && w.h > 3.4 ? 0.95 : 0.45, size / Math.pow(Math.min(1.1, Math.max(0.12, w.h / 2.6)), 0.9)));
-    const long = 0.5 * Math.pow(Math.min(w.h, 5.2), 0.85) * (0.8 + 0.45 * u) * share;
+    const share = Math.min(1.25, Math.max(0.45, size / Math.pow(Math.min(1.1, Math.max(0.12, w.h / 2.6)), 0.9)));
+    const long = 0.5 * Math.pow(Math.min(w.h, 3.8), 0.85) * (0.8 + 0.45 * u) * share;
     const lop = Math.min(0.97, 0.66 + 0.26 * v + 0.2 * swept);
     const arch = 1.25 + 1.0 * ((w.seed * 41.3) % 1);
     const strands = Math.round((fine >= 40 ? 170 : fine >= 28 ? 120 : fine >= 13 ? 64 : fine >= 9 ? 44 : fine >= 5 ? 34 : fine >= 4 ? 24 : fine >= 3 ? 18 : fine >= 2.5 ? 12 : fine >= 2 ? 8 : 6) * (0.8 + 0.4 * q) * (1 - 0.4 * ragged) * (w.kind === 1 ? 0.5 : 1));
@@ -588,7 +588,9 @@ export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: nu
       const az = (c0[0] as number) + (with_ ? rng.normal() * 0.75 : rng.range(0, TAU));
       locks.push([az, 0.25 + 0.7 * Math.pow(rng.next(), 1.2), rng.range(0.6, 1.1) * (with_ ? 1 : 0.62)]);
     }
-    const heart = 0.18 + 0.5 * u * u;
+    // Behind the stalks a lens stands among, a head is told by its outline alone, and a mop that hangs all round is a palm there: those
+    // stand up more than they hang, a spray of strands off the tip with a few gone over.
+    const heart = Math.max(0.18 + 0.5 * u * u, 0.62 * spray);
     // Where the lens is near enough to tell one strand from the next, a strand is a thread and not a blade.
     const thread = fine >= 28 ? 0.75 : fine >= 13 ? 0.85 : 1;
     for (let k = 0; k < strands; k++) {
@@ -598,7 +600,7 @@ export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: nu
       const az = up ? rng.range(0, TAU) : lock[0] + rng.normal() * 0.3;
       const leave = sp ? rng.range(1.5, 2.4) : up ? 0.04 + 0.5 * Math.pow(rng.next(), 1.4) : Math.max(0.1, lock[1] + rng.normal() * 0.14);
       const fall = sp ? rng.range(0.4, 1.2) : up ? 20 + rng.range(0.5, 1.7) : 2.75 - leave + rng.range(-0.3, 0.3);
-      const length = long * (sp ? rng.range(0.4, 0.9) : up ? rng.range(0.28, 0.5 + 0.3 * u) : lock[2] * (rng.next() < 0.18 ? rng.range(0.15, 0.45) : rng.range(0.45, 1.2))) * (1 - ragged * rng.range(0, 0.5));
+      const length = long * (sp ? rng.range(0.4, 0.9) : up ? rng.range(0.28 + 0.2 * spray, 0.5 + 0.3 * u + 0.35 * spray) : lock[2] * (rng.next() < 0.18 ? rng.range(0.15, 0.45) : rng.range(0.45, 1.2))) * (1 - ragged * rng.range(0, 0.5));
       // The first strand of a head is the last to go when the head is thinned for distance: no head thins to nothing.
       list.add(w, end, aim, az, leave, length, Math.min(0.03, Math.max(0.005, length * rng.range(0.012, 0.04))) * broad * thread * (fine >= 5 ? 1 : fine >= 3 ? 1.15 : 1.3), rng.next(), fall + 10, sp, k === 0 ? 0 : 0.75 * rng.next(), !w.bare, w.seed);
     }
