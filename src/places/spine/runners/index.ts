@@ -102,7 +102,7 @@ const smooth = (a: number, b: number, v: number): number => {
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('runners');
   // The dead one's coat is seen from three metres: every lock of it is drawn as its hairs.
-  const hairs = strandGeometry(12, 6, 4);
+  const hairs = strandGeometry(11, 6, 4);
   // The herd's is seen from metres off, and hangs straight: fewer hairs to a lock and fewer bends to a hair, and more locks.
   const hairsFar = strandGeometry(6, 6);
   const tendril = tendrilGeometry();
