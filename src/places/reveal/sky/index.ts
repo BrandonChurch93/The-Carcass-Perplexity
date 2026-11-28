@@ -134,7 +134,7 @@ void main() {
   vec4 hazeGB = GRADS(hazeUvB);
   if (goldA > 0.0) {
     float layers = dot(0.6 * pic(uMatVeil, hazeUvA, hazeGA, 1.0).rgb + 0.4 * pic(uMatVeil, hazeUvB, hazeGB, 1.0).rgb, vec3(0.3, 0.55, 0.15));
-    goldA *= 0.76 + 0.24 * smoothstep(0.1, 0.42, layers) + 0.2 * (layers - 0.262);
+    goldA *= 0.92 + 0.08 * smoothstep(0.1, 0.42, layers) + 0.07 * (layers - 0.262);
   }
   vec3 gold = uSunColour * vec3(1.0, 0.8, 0.52) * (0.08 + 0.34 * image);
   if (uDusk > 0.0) {
@@ -403,7 +403,7 @@ void main() {
 }`;
 
 // The edge of the planet. Inside it the air thickens to a blue band; outside it thins into the black within a few tens of kilometres,
-// and behind the black stand a few stars.
+// and behind the black, once the day is over and the exposure opens, a few stars.
 const EDGE_FRAGMENT = /* glsl */ `
 ${RIG_GLSL}
 ${NOISE_GLSL}
@@ -424,7 +424,7 @@ void main() {
     float pick = hash12(cell);
     vec2 off = vec2(hash12(cell + 7.3), hash12(cell + 19.1)) - 0.5;
     float star = step(0.94, pick) * exp(-dot(within - 0.6 * off, within - 0.6 * off) * 520.0) * (0.25 + 0.75 * hash12(cell + 3.7)) * smoothstep(20.0, 90.0, km);
-    vec3 colour = (glow + vec3(0.85, 0.9, 1.0) * star * 0.3) * a;
+    vec3 colour = glow * a;
     if (uDusk > 0.0) {
       // The air at the edge keeps the sun longest, on the side the sun went: a twilight arc, warm against the planet and blue above,
       // and when that has gone a thin line of airglow all round. The stars come out as the exposure opens.
