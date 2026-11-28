@@ -8,7 +8,7 @@ import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { LOD_GLSL } from './lod';
 import { smooth } from '../layout';
 import { vnoise } from '../shared/noise';
-import { landHeight, onAxis, streamAcross, streamFloor } from './height';
+import { BENCH, landHeight, onAxis, streamAcross, streamFloor } from './height';
 
 /** A stone that stands in the stream: metres along it, metres off its middle, and its radius. */
 export interface Standing {
@@ -184,7 +184,8 @@ export function createStream(ctx: Context, stones: Standing[], to: number, grit:
       position[o * 3 + 2] = z;
       flow[o * 2] = along;
       flow[o * 2 + 1] = off;
-      water[o * 3] = level - landHeight(x, z);
+      // Below the foot of the bench the water goes down into the gravel and runs under it: it is not seen again.
+      water[o * 3] = level - landHeight(x, z) - 2 * smooth(BENCH.end, BENCH.end - 1.5, along);
       water[o * 3 + 1] = fall;
       water[o * 3 + 2] = churned;
     }

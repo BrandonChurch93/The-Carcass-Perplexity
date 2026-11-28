@@ -67,7 +67,7 @@ ${SHORE_LAY_GLSL}
 vec2 lipHigh(vec2 xz, float level) {
   // Both are read a level and more above the mesh: the sheet's height is its tone, sharp at every fleck of weed, and raised texel by
   // texel it is a field of thorns. Read soft, each stone is one round back.
-  float fine = textureLod(tShorePH, shoreLay(tShorePH, xz).xy, level + 10.3).r;
+  float fine = shoreHigh(tShorePH, xz, level + 10.3);
   vec2 t = vec2(xz.x * 0.82 + xz.y * 0.57, -xz.x * 0.57 + xz.y * 0.82);
   float stand = smoothstep(0.42, 0.9, textureLod(tShorePH, t / vec2(6.4, 3.6) + 0.37, max(level + 9.6, 4.0)).r);
   // A standing stone keeps the grain of the small ones on its back, so no top is a flat table.

@@ -16,7 +16,6 @@ import { ROCK_GLSL, rockUniforms } from './rock';
 import { createStream, standingStones } from './stream';
 import { CROP, CROP_FRAGMENT, CROP_VERTEX, cropGround, outcropAt } from './outcrop';
 import { createKnobs } from './knob';
-import { createShelf } from './shelf';
 
 export const PARTS: readonly string[] = ['land', 'brow', 'scree', 'stream'];
 
@@ -269,11 +268,8 @@ export function create(ctx: Context): Piece {
   lipMaterial.userData.depthFragment = NEAR_DEPTH;
   const lipMesh = new THREE.Mesh(lipGeometry(), lipMaterial);
   const knobs = createKnobs(ctx, NEAR_DEPTH, block);
-  // The rock of the shelf round the bones, where it stands out of the water.
-  const shelf = createShelf(ctx, block);
-  ctx.scene.add(ctx.parts.built('land', socket, patch, cropMesh, lipMesh, ...knobs.meshes, ...shelf.meshes));
+  ctx.scene.add(ctx.parts.built('land', socket, patch, cropMesh, lipMesh, ...knobs.meshes));
   for (const m of knobs.meshes) ctx.scene.add(m);
-  for (const m of shelf.meshes) ctx.scene.add(m);
   ctx.scene.add(lipMesh);
   ctx.scene.add(patch);
   ctx.scene.add(cropMesh);
@@ -628,7 +624,6 @@ export function create(ctx: Context): Piece {
       for (const m of [socketMaterial, patchMaterial, cropMaterial, lipMaterial, browMaterial, stoneMaterial, ...blockMaterials]) m.dispose();
       stream.dispose();
       knobs.dispose();
-      shelf.dispose();
     },
   };
 }

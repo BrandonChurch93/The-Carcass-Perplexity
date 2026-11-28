@@ -1,3 +1,4 @@
+// Held back in the third wave and not built (nothing imports this file): at 8761 it read as a scaled slab with a cut outline.
 // The rock of the shelf round the bones: craggy limestone that stands out of the water at the lip. It is a height field of plates,
 // each a slab of its own height and tilt with open joints between, pitted by the water, on a fine mesh of its own. A plate either
 // stands or lies under the water whole, so the edge of the rock is the broken line of the plates and not a contour. Above the
@@ -150,7 +151,7 @@ void main() {
   float washed = smoothstep(0.14, 0.06, lift + 0.06 * (stain - 0.5)) * smoothstep(0.42, 0.66, 0.6 * vnoise(at * 1.3 + 21.0) + 0.4 * vnoise(at * 4.1 + 2.0) + 0.45 * (1.0 - open));
   albedo = mix(albedo, albedo * vec3(0.62, 0.36, 0.15), 0.85 * washed);
   // The wet weed the bones lie half sunk in: a dark mat on the rock about them, thinner on what stands proud of it.
-  float mat = vWeed * smoothstep(1.0, 0.45, open - 0.5 * vnoise(at * 6.1 + 17.0));
+  float mat = vWeed * (0.5 + 0.5 * smoothstep(1.0, 0.45, open - 0.5 * vnoise(at * 6.1 + 17.0)));
   float strand = vnoise(vec2(dot(at, vec2(0.8, 0.6)) * 9.0, dot(at, vec2(-0.6, 0.8)) * 70.0) + 3.0 * vnoise(at * 2.7));
   albedo = mix(albedo, mix(vec3(0.07, 0.035, 0.012), vec3(0.34, 0.16, 0.05), strand), 0.9 * mat);
   // Lichen in pale and rusty patches on the high tops.
@@ -221,8 +222,8 @@ export function createShelf(ctx: Context, sheets: Record<string, THREE.IUniform>
       position[o * 3 + 2] = z;
       const u = U0 + i * CELL;
       const w = W0 + j * CELL;
-      const off = Math.max(Math.max(-1.9 - u, u - 3.0), Math.max(-0.75 - w, w - 1.3));
-      weed[o] = smooth(0.55, -0.25, off + 0.6 * (vnoise(u * 1.9 + 7, w * 1.9 + 3) - 0.5)) * (0.5 + 0.5 * smooth(0.3, 0.6, vnoise(u * 5.3, w * 5.3 + 9)));
+      const off = Math.max(Math.max(-2.3 - u, u - 3.4), Math.max(-1.1 - w, w - 1.7));
+      weed[o] = smooth(0.7, -0.3, off + 0.8 * (vnoise(u * 1.9 + 7, w * 1.9 + 3) - 0.5)) * (0.7 + 0.3 * smooth(0.3, 0.6, vnoise(u * 5.3, w * 5.3 + 9)));
       open[o] = Math.min(1, Math.max(0, 0.8 - 22 * ((near[o] as number) - h) - 7 * ((wideBlur[o] as number) - h)));
     }
   }

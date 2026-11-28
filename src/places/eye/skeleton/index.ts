@@ -8,7 +8,6 @@ import { vnoise } from '../shared/noise';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { WARM_GLSL } from '../land/lod';
-import { SHELF_FLAT } from '../land/shelf';
 import { SCALE, bonesSeat } from './place';
 import { SCULPT } from './sculpt';
 
@@ -48,8 +47,7 @@ void main() {
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 q = vLocal;
-  // Over the flat of rock it lies on (land/shelf.ts).
-  float lift = vWorld.y - ${SHELF_FLAT.toFixed(3)};
+  float lift = vWorld.y;
   // The software renderer shades four pixels together, and a screen derivative taken under a branch takes stale memory from the pixels
   // that did not go that way: no frame then renders the same twice. So the grain of bone is worked out here, for every point,
   // and its lie across the screen taken before any branch.
@@ -356,7 +354,7 @@ export function create(ctx: Context): Piece {
   const z = seat.z;
   mesh.matrixAutoUpdate = false;
   // Sunk into the crust: the lower half of every bone that lies on the floor is under it.
-  mesh.matrix.makeBasis(along.clone().multiplyScalar(SCALE), new THREE.Vector3(0, SCALE, 0), toCamera.clone().multiplyScalar(SCALE)).setPosition(x, SHELF_FLAT - SUNK * SCALE, z);
+  mesh.matrix.makeBasis(along.clone().multiplyScalar(SCALE), new THREE.Vector3(0, SCALE, 0), toCamera.clone().multiplyScalar(SCALE)).setPosition(x, -SUNK * SCALE, z);
   mesh.matrixWorldNeedsUpdate = true;
   // What the bones take from the floor: the sheet lies a hair over it and multiplies what is drawn there.
   const sunDir = ctx.rig.sun.direction;
@@ -386,7 +384,7 @@ export function create(ctx: Context): Piece {
   const sheet = new THREE.Mesh(sheetGeometry, sheetMaterial);
   sheet.frustumCulled = false;
   sheet.matrixAutoUpdate = false;
-  sheet.matrix.makeBasis(along.clone().multiplyScalar(SCALE), new THREE.Vector3(0, SCALE, 0), toCamera.clone().multiplyScalar(SCALE)).setPosition(x, SHELF_FLAT + 0.006, z);
+  sheet.matrix.makeBasis(along.clone().multiplyScalar(SCALE), new THREE.Vector3(0, SCALE, 0), toCamera.clone().multiplyScalar(SCALE)).setPosition(x, 0.004, z);
   sheet.matrixWorldNeedsUpdate = true;
   ctx.scene.add(sheet);
   ctx.scene.add(ctx.parts.built('skeleton', mesh, sheet));
