@@ -6,6 +6,7 @@
 // in both places, so each layer slides against the water as it does on the other side of the cut.
 import * as THREE from 'three';
 import { CLOUD_BYTES, CLOUD_SIZE } from './cloud.data';
+import { PLATE_BYTES, PLATE_HALF, PLATE_LAKE, PLATE_TALL, PLATE_WIDE } from './plate.data';
 
 export interface LidNumbers {
   sun: number[];
@@ -60,6 +61,31 @@ function cloudTile(): THREE.DataTexture {
   return map;
 }
 
+let plateMap: THREE.DataTexture | null = null;
+
+/** The approved picture of the lake from above, where it lies under the lens about the cut. */
+function plateTile(): THREE.DataTexture {
+  if (plateMap) return plateMap;
+  const raw = atob(PLATE_BYTES);
+  const data = new Uint8Array(PLATE_WIDE * PLATE_TALL * 4);
+  for (let i = 0; i < PLATE_WIDE * PLATE_TALL; i++) {
+    data[4 * i] = raw.charCodeAt(3 * i);
+    data[4 * i + 1] = raw.charCodeAt(3 * i + 1);
+    data[4 * i + 2] = raw.charCodeAt(3 * i + 2);
+    data[4 * i + 3] = 255;
+  }
+  const map = new THREE.DataTexture(data, PLATE_WIDE, PLATE_TALL, THREE.RGBAFormat, THREE.UnsignedByteType);
+  map.wrapS = THREE.ClampToEdgeWrapping;
+  map.wrapT = THREE.ClampToEdgeWrapping;
+  map.magFilter = THREE.LinearFilter;
+  map.minFilter = THREE.LinearMipmapLinearFilter;
+  map.generateMipmaps = true;
+  map.colorSpace = THREE.NoColorSpace;
+  map.needsUpdate = true;
+  plateMap = map;
+  return map;
+}
+
 /**
  * The uniforms of the lid. `unit` is the world length of one unit across, `tall` the world height of the camera at the cut. `grade` is
  * how a place must weigh the colours of the lid for them to come out of its own finish as they come out of the other's.
@@ -79,6 +105,10 @@ export function lidUniforms(n: LidNumbers, centre: [number, number], unit: numbe
     uLidShadow: { value: n.shadow },
     uLidWater: { value: new THREE.Vector4((n.water[0] as number) * (deep[0] as number), (n.water[1] as number) * (deep[1] as number), (n.water[2] as number) * (deep[2] as number), n.waterReach) },
     uLidMap: { value: cloudTile() },
+    // The picture of the lake from above, and how a place weighs its land and its deep water.
+    uLidPlate: { value: plateTile() },
+    uLidPlateLand: { value: new THREE.Vector3(grade[0], grade[1], grade[2]) },
+    uLidPlateDeep: { value: new THREE.Vector3(deep[0], deep[1], deep[2]) },
     // The rows of pixels the cloud is read for. Both places keep this one number, whatever the size of the frame, so the banks are as
     // fine on one side of the cut as on the other: it suits the full frame, where both draw the lid on about a thousand rows.
     uLidRows: { value: 720 },
@@ -145,6 +175,9 @@ uniform float uLidShadow;
 uniform vec4 uLidWater;
 uniform sampler2D uLidMap;
 uniform float uLidRows;
+uniform sampler2D uLidPlate;
+uniform vec3 uLidPlateLand;
+uniform vec3 uLidPlateDeep;
 
 const int LID_DECKS = ${LID_DECKS.length};
 const int LID_CUTS = 8;
@@ -162,6 +195,17 @@ const vec2 LID_WIND[LID_DECKS] = vec2[LID_DECKS](${LID_DECKS.map((d) => `vec2(${
 const float LID_FOOT = ${G(LID_GAP.foot)};
 const float LID_TILE = ${G(512)};
 const float LID_THICK = 44.0;
+const vec2 PLATE_HALF = vec2(${G(PLATE_HALF[0] as number)}, ${G(PLATE_HALF[1] as number)});
+const vec2 PLATE_LAKE = vec2(${G(PLATE_LAKE[0] as number)}, ${G(PLATE_LAKE[1] as number)});
+const float PLATE_ACROSS = ${G(PLATE_WIDE / (2 * (PLATE_HALF[0] as number)))};
+// The rough shape of the ground under the picture, in heights of the camera at the cut: the lake lies flat in a bowl, its rim stands
+// highest, and the country falls away from the rim.
+const float PLATE_RIM = 0.022;
+
+float plateHigh(vec2 p) {
+  float r = length((p - PLATE_LAKE) / vec2(1.17, 1.1));
+  return PLATE_RIM * smoothstep(0.98, 1.3, r) * (1.0 - 0.65 * smoothstep(1.3, 2.4, r));
+}
 
 // After the cut the lens leaves the banks under it faster than the land grows: every height of the lid is this much of what it was at the cut.
 // It leaves from rest, so the cut has one rate of climb on both sides, and ends where cloud stands over land seen from so high.
@@ -333,7 +377,11 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     float tongues = smoothstep(0.3, 0.75, 0.6 * vnoise(gm * 1.7 + 3.1) + 0.4 * vnoise(gm * 4.3 + 8.2));
     float torn = 0.6 * vnoise(gm * 9.0 + 6.1) + 0.4 * vnoise(gm * 21.0 + 0.9);
     float grown = 1.0 + (0.5 + 1.2 * max(tm, 0.0)) * tm;
-    float stands = clamp((length(g / (LID_LAKE * uLidWater.w)) / grown * (1.0 + 0.3 * tongues + 0.08 * (torn - 0.5)) - 0.8) / 0.13, 0.0, 1.0);
+    // Where the picture of the ground does not reach it stands thick. Over the picture it has no outline of the lake: it lies in banks
+    // of unlike size over water, shore and land alike, since the ground under it is one ground in both places on those frames.
+    vec2 edge = (PLATE_HALF - abs(g)) / 0.25;
+    float stands = clamp(1.0 - min(edge.x, edge.y), 0.0, 1.0);
+    stands = max(stands, clamp((0.5 * tongues + 0.5 * vnoise(gm * 0.9 + 5.7) - 0.52 - 0.2 * tm) / 0.2, 0.0, 1.0));
     // Banks of it lie on the water as well, so the water is seen in several places of unlike shape and not as one dark round: they shrink as the gaps widen.
     stands = max(stands, clamp((0.55 * vnoise(gm * 2.9 + 11.3) + 0.3 * vnoise(gm * 6.7 + 4.9) + 0.15 * torn - 0.6 - 0.2 * tm) / 0.2, 0.0, 1.0));
     // After the cut new gaps open over the land and grow until none of it is left.
@@ -349,16 +397,27 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     sum += clear * mist * fog * mix(1.0, lightLeft, 0.4);
     tr *= 1.0 - mist;
   }
-  // One water under the banks. On the frames about the cut the deep water of the lake is drawn here, the same in both places, with the wind
-  // on it and the shade of the banks: the Eye's own water goes over to it as the lens nears the cut, and it goes over to the rise's after.
-  // It has no edge: toward the shores each place keeps its own lake, and the banks hide what differs.
-  float water = about * (1.0 - smoothstep(0.93, 1.02, length(g / (LID_LAKE * uLidWater.w))));
-  if (water > 0.0 && tr > 0.02 && floorA < 0.02) {
+  // One ground under the banks. On the frames about the cut the approved picture of the lake from above is drawn here, the same in both
+  // places, laid on the rough shape of the bowl so the rim moves against the water as the lens climbs, with the wind on its water and
+  // the shade of the banks on all of it: the Eye's own ground goes over to it as the lens nears the cut, and it goes over to the rise's after.
+  vec2 inPlate = (PLATE_HALF - abs(g)) / 0.25;
+  float ground = about * clamp(min(inPlate.x, inPlate.y), 0.0, 1.0);
+  if (ground > 0.0 && tr > 0.02 && floorA < 0.02) {
+    // Where the ray meets the rough ground: twice, from the flat.
+    vec2 gp = g + lean * plateHigh(g);
+    gp = g + lean * plateHigh(gp);
+    float lodP = log2(max(reach * camA * PLATE_ACROSS, 1.0));
+    vec3 seen = textureLod(uLidPlate, gp / (2.0 * PLATE_HALF) + 0.5, lodP).rgb;
+    vec3 lin = seen * seen * (0.25 + 0.75 * seen);
+    // Water is dark and blue in the picture; the wind is on it and moves.
+    float wet = smoothstep(0.02, 0.07, seen.b - seen.r) * (1.0 - smoothstep(0.15, 0.24, seen.g));
     vec2 wind = normalize(uLidDrift);
-    vec2 along = vec2(wind.x * g.x + wind.y * g.y, -wind.y * g.x + wind.x * g.y) * vec2(0.3, 1.0);
+    vec2 along = vec2(wind.x * gp.x + wind.y * gp.y, -wind.y * gp.x + wind.x * gp.y) * vec2(0.3, 1.0);
     float windOn = 0.5 * vnoise(along * 7.0 + uLid.y * vec2(0.5, 0.0) + 4.4) + 0.3 * vnoise(along * 19.0 - uLid.y * vec2(1.1, 0.0) + 1.3) + 0.2 * vnoise(along * 47.0 + 7.7);
-    sum += tr * water * uLidWater.rgb * (0.78 + 0.44 * windOn);
-    tr *= 1.0 - water;
+    // The deep water is the one both places already share; the picture gives its shallows and its shore.
+    vec3 colour = mix(lin * uLidPlateLand, mix(lin * uLidPlateDeep * 3.0, uLidWater.rgb, 0.7) * (0.78 + 0.44 * windOn), wet);
+    sum += tr * ground * colour;
+    tr *= 1.0 - ground;
   }
   return vec4(sum, tr);
 }`;
