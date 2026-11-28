@@ -1,0 +1,21 @@
+START-07:32:25
+
+> the-carcass@0.1.0 gate
+> node tools/gate.mjs --phase 6 --only G1,G2,G6,G7,G8,G9,G11,G12,G15,G16
+
+G1 pass  npm run build exits clean with no type errors
+G2 pass  Unit tests pass
+G6 pass  The config passes startup validation and the judged list is in kit/PROGRESS.md
+G7 pass  The lengths of the film, of every place and of the loop, and the order of the places
+G8 pass  Third-party files, recipes and sound records are all written down
+G9 pass  File sizes, secrets, untracked folders, sound on a public repo and the approved hashes
+G11 pass  The cut follows the music
+G12 FAIL  The rise is one shot
+    The check stopped with an error: Only 2.8 GB of disk is free and a render needs 3 GB. Nothing was rendered.
+G15 FAIL  Every key has a key frame inside its unit, and the rise covers its windows
+    The check stopped with an error: Only 2.8 GB of disk is free and a render needs 3 GB. Nothing was rendered.
+G16 pass  The words of the narration in the cut list
+gate phase 6 (only G1, G2, G6, G7, G8, G9, G11, G12, G15, G16): FAIL. 8 of 10 passed, 2 failed, 0 not built.
+gate: out/work/gate/phase-6-only.json
+ENDED 1
+END-07:35:46

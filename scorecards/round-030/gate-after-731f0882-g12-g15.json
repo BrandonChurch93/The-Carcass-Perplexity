@@ -1,0 +1,44 @@
+{
+  "phase": 6,
+  "at": "2026-11-28T07:55:21Z",
+  "only": [
+    "G12",
+    "G15"
+  ],
+  "ok": true,
+  "failed": [],
+  "results": [
+    {
+      "id": "G12",
+      "title": "The rise is one shot",
+      "kind": "machine",
+      "phase": 2,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "The rise is the one shot reveal-01, frames 9541 to 10027. The camera climbs from 155 to 5286 and never falls or jumps."
+      ],
+      "skipped": [],
+      "seconds": 1.5
+    },
+    {
+      "id": "G15",
+      "title": "Every key has a key frame inside its unit, and the rise covers its windows",
+      "kind": "machine",
+      "phase": 2,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "34 keys of the config, 34 with a key frame inside the span of its own unit.",
+        "reveal-1: the view covers its window, with at most 0.7 px of the master to spare where 29.3 px is allowed.",
+        "reveal-2: the view covers its window, with at most 0.5 px of the master to spare where 107.0 px is allowed.",
+        "reveal-3: the view covers its window, with at most 1.3 px of the master to spare where 250.8 px is allowed.",
+        "reveal-4: the view covers its window, with at most 2.9 px of the master to spare where 587.3 px is allowed."
+      ],
+      "skipped": [],
+      "seconds": 0
+    }
+  ]
+}

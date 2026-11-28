@@ -1,0 +1,229 @@
+{
+  "unit": "marsh",
+  "tier": "final",
+  "format": "uhd",
+  "measures": [
+    "M1",
+    "M2",
+    "M3"
+  ],
+  "colour": {
+    "M1": "green",
+    "M2": "green",
+    "M3": "green"
+  },
+  "missing": [],
+  "frames": [
+    {
+      "id": "marsh-0",
+      "frame": 5725,
+      "key": true
+    },
+    {
+      "id": "marsh-1",
+      "frame": 6102,
+      "key": true
+    },
+    {
+      "id": "marsh-2",
+      "frame": 5940,
+      "key": true
+    },
+    {
+      "id": "marsh-3",
+      "frame": 6424,
+      "key": true
+    },
+    {
+      "id": "marsh-4",
+      "frame": 6800,
+      "key": true
+    }
+  ],
+  "results": [
+    {
+      "measure": "M1",
+      "id": "marsh-0",
+      "frame": 5725,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "marsh-1",
+      "frame": 6102,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "marsh-2",
+      "frame": 5940,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "marsh-3",
+      "frame": 6424,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "marsh-4",
+      "frame": 6800,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "marsh-0",
+      "frame": 5725,
+      "status": "pass",
+      "share": 0.23703,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "marsh-1",
+      "frame": 6102,
+      "status": "pass",
+      "share": 0.499666,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "marsh-2",
+      "frame": 5940,
+      "status": "pass",
+      "share": 0.607809,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "marsh-3",
+      "frame": 6424,
+      "status": "pass",
+      "share": 0.491401,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "marsh-4",
+      "frame": 6800,
+      "status": "pass",
+      "share": 0.223282,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M3",
+      "id": "marsh-0",
+      "frame": 5725,
+      "status": "pass",
+      "ratio": 1.1353,
+      "floor": 0.75,
+      "frameEnergy": 609.6697,
+      "approvedEnergy": 537.0332,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/4-marsh/marsh-0-establishing.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "marsh-1",
+      "frame": 6102,
+      "status": "pass",
+      "ratio": 2.2382,
+      "floor": 0.75,
+      "frameEnergy": 320.1572,
+      "approvedEnergy": 143.043,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/4-marsh/marsh-1-the-bubbling-seep-pool.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "marsh-2",
+      "frame": 5940,
+      "status": "pass",
+      "ratio": 1.1584,
+      "floor": 0.75,
+      "frameEnergy": 299.0689,
+      "approvedEnergy": 258.1663,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/4-marsh/marsh-2-the-stalk-colony.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "marsh-3",
+      "frame": 6424,
+      "status": "pass",
+      "ratio": 1.8165,
+      "floor": 0.75,
+      "frameEnergy": 623.5986,
+      "approvedEnergy": 343.302,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/4-marsh/marsh-3-mud-wallowers.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "marsh-4",
+      "frame": 6800,
+      "status": "pass",
+      "ratio": 1.2574,
+      "floor": 0.75,
+      "frameEnergy": 270.9341,
+      "approvedEnergy": 215.4734,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/4-marsh/marsh-4-the-one-on-the-thin-crust.jpg"
+    }
+  ],
+  "usual": {
+    "tier": "final",
+    "format": "uhd"
+  },
+  "thresholds": {
+    "pixelThreshold": 4,
+    "checkGapSeconds": 1,
+    "minSharpnessRatio": 0.75
+  },
+  "sharpness": "The mean squared response of a four neighbour Laplacian on the Rec. 709 luminance of the 8 bit picture, over every pixel that is not on the border. The approved picture is cropped at its centre to the shape of the frame, and both pictures go through the same lanczos3 resize to the size of that crop.",
+  "state": {
+    "engine": "6714b45ff14a5941",
+    "units": {
+      "heart": "e26939d6334ba7c1",
+      "ribs": "b102a8a12e581c38",
+      "breath": "faeff2bfbd6618f8",
+      "marsh": "85689939a752b171",
+      "spine": "b141536f55a18b99",
+      "eye": "e224102a93b17dc2",
+      "reveal": "a285a6223a7f47ea",
+      "film": "51d802f37e2b75ab"
+    },
+    "browser": "147.0.7727.15"
+  }
+}

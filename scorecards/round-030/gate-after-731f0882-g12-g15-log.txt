@@ -1,0 +1,11 @@
+START-07:55:19
+
+> the-carcass@0.1.0 gate
+> node tools/gate.mjs --phase 6 --only G12,G15
+
+G12 pass  The rise is one shot
+G15 pass  Every key has a key frame inside its unit, and the rise covers its windows
+gate phase 6 (only G12, G15): pass. 2 of 2 passed, 0 failed, 0 not built.
+gate: out/work/gate/phase-6-only.json
+ENDED 0
+END-07:55:21

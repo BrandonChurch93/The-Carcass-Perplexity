@@ -1,0 +1,15 @@
+START-07:35:32
+
+> the-carcass@0.1.0 gate
+> node tools/gate.mjs --phase 6 --only G3,G4,G5,G10,G13
+
+G3 pass  npm run determinism passes
+G4 pass  Stills are the size of their format, and the film and the loop have the right frame counts
+G5 pass  No interface in a frame, and every frame is read from the canvas
+G10 pass  Only WebGL2 core and portable extensions, with a half float path
+G13 pass  No covered part is a stand-in
+    not checked: test 4 for eye/stream: it was never seen in the film as a stand-in, so it has no reference picture
+gate phase 6 (only G3, G4, G5, G10, G13): pass. 5 of 5 passed, 0 failed, 0 not built.
+gate: out/work/gate/phase-6-only.json
+ENDED 0
+END-07:49:13
