@@ -61,6 +61,8 @@ export interface Build {
   stem?: number;
   leg: number;
   head: number;
+  /** How long the trunk is from the hip to the shoulder, of what it was made with. */
+  long?: number;
 }
 
 export interface Hoof {
@@ -68,6 +70,8 @@ export interface Hoof {
   at: V3;
   /** 0 planted, 1 folded at the top of a step. */
   fold: number;
+  /** The cannon leant from how it stands at rest, radians: forward at its top where the hoof is behind the leg. */
+  lean?: number;
 }
 
 export interface Pose {
@@ -154,7 +158,7 @@ export function solve(b: Build, p: Pose, out: Float32Array): Solved {
     }
   };
 
-  const trunkShape = diag(s * b.girth * (1 + p.breath), s * b.depth * (1 + 0.35 * p.breath), s);
+  const trunkShape = diag(s * b.girth * (1 + p.breath), s * b.depth * (1 + 0.35 * p.breath), s * (b.long ?? 1));
   const rootTurn = mul(rotY(p.yaw), mul(rotX(p.pitch), rotZ(p.roll)));
   const root: V3 = [p.shift[0], standing(b) + p.shift[1], J('root')[2] * s + p.shift[2]];
   const trunk = mul(rootTurn, trunkShape);
@@ -220,7 +224,7 @@ export function solve(b: Build, p: Pose, out: Float32Array): Solved {
     let from = leg.hind ? add(pelvisAt, apply(pelvis, sub(top, J('pelvis')))) : add(chestAt, apply(chest, sub(top, J('chest'))));
     const fetlock: V3 = [hoof.at[0], hoof.at[1] + (r[3] as V3)[1] * s, hoof.at[2]];
     // The cannon stands nearly upright under a planted leg, and folds as the hoof comes up: the hock goes forward over the hoof, the knee too.
-    const lean = Math.atan2(-r3[2], -r3[1]) + hoof.fold * (leg.hind ? 0.75 : 0.95);
+    const lean = Math.atan2(-r3[2], -r3[1]) + hoof.fold * (leg.hind ? 0.75 : 0.95) + (hoof.lean ?? 0);
     let upper: V3 = [fetlock[0] - r3[0] * s, fetlock[1] + l3 * Math.cos(lean), fetlock[2] + l3 * Math.sin(lean)];
     let d = sub(upper, from);
     if (!leg.hind) {
@@ -259,5 +263,6 @@ export function solve(b: Build, p: Pose, out: Float32Array): Solved {
 export function restHoof(b: Build, k: number): V3 {
   const leg = LEGS[k] as (typeof LEGS)[number];
   const fet = J(leg.hind ? 'hfet' : 'ffet');
-  return [fet[0] * leg.side * b.size * b.girth, 0, fet[2] * b.size];
+  const mid = J('root')[2];
+  return [fet[0] * leg.side * b.size * b.girth, 0, (mid + (fet[2] - mid) * (b.long ?? 1)) * b.size];
 }
