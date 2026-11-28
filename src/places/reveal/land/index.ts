@@ -10,7 +10,7 @@ import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 import { WEATHER_GLSL } from '../shared/weather';
 import { LEVELS, pairFor, type Level } from './levels';
 import { OCEAN_GLSL, oceanUniforms } from './ocean';
-import { BODY_BIAS, BODY_CAST, BODY_COARSE, BODY_GROUND, BODY_LIGHT, BODY_PAN, BODY_PILE, BODY_PILE_END, BODY_READ, BODY_UNIFORMS, BODY_WET } from './body';
+import { BODY_BIAS, BODY_CAST, BODY_COARSE, BODY_GROUND, BODY_LIGHT, BODY_PAN, BODY_PILE, BODY_PILE_END, BODY_READ, BODY_UNIFORMS, BODY_VENTS, BODY_WET } from './body';
 
 // The window of the first approved picture in the master (references/approved/7-reveal/pullback.json): the bed map covers it.
 const BED = { x: 1126.18, y: 1498.28, w: 293.34, h: 165.09 };
@@ -921,6 +921,7 @@ ${BODY_CAST}
   glow += vec3(1.0, 0.16, 0.03) * 0.09 * max(pulse - 0.12, 0.0) * exp(-d0 / 30000.0) * land * (0.6 + 0.8 * clamp(0.5 + 2.6 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 1.0));
   vec3 glowSwell = glow;
   glow += vec3(1.0, 0.3, 0.06) * 0.26 * halo * land * clamp(0.4 + 2.6 * dot(slope, fromLava / (length(fromLava) + 1.0)), 0.0, 1.8);
+${BODY_VENTS}
 
   // By night the Heart is the brightest thing on the planet: the ember swells with the beat, its fire lights the rock and the
   // flanks of the ribs that face it, falling off with distance, and veins of fire run out between the ribs.

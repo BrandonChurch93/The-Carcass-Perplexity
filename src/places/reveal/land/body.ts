@@ -17,6 +17,8 @@ uniform vec4 uBodyRelief2;
 #define PAN_LOW 0.135
 #define PAN_HIGH 0.165
 #define PAN_THIN 0.12
+// How strong the light of the vents lies on the rock round them, from orbit and by day.
+#define VENT_LIGHT 0.8
 `;
 
 /** The body's pictures are worked at the size the picture holds: from orbit they are read nearly at their own grain. */
@@ -117,6 +119,24 @@ export const BODY_PAN = /* glsl */ `
     float plate = (1.0 - smoothstep(0.8, 1.3, reach)) * (1.0 - smoothstep(PAN_LOW, PAN_HIGH, height)) * land;
     panAt = mix(panAt, plate, joined);
     rawBrine -= PAN_THIN * joined;
+  }
+#endif
+`;
+
+/** From orbit each vent is a point of light that lights the rock round it: the slopes that face it, by the rock's own colour, and
+ * under the light of the day on the crests. As the day ends it goes, and by night the fire's own drawing stands as it was. */
+export const BODY_VENTS = /* glsl */ `
+#ifdef BODY
+  if (joined > 0.0 && uDusk < 0.5 && d0 < 160000.0) {
+    float lit = exp(-d0 / 4200.0) * 1.3 * swell * clamp(0.18 + 3.0 * dot(slope, fromLava / (sqrt(d0) + 1.0)), 0.0, 2.0);
+    for (int i = 0; i < 6; i++) {
+      vec3 vent = VENTS[i];
+      vec2 q = fromLava - vent.xy;
+      float dd = dot(q, q);
+      float answer = 0.72 + 0.2 * vnoise(vec2(uTime * (0.17 + 0.06 * float(i)), 31.0 + 7.3 * float(i)));
+      lit += exp(-dd / (2600.0 * vent.z)) * 1.6 * vent.z * answer * clamp(0.18 + 3.0 * dot(slope, q / (sqrt(dd) + 1.0)), 0.0, 2.0);
+    }
+    glow += vec3(1.0, 0.36, 0.08) * VENT_LIGHT * lit * land * joined * (1.0 - smoothstep(0.0, 0.5, uDusk)) * (0.25 + 2.2 * dot(ground, vec3(0.3, 0.6, 0.1)));
   }
 #endif
 `;
