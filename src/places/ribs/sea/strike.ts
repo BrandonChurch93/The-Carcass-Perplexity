@@ -73,7 +73,7 @@ void main() {
   float size = aAt.w;
   if (kind > 0.5 && kind < 1.5) {
     // Close to the lens a handful of beads is a few big soft drops, and most handfuls are not seen at all.
-    size *= (1.0 + 0.9 * near) * step(0.62 * near, fract(aLook.y * 13.7));
+    size *= (1.0 + 0.6 * near) * step(0.62 * near, fract(aLook.y * 13.7));
   }
   centre.xy += (across * position.x + along * position.y * drawn) * size;
   vDense = dense;
@@ -320,8 +320,8 @@ export class Burst {
       };
 
       // Sheets: each finger is a run of cards that leave one after another, so the column stands from the sea to its head while it is fed.
-      // A slam close to the lens: half the sheets, each larger.
-      for (let i = 0; i < SHEETS && !s.wash; i += slam ? 2 : 1) {
+      // A slam close to the lens: a fifth of the sheets, each larger and denser. Every card there is a second of drawing over a film's opening.
+      for (let i = 0; i < SHEETS && !s.wash; i += slam ? 5 : 1) {
         const id = s.id * 100000 + i;
         const j = jet(i % JETS);
         const order = Math.floor(i / JETS) / (SHEETS / JETS);
@@ -338,12 +338,12 @@ export class Burst {
         const fade = Math.min(1, a / 0.1) * Math.min(1, Math.max(0, (y + 2) / 5)) * (1 - 0.6 * Math.max(0, gone - 0.6) / 0.4);
         // The low third of a slam is its body: dense and white, thinning upward into the torn water.
         const low = slam ? Math.min(1, Math.max(0, 1 - y / (0.22 * s.height))) : 0;
-        this.put(bx + dx, y, bz + dz, big * (1.5 + 1.5 * Math.min(a, 2.5)) * (0.6 + 0.8 * rand(id, 9)) * (0.6 + 0.5 * j.power) * (slam ? 1.7 + 0.5 * low : 1), vx, vy, vz, flag + 0.4 * low, 0.92 * fade * still, rand(id, 10), gone * (1 - 0.6 * low), sunward(j.along, id));
+        this.put(bx + dx, y, bz + dz, big * (1.5 + 1.5 * Math.min(a, 2.5)) * (0.6 + 0.8 * rand(id, 9)) * (0.6 + 0.5 * j.power) * (slam ? 1.45 + 0.45 * low : 1), vx, vy, vz, flag + (slam ? 0.2 + 0.2 * low : 0), 0.92 * fade * still, rand(id, 10), gone * (1 - 0.6 * low), sunward(j.along, id));
       }
 
       // Droplets: thrown wide of the fingers, faster than the sheets at first and slowed sooner, each card a handful of beads.
       // A slam near the lens is drawn with fewer handfuls, each larger.
-      for (let i = 0; i < DROPS && !s.wash; i += slam ? 2 : 1) {
+      for (let i = 0; i < DROPS && !s.wash; i += slam ? 6 : 1) {
         const id = s.id * 100000 + 20000 + i;
         const j = jet(Math.floor(rand(id, 1) * JETS));
         const a = t - j.late - 0.7 * rand(id, 6) * rand(id, 11);
@@ -352,7 +352,7 @@ export class Burst {
         // A slam's drops are of every size: the fine ones stop and hang, the heavy ones go on up and come down hard.
         const k = slam ? 0.45 + 1.5 * small * small : 0.1 + 0.4 * small * small;
         // One in three is of the crown: thrown low and wide of the foot as the sea strikes, and down again inside two seconds.
-        const crown = (slam ? i / 2 : i) % 3 === 0;
+        const crown = (slam ? i / 6 : i) % 3 === 0;
         const v0 = crown ? launch(j, 0.1 + 0.22 * rand(id, 7), 3.4, id, k, 0.2) : launch(j, 0.55 + 0.75 * rand(id, 7), 1.6, id, k, 0.2 + 0.5 * rand(id, 25));
         const [dx, dy, dz, vx, vy, vz] = fly(a, k, v0, 0.45);
         const y = 0.6 + dy;
@@ -363,7 +363,7 @@ export class Burst {
       }
 
       // Mist: the finest water stops in the air near the top of its finger and goes off down the wind, thinning.
-      for (let i = 0; i < MIST && !s.wash; i++) {
+      for (let i = 0; i < MIST && !s.wash; i += slam ? 2 : 1) {
         const id = s.id * 100000 + 40000 + i;
         const j = jet(Math.floor(rand(id, 1) * JETS));
         const a = t - j.late - 1.1 - 1.6 * rand(id, 6);
@@ -416,7 +416,7 @@ export class Burst {
           const flat = slam ? Math.max(0.22, Math.min(1, 1 - (a - 1.4) / 2.2)) : 1;
           const heap = slam ? 0.25 + 0.75 * peak * (0.5 + rand(id, 16)) : 1;
           // While the sea is still coming in, the heap at the foot is the burst's white body: a few big heads, one over another.
-          this.put(x, y * (slam ? flat * (1 + 1.6 * heap) : 1), z, big * (0.5 + 4.5 * lump) * (0.6 + 0.4 * Math.min(a, 2)) * (slam ? 0.8 + 1.5 * heap : 1), 0, 0, 0, 3 + (slam ? 0.05 + 0.4 * heap * flat : 0), (0.25 + 0.7 * rand(id, 9)) * (slam ? 0.45 + 0.55 * heap : 1) * fade * still, rand(id, 10), 0, (0.7 + 0.6 * rand(id, 15)) * flat);
+          this.put(x, y * (slam ? flat * (1 + 1.6 * heap) : 1), z, big * (0.5 + 4.5 * lump) * (0.6 + 0.4 * Math.min(a, 2)) * (slam ? 0.6 + 0.8 * heap : 1), 0, 0, 0, 3 + (slam ? 0.05 + 0.4 * heap * flat : 0), (0.25 + 0.7 * rand(id, 9)) * (slam ? 0.45 + 0.55 * heap : 1) * fade * still, rand(id, 10), 0, (0.7 + 0.6 * rand(id, 15)) * flat);
         }
       }
     }
