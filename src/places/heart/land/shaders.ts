@@ -833,6 +833,10 @@ void main() {
   // pale line along its brow, which is this.
   float cap = smoothstep(0.62, 0.9, n0.y) * smoothstep(34.0, 60.0, vWorld.y) * (0.6 + 0.4 * smoothstep(0.3, 0.6, mid));
   albedo = mix(albedo, vec3(0.25, 0.228, 0.2) * (0.5 + 1.0 * height), 0.7 * cap);
+  // And the brow itself, where the table turns over into the cliff, and the lip of every ledge under it, is bare broken edge that takes the
+  // sky: the palest line of the butte in its picture.
+  float brow = smoothstep(0.2, 0.42, n0.y) * smoothstep(0.8, 0.58, n0.y) * smoothstep(40.0, 62.0, vWorld.y);
+  albedo = mix(albedo, vec3(0.34, 0.3, 0.26) * (0.6 + 0.8 * height), 0.65 * brow);
   // A skirt of talus lies against its near side, in the shape and in cones of tone above it: paler than the cliffs and without their joints.
   float coneRun = dot(vWorld.xz, vec2(0.25, 0.97));
   float coneTop = 16.0 + 30.0 * vnoise(vec2(coneRun / 34.0, 1.7)) + 6.0 * (mid - 0.5);
