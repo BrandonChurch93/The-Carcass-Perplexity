@@ -229,6 +229,9 @@ interface Stone {
   size: number;
   /** It stands in the stream. */
   wet?: boolean;
+  /** On the beach: how large it lies beside how it was laid (nothing: it is not there), and how deep it is bedded in the gravel. */
+  lie?: number;
+  bed?: number;
 }
 
 export function create(ctx: Context): Piece {
@@ -500,6 +503,26 @@ export function create(ctx: Context): Piece {
       ctx.scene.add(mesh);
     }
   }
+  // The stones of the beach lie as a lake leaves them: gathered in a few heaps of mixed sizes with bare gravel between, one alone here
+  // and there, and one in four bedded to its shoulders. Each is told so by its own place, and none leaves the list: the rest are laid
+  // in the order they always were.
+  for (const s of [...(stones[0] as Stone[]), ...(stones[1] as Stone[])]) {
+    const [along, across] = axisOf(s.x, s.z);
+    if (along < -2 || along > 124 || Math.abs(across) > 62) continue;
+    const on = (1 - smooth(108, 124, along)) * (1 - smooth(46, 62, Math.abs(across)));
+    if (on <= 0) continue;
+    const own = (n: number): number => {
+      const v = Math.sin(s.x * 12.9898 * n + s.z * 78.233 + n * 37.1) * 43758.5453;
+      return v - Math.floor(v);
+    };
+    const heap = 0.62 * vnoise(along / 10 + 41, across / 10 + 17) + 0.38 * vnoise(along / 3.7 + 3, across / 3.7 + 29);
+    if (on > 0.5 && heap < 0.54 && own(1) > 0.07) {
+      s.lie = 0;
+      continue;
+    }
+    s.lie = Math.min(1 + on * (-0.65 + 1.0 * own(2) ** 2.5), Math.max(1.6 / s.size, 1));
+    if (own(3) < 0.28) s.bed = on * (0.25 + 0.35 * own(4));
+  }
   // The blocks: each a broken stone raised from the atlas. How finely one is cut goes by how near a camera ever comes to it.
   const blockMaterials: THREE.ShaderMaterial[] = [];
   const balls: THREE.BufferGeometry[] = [];
@@ -523,7 +546,7 @@ export function create(ctx: Context): Piece {
       const pass = Math.hypot(Math.max(0, Math.abs(along - 150) - 52), across);
       const k = pass < 48 && s.size > 2.3 ? 0 : pass < 90 && s.size > 1.1 ? 1 : pass < 40 || (reach < 330 && s.size > 1.1) ? 2 : reach < 330 ? 3 : 4;
       (classes[k] as { list: Stone[] }).list.push(s);
-      if (s.size > 0.5 && (s.size <= 2.2 || Math.hypot(s.x, s.z) < 1300)) discs.push(s);
+      if (s.size > 0.5 && s.lie !== 0 && (s.size <= 2.2 || Math.hypot(s.x, s.z) < 1300)) discs.push(s.lie === undefined ? s : { x: s.x, z: s.z, size: s.size * s.lie });
     }
     for (const c of classes) {
       if (c.list.length === 0) continue;
@@ -536,7 +559,8 @@ export function create(ctx: Context): Piece {
       blockMaterials.push(material);
       c.list.forEach((s, i) => {
         // A stone of the atlas is about 0.8 from its middle to its faces.
-        const half = s.size * 0.58;
+        // A stone the beach does not hold is a grain under the ground.
+        const half = s.size * 0.58 * (s.lie === 0 ? 0.001 : (s.lie ?? 1));
         const sy = half * rng.range(0.6, 1.0);
         const ground = groundAt(s.x, s.z);
         const e = Math.max(0.4, s.size * 0.5);
@@ -544,7 +568,8 @@ export function create(ctx: Context): Piece {
         const gx = (landHeight(s.x + e, s.z) - landHeight(s.x - e, s.z)) / (2 * e);
         const gz = (landHeight(s.x, s.z + e) - landHeight(s.x, s.z - e)) / (2 * e);
         // On a slope it is sunk by as much again as its downhill side would stand clear.
-        dummy.position.set(s.x, ground + sy * rng.range(0.06, 0.36) - 0.28 * half * Math.min(1, Math.hypot(gx, gz)), s.z);
+        const clear = rng.range(0.06, 0.36);
+        dummy.position.set(s.x, ground + sy * (s.bed === undefined ? clear : -s.bed) - 0.28 * half * Math.min(1, Math.hypot(gx, gz)) - (s.lie === 0 ? 1 : 0), s.z);
         dummy.rotation.set(rng.range(-0.4, 0.4), rng.range(0, Math.PI * 2), rng.range(-0.4, 0.4));
         dummy.scale.set(half * rng.range(0.8, 1.3), sy, half * rng.range(0.8, 1.3));
         dummy.updateMatrix();
