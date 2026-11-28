@@ -19,6 +19,7 @@ attribute vec4 aBones;
 attribute vec4 aWeights;
 attribute vec2 aShade;
 uniform vec4 uBones[${BONES * 3}];
+uniform vec4 uOwn;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vRest;
@@ -34,13 +35,21 @@ void main() {
   float h = dot(fromSkull, muzzleWay) / 0.744;
   float girthAt = 1.0 + 0.24 * exp(-pow((h - 0.12) / 0.24, 2.0)) - 0.08 * exp(-pow((h - 0.5) / 0.2, 2.0)) + 0.22 * smoothstep(0.6, 1.0, h);
   p.xyz += headed * ((girthAt - 1.0) * (fromSkull - muzzleWay * dot(fromSkull, muzzleWay)) + muzzleWay * (0.16 * smoothstep(0.25, 1.0, h)));
+  // The blades of the shoulder and the points of the hip were made to stand under the hide of a flank seen side on. On the two seen from
+  // behind and above they would stand on the back as horns: there they lie under the hide, and the back is round over them.
+  vec3 fromBlade = (vec3(abs(position.x), position.yz) - vec3(0.25, 2.3, 0.7)) / vec3(0.14, 0.14, 0.24);
+  vec3 fromHip = (vec3(abs(position.x), position.yz) - vec3(0.215, 2.25, -0.6)) / vec3(0.13, 0.1, 0.19);
+  float blade = step(0.01, uOwn.w) * exp(-dot(fromBlade, fromBlade));
+  float hipPoint = step(0.01, uOwn.w) * exp(-dot(fromHip, fromHip));
+  p.y -= 0.12 * blade + 0.04 * hipPoint;
+  vec3 made = normalize(mix(normal, vec3(0.45 * sign(position.x), 0.89, 0.0), 0.85 * max(blade, hipPoint)));
   vec3 world = vec3(0.0);
   vec3 n = vec3(0.0);
   for (int k = 0; k < 4; k++) {
     float w = aWeights[k];
     int b = int(aBones[k] + 0.5) * 3;
     world += w * vec3(dot(uBones[b], p), dot(uBones[b + 1], p), dot(uBones[b + 2], p));
-    n += w * vec3(dot(uBones[b].xyz, normal), dot(uBones[b + 1].xyz, normal), dot(uBones[b + 2].xyz, normal));
+    n += w * vec3(dot(uBones[b].xyz, made), dot(uBones[b + 1].xyz, made), dot(uBones[b + 2].xyz, made));
   }
   vWorld = world;
   vNormal = normalize(n);
@@ -156,6 +165,8 @@ void main() {
   vec3 dpy = dFdy(vWorld);
   vec3 rx = dFdx(vRest);
   vec3 ry = dFdy(vRest);
+  // The two under the last camera stand before its focus: what is fine in the hide is lost, as through a soft lens.
+  float soft05 = 1.0 + 0.4 * step(0.01, uOwn.w);
   float px = (length(dpx) + length(dpy)) / uOwn.y;
   // Where on the body: along the neck from its root, down the legs, on the flanks of the trunk.
   float along = dot(vRest - vec3(0.0, 2.02, 0.95), vec3(0.0, 0.9407, 0.3393));
@@ -168,23 +179,27 @@ void main() {
   float w2 = n3(at * 11.0);
   float rings = crease(along * 19.0 + 2.6 * w1 + 0.7 * w2, 19.0 * px);
   float near = uKin.x;
+  // The two under the last camera are seen from above and behind, a few paces off and out of focus: the bones and the ribs that mark a flank
+  // seen side on would stand on a back as knobs and ridges, and are let down.
+  float under05 = step(0.01, uOwn.w);
   // Seen close, the hide of the neck is gathered all the way up it, not at its root alone.
   float root = 1.0 - smoothstep(0.2, 1.3 + 1.2 * near, along);
   float joint = exp(-pow((vRest.y - 0.78) / 0.17, 2.0)) + exp(-pow((vRest.y - 0.14) / 0.09, 2.0)) + 0.6 * exp(-pow((vRest.y - 1.36) / 0.14, 2.0));
   float legRings = crease(vRest.y * 46.0 + 3.0 * w1 + 1.2 * w2, 46.0 * px);
-  float ribs = flank * smoothstep(-0.12, 0.05, vRest.z) * smoothstep(0.6, 0.42, vRest.z) * smoothstep(1.42, 1.62, vRest.y) * smoothstep(2.16, 1.86, vRest.y);
+  float ribs = (1.0 - step(0.01, uOwn.w)) * flank * smoothstep(-0.12, 0.05, vRest.z) * smoothstep(0.6, 0.42, vRest.z) * smoothstep(1.42, 1.62, vRest.y) * smoothstep(2.16, 1.86, vRest.y);
   // The hide hangs loose where the body bends: at the root of the neck, behind the shoulder, in front of the stifle, under the belly. Over the
   // ribs, the hip and the rump it is drawn tight.
   vec3 fromShoulder = (vRest - vec3(0.0, 1.62, 0.62)) / vec3(1.0, 0.42, 0.3);
   vec3 fromStifle = (vRest - vec3(0.0, 1.5, -0.5)) / vec3(1.0, 0.36, 0.26);
-  float slackNeck = neck * root * (1.0 - 0.7 * uPose.x);
+  float slackNeck = neck * root * (1.0 - 0.7 * uPose.x * (1.0 - 0.45 * under05));
   float loose = clamp(slackNeck + exp(-dot(fromShoulder.yz, fromShoulder.yz)) + exp(-dot(fromStifle.yz, fromStifle.yz))
     + trunk * smoothstep(-0.1, -0.7, rn.y) + 0.8 * leg * joint, 0.0, 1.0);
   loose = mix(0.1, 1.0, loose * smoothstep(0.15, 0.8, n3(at * 1.9 + 7.0)) * 1.5);
   loose = min(loose, 1.0);
-  float relief = slackNeck * (0.004 + 0.002 * near) * rings
+  // Under the last camera the thick necks are ringed deep, and no two rings alike: one stands proud, the next is hardly there.
+  float relief = slackNeck * (0.004 + 0.002 * near) * (1.0 + under05 * (1.3 * n3(vec3(along * 7.0, own * 17.0, 3.0)) - 0.45)) * rings
     + leg * joint * 0.0026 * legRings
-    + ribs * (1.0 - smoothstep(0.005, 0.016, px)) * 0.0022 * (0.5 + w1) * cos(6.2832 * (vRest.z + 0.3 * (vRest.y - 1.9) + 0.03 * w1) / 0.15);
+    + ribs * (1.0 - 0.65 * under05) * (1.0 - smoothstep(0.005, 0.016, px)) * 0.0022 * (0.5 + w1) * cos(6.2832 * (vRest.z + 0.3 * (vRest.y - 1.9) + 0.03 * w1) / 0.15);
   // The bones under a thin hide: the point of the hip, the blade and the point of the shoulder stand out, and the flank falls in between the
   // last rib and the hip.
   vec2 side = vRest.yz;
@@ -194,7 +209,10 @@ void main() {
     + 0.7 * exp(-dot(side - vec2(1.56, 0.8), side - vec2(1.56, 0.8)) / 0.0081) + 0.6 * blade);
   float hollow = trunk * smoothstep(0.25, 0.6, abs(rn.x)) * exp(-dot((side - vec2(1.88, -0.2)) / vec2(0.17, 0.13), (side - vec2(1.88, -0.2)) / vec2(0.17, 0.13)));
   float ribbed = ribs * (0.5 + w1) * cos(6.2832 * (vRest.z + 0.3 * (vRest.y - 1.9) + 0.03 * w1) / 0.15);
-  relief += (1.0 - smoothstep(0.022, 0.05, px)) * (0.02 * bone - 0.022 * hollow + 0.0034 * ribbed);
+  relief += (1.0 - 0.65 * under05) * (1.0 - smoothstep(0.022, 0.05, px)) * (0.02 * bone - 0.022 * hollow + 0.0034 * ribbed);
+  // Seen from behind and above, a back is its spine: a low ridge from the withers to the rump, knuckled bone by bone.
+  float spine = under05 * trunk * smoothstep(0.5, 0.95, rn.y) * exp(-pow(vRest.x / 0.04, 2.0));
+  relief += (1.0 - smoothstep(0.022, 0.05, px)) * 0.011 * spine * (0.72 + 0.28 * cos(6.2832 * (vRest.z + 0.02 * w1) / 0.105));
   float groove = max(0.5 * neck * root * (1.0 - rings), 0.5 * leg * joint * (1.0 - legRings));
   // Every slope across the screen is taken here, above the first branch.
   vec2 slope = vec2(dFdx(relief), dFdy(relief));
@@ -205,15 +223,23 @@ void main() {
     ivec3 me = ivec3(3) - mi - ma;
     vec2 w = clamp((vec2(an[ma.x], an[me.x]) - 0.5773) / 0.4227, 0.0, 1.0);
     w = (w + 1e-4) / (w.x + w.y + 2e-4);
-    vec3 dx = rx * 0.6;
-    vec3 dy = ry * 0.6;
+    vec3 dx = rx * 0.6 * soft05;
+    vec3 dy = ry * 0.6 * soft05;
     // The loose hide: its folds, scars and dirt, from the broad sheet. Two places of the sheet are worn, one over the other in patches, so no
     // scar is found twice on one animal, and no two animals wear the same.
     float limb = max(neck, leg);
     float which = smoothstep(0.42, 0.58, n3(at * 0.8 + 3.0));
-    vec3 folded = wornAt(at, dx, dy, ma.x, me.x, w, limb, which);
+    // The two under the last camera wear the loose folds on the neck alone: a back seen from behind and above is drawn tight.
+    float foldsHere = 1.0 - under05 * (1.0 - smoothstep(0.05, 0.6, neck));
+    vec3 folded = vec3(1.0);
+#ifdef BACK
+    // The software renderer runs both sides of a branch: the two that fill the frame's foot read the sheet once, ringing the neck.
+    if (foldsHere > 0.0) folded = foldsOn(at, dx, dy, ma.x, me.x, w, true) / vec3(0.4982, 0.3117, 0.2376);
+#else
+    if (foldsHere > 0.0) folded = wornAt(at, dx, dy, ma.x, me.x, w, limb, which);
+#endif
     float tone = dot(folded, vec3(0.3, 0.5, 0.2));
-    skin *= mix(vec3(1.0), mix(vec3(tone), folded, 0.75), 0.5 + 0.5 * loose);
+    skin *= mix(vec3(1.0), mix(vec3(tone), folded, 0.75), (0.5 + 0.5 * loose) * foldsHere);
     // The bottom of a fold holds its own shade and the dirt of years: it is dark, and darkest where the hide hangs loosest.
     skin *= mix(vec3(1.0), vec3(0.5, 0.42, 0.38), 0.85 * loose * smoothstep(0.95, 0.6, tone));
     // The fine sheet, twice: the net of creases, and close to, the pores.
@@ -223,7 +249,11 @@ void main() {
     vec3 tiled = sqrt(broad.rgb * fine.rgb) / vec3(0.69, 0.41, 0.32);
     skin *= mix(vec3(1.0), tiled, 0.45) * mix(0.9, 1.0, smoothstep(0.22, 0.52, broad.a)) * (0.94 + 0.12 * fine.a);
     // The folds turn the light: the relief's slope across the screen leans the normal.
-    slope += 0.06 * loose * leanAt(at, rx, ry, ma.x, me.x, w, limb, which);
+#ifdef BACK
+    if (foldsHere > 0.0) slope += 0.06 * foldsHere * loose * slopeOn(at, rx, ry, ma.x, me.x, w, true);
+#else
+    if (foldsHere > 0.0) slope += 0.06 * foldsHere * loose * leanAt(at, rx, ry, ma.x, me.x, w, limb, which);
+#endif
     vec3 r1 = cross(dpy, n);
     vec3 r2 = cross(n, dpx);
     float det = dot(dpx, r1);
@@ -239,13 +269,15 @@ void main() {
   float run = trunk * (1.0 - smoothstep(0.005, 0.016, px)) * smoothstep(1.5, 2.1, vRest.y) * smoothstep(0.56, 0.74, n3(vec3(at.x * 0.6, at.y * 0.45, at.z * 21.0)));
   // And it lies as a ragged grey saddle from the spine down onto the ribs and the rump, where the animal cannot rub it off.
   float saddle = trunk * smoothstep(1.8, 2.14, vRest.y + 0.5 * (n3(at * vec3(1.6, 1.0, 3.4) + 17.0) - 0.5)) * (0.5 + 0.5 * blotch);
-  float dirt = clamp(0.85 * top * smoothstep(0.2, 0.6, n3(at * vec3(3.0, 3.0, 1.4) + 5.0)) + 0.46 * smear + 0.4 * run + 0.8 * saddle, 0.0, 1.0);
+  float dirt = clamp(0.85 * top * smoothstep(0.2, 0.6, n3(at * vec3(3.0, 3.0, 1.4) + 5.0)) + 0.46 * smear + 0.4 * (1.0 - 0.6 * under05) * run + 0.8 * (1.0 - 0.5 * under05) * saddle, 0.0, 1.0);
   // Old on the shore: broad streaks of dried mud down the ribs and the haunch, and the long thin scars of thorn and horn, healed dark.
+#ifndef BACK
   float aged = uPose.z * trunk * (1.0 - smoothstep(0.05, 0.1, px));
   float streak = smoothstep(1.45, 2.1, vRest.y) * smoothstep(0.5, 0.72, n3(vec3(at.x * 0.6, at.y * 0.45, at.z * 13.0) + 3.0));
   float torn = n3(vec3(at.x * 0.5, (at.y * 0.94 + at.z * 0.34) * 1.2, (at.z * 0.94 - at.y * 0.34) * 9.0) + 23.0);
   float scar = (1.0 - smoothstep(0.0, 0.1, abs(torn - 0.5))) * smoothstep(0.52, 0.68, n3(at * 1.7 + 31.0));
   dirt = clamp(dirt + aged * (0.9 * streak + 0.9 * scar), 0.0, 1.0);
+#endif
   skin = mix(skin, skin * vec3(0.46, 0.4, 0.36), dirt);
   // The hide is rubbed pale on the bones and lies in its own shade between the ribs and in the hollow of the flank.
   skin *= 1.0 + (1.0 - smoothstep(0.022, 0.05, px)) * (0.2 * bone - 0.3 * hollow - 0.11 * (0.4 + 1.2 * w2) * (ribs * (0.5 + w1) - ribbed));
@@ -254,7 +286,7 @@ void main() {
   // The herd, far off in the shade, is pale: cream to grey. What warmth the close ones show is the sun's, and there is none on the bank.
   skin = mix(skin, dot(skin, vec3(0.3, 0.5, 0.2)) * vec3(1.03, 1.0, 0.97), 0.8 * step(0.001, uPose.y)) * (1.0 + 0.55 * uPose.y);
   // Seen close in the evening the bare hide is a grey going to rose, not a cream: the warmth it has is the sun's.
-  skin = mix(skin, dot(skin, vec3(0.3, 0.5, 0.2)) * vec3(1.02, 0.95, 0.97), 0.45 * near);
+  skin = mix(skin, dot(skin, vec3(0.3, 0.5, 0.2)) * vec3(1.02, 0.95, 0.97), 0.45 * near * (1.0 - 0.85 * under05));
   // And it is not of one colour: broad patches where the skin is darker and greyer, and the small dark spots of age over the back and the haunch.
   float patchy = 0.0;
   float spots = 0.0;
@@ -262,7 +294,7 @@ void main() {
     patchy = smoothstep(0.46, 0.7, n3(at * vec3(3.1, 4.3, 3.1) + 9.0));
     spots = smoothstep(0.7, 0.78, n3(at * 21.0 + 3.0)) * smoothstep(0.35, 0.6, n3(at * 2.3 + 13.0)) * (1.0 - smoothstep(0.006, 0.02, px));
   }
-  skin *= mix(vec3(1.0), vec3(0.8, 0.74, 0.75), near * 0.7 * patchy) * (1.0 - 0.38 * near * spots);
+  skin *= mix(vec3(1.0), vec3(0.8, 0.74, 0.75), near * (0.7 + 0.25 * under05) * patchy) * (1.0 - 0.38 * near * spots);
   // The belly and the inside of the legs are paler; the joints of the legs are rubbed dark.
   skin *= 1.0 + 0.1 * smoothstep(0.2, -0.6, rn.y) * trunk;
   float above = (vWorld.y - max(uOwn.z, 0.0)) / uOwn.y;
@@ -275,7 +307,10 @@ void main() {
   float waterline = (1.0 - smoothstep(0.0, 0.06, above + 0.03 * ragged)) * step(uOwn.z, -0.02);
   float muddy = (1.0 - smoothstep(0.2, 1.25, above + 0.5 * ragged)) * leg;
   skin *= mix(vec3(1.0), vec3(0.5, 0.44, 0.39), 0.85 * muddy * (0.55 + 0.9 * ragged));
-  float fleck = smoothstep(0.7, 0.78, n3(at * vec3(110.0, 70.0, 110.0)) * (0.7 + 0.6 * n3(at * 6.0))) * (1.0 - smoothstep(0.3, 1.4, above + 0.6 * ragged));
+  float fleck = 0.0;
+#ifndef BACK
+  fleck = smoothstep(0.7, 0.78, n3(at * vec3(110.0, 70.0, 110.0)) * (0.7 + 0.6 * n3(at * 6.0))) * (1.0 - smoothstep(0.3, 1.4, above + 0.6 * ragged));
+#endif
   float horn = 1.0 - smoothstep(0.075, 0.1, vRest.y + 0.02 * ragged);
   // Above the wet the leg is damp to the hock and the knee from the wading, and the belly from what the legs threw up: darker, with a sheen.
   float under = trunk * smoothstep(-0.15, -0.7, rn.y);
@@ -284,6 +319,9 @@ void main() {
   float spatter = 0.0;
   if (near > 0.0) {
     damp = max((1.0 - smoothstep(0.7, 1.25, above + 0.4 * ragged)) * leg, under * smoothstep(0.3, 0.6, n3(at * vec3(2.0, 2.0, 5.0) + 41.0) + 0.5 * under));
+    // The two under the last camera have waded to the belly: the hide is dark and damp up the haunch and the flank, to a ragged line.
+    damp = max(damp, 0.55 * under05 * trunk * (1.0 - smoothstep(1.3, 1.72, vRest.y + 0.3 * (ragged - 0.5) + 0.3 * (drift - 0.5))));
+#ifndef BACK
     // Drops hang under the belly and at the back of the legs, swell, and fall: each in a place of its own, each at its own time.
     vec2 cell = vec2(vRest.z * 34.0, vRest.x * 34.0 + vRest.y * 9.0);
     vec2 inCell = fract(cell) - 0.5;
@@ -294,6 +332,7 @@ void main() {
       * (1.0 - smoothstep(0.1, 0.24, length(inCell) / max(grown, 0.05))) * (1.0 - smoothstep(0.004, 0.012, px));
     // Seen close, the mud it kicked up is on the leg in spatters a finger wide, thick at the fetlock and thinning to the hock.
     spatter = leg * smoothstep(0.6, 0.72, n3(at * vec3(37.0, 23.0, 37.0)) * (0.75 + 0.5 * n3(at * 5.0))) * (1.0 - smoothstep(0.35, 1.3, above + 0.5 * ragged));
+#endif
   }
   vec3 albedo = mix(skin * mix(vec3(1.0), mix(vec3(0.17, 0.15, 0.14), vec3(0.2, 0.175, 0.17), near), wet) * (1.0 - 0.78 * waterline) * mix(vec3(1.0), vec3(0.45, 0.4, 0.4), damp * (1.0 - wet)), vec3(0.13, 0.1, 0.08), max(0.55 * fleck, 0.6 * spatter));
   albedo = mix(albedo, vec3(0.05, 0.045, 0.04), horn);
@@ -316,7 +355,7 @@ void main() {
   // The low sun is warm in a bare hide, and lies along every outline that is turned to it.
   float sunward = dot(n, uSunDir);
   float rim = pow(1.0 - nv, 3.0) * smoothstep(-0.15, 0.5, sunward);
-  c += albedo * uSunColour * (vec3(0.05, -0.01, -0.13) * max(sunward, 0.0) + vec3(1.0, 0.7, 0.46) * rim * (1.0 + 1.6 * near)) * (sunHere * lit * (0.4 + 0.6 * occ) / 3.14159);
+  c += albedo * uSunColour * (vec3(0.05, -0.01, -0.13) * max(sunward, 0.0) + vec3(1.0, 0.7, 0.46) * rim * (1.0 + 1.6 * near * (1.0 - 0.75 * step(0.01, uOwn.w)))) * (sunHere * lit * (0.4 + 0.6 * occ) / 3.14159);
   // Seen close, a rough hide the low sun only grazes holds little of it: the flank turned half from the sun falls to the sky's cool light, and
   // the sun keeps the faces turned full to it and the outline.
   c -= albedo * uSunColour * (0.62 * near * (1.0 - smoothstep(0.2, 0.75, sunward)) * max(sunward, 0.0) * sunHere * lit * (0.4 + 0.6 * occ) / 3.14159);
@@ -329,7 +368,7 @@ void main() {
   // The wet of the leg takes the sun as a film of water does.
   c += ((0.25 + 0.35 * near) * wet + 0.24 * damp * (1.0 - wet) + 0.5 * drop) * lit * rigGlint(p, n, v, 0.16);
   // Seen close, what is turned from the sun is lit by the sky and the lake and not by the warm wall: cool against the rim.
-  c *= mix(vec3(1.0), vec3(0.84, 0.93, 1.08), near * smoothstep(0.25, -0.35, sunward));
+  c *= mix(vec3(1.0), vec3(0.84, 0.93, 1.08), near * (1.0 - 0.85 * under05) * smoothstep(0.25, -0.35, sunward));
   c *= 1.0 - 0.25 * drop;
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
@@ -396,7 +435,7 @@ export function create(ctx: Context): Piece {
   const all = herd(ctx.rng('drinkers-bodies'), ctx.events.rise - 1.7);
   const cast = all.map((_, index) => index);
   // The two under the last camera stay cards in every shot: their slender necks are the approved picture's, and the unit keeps them as they are.
-  const shotOf = (index: number): string => (index < 4 ? 'eye-04' : index < 6 ? 'none' : index < CLOSE ? 'eye-02' : 'eye-01');
+  const shotOf = (index: number): string => (index < 4 ? 'eye-04' : index < 6 ? 'eye-05' : index < CLOSE ? 'eye-02' : 'eye-01');
   const animals = cast.map((index) => all[index] as Drinker);
   const cards = createCards(ctx);
   const mid = bodyGeometry(MID_DATA, LEVELS.mid);
@@ -407,17 +446,18 @@ export function create(ctx: Context): Piece {
   const drawn: Drawn[] = animals.map((animal, i) => {
     const index = cast[i] as number;
     const bones = new Float32Array(BONES * 12);
-    const own = new THREE.Vector4(animal.own, animal.build.size, 0, animal.level === undefined ? 0 : 0.45);
+    const own = new THREE.Vector4(animal.own, animal.build.size, 0, animal.level === undefined ? 0 : 0.5);
     // z: the four of the shore shot, the first four of the list, are seen long and near: they carry the marks of their years.
     const pose = new THREE.Vector3(0, index < CLOSE ? 0 : 0.45, index < 4 ? 1 : 0);
     // Three hides in the herd: pale cream, sand going to rust, and a grey dun. Together they are as light as the one hide was.
     const kindOf = (animal.own * 37.7) % 1;
-    const tone = index < CLOSE ? new THREE.Vector3(1, 1, 1) : kindOf < 0.4 ? new THREE.Vector3(1.1, 1.08, 1.04) : kindOf < 0.75 ? new THREE.Vector3(1.0, 0.95, 0.88) : new THREE.Vector3(0.86, 0.87, 0.9);
-    const near = new THREE.Vector2(index < CLOSE && index !== 4 && index !== 5 ? 1 : 0, 0);
+    const tone = animal.level !== undefined ? new THREE.Vector3(1.17, 1.12, 0.97) : index < CLOSE ? new THREE.Vector3(1, 1, 1) : kindOf < 0.4 ? new THREE.Vector3(1.1, 1.08, 1.04) : kindOf < 0.75 ? new THREE.Vector3(1.0, 0.95, 0.88) : new THREE.Vector3(0.86, 0.87, 0.9);
+    const near = new THREE.Vector2(index < CLOSE ? 1 : 0, 0);
     const material = new THREE.ShaderMaterial({
       uniforms: { ...ctx.rig.uniforms, uBones: { value: bones }, uOwn: { value: own }, uPose: { value: pose }, uTone: { value: tone }, uKin: { value: near }, tHide, tFolds, tSlope },
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
+      defines: animal.level === undefined ? {} : { BACK: 1 },
       // The surface is wound with its outside as its back: only that side is drawn.
       side: THREE.BackSide,
     });
@@ -425,7 +465,8 @@ export function create(ctx: Context): Piece {
     mesh.frustumCulled = false;
     mesh.visible = false;
     ctx.scene.add(mesh);
-    ctx.reflected.push(mesh);
+    // The two under the last camera stand at the frame's foot: what the lake would show of them lies under the frame, and is not drawn.
+    if (animal.level === undefined) ctx.reflected.push(mesh);
     return { animal, index, mesh, material, bones, own, pose, near, solved: solve(animal.build, standPose(animal, 0, () => 0, 1), bones) };
   });
   // Each body darkens the ground it stands on, as its card did.
@@ -466,9 +507,12 @@ export function create(ctx: Context): Piece {
       const isBody = (index: number): boolean => index < cast.length && shotOf(index) === running;
       let lap = cards.setTime(t, isBody);
       drips.begin();
+      // The two under the last camera stand with their legs under the frame's foot: the rings at them would be worked out over all the near
+      // water and never seen.
+      let unseen = false;
       const ring = (x: number, z: number, strength: number): void => {
         const slot = ctx.laps[lap];
-        if (!slot || strength <= 0) return;
+        if (unseen || !slot || strength <= 0) return;
         slot.x = x;
         slot.z = z;
         slot.strength = strength;
@@ -476,6 +520,7 @@ export function create(ctx: Context): Piece {
       };
       for (const g of drawn) {
         const d = g.animal;
+        unseen = d.level !== undefined;
         const bodies = isBody(g.index);
         g.mesh.visible = bodies;
         const size = d.build.size;
@@ -581,10 +626,11 @@ export function create(ctx: Context): Piece {
           if (wetAt(at[0], at[2]) && g.own.z < -0.02) ring(at[0], at[2], Math.max(0.4, Math.min(1.2, 9 * Math.max(stir, before))));
         }
       }
+      unseen = false;
       drips.end();
       // And a faint ring round every leg that stands in the lake: the animal breathes and shifts, and the water at its legs is never quite still.
       for (const g of drawn) {
-        if (!g.mesh.visible || g.own.z > -0.02 || g.index >= CLOSE) continue;
+        if (!g.mesh.visible || g.own.z > -0.02 || g.index >= CLOSE || g.animal.level !== undefined) continue;
         for (const h of g.solved.hooves) if (wetAt(h[0], h[2]) && h[1] - g.own.z < 0.02) ring(h[0], h[2], 0.3);
       }
       for (; lap < ctx.laps.length; lap++) {
