@@ -23,6 +23,8 @@ uniform sampler2D tSky;
 uniform sampler2D tFar;
 // What the far picture's white comes to in the rig's light.
 const float FAR_GAIN = 1.05;
+// How much heavier and lighter the overcast's masses are than its mean.
+const float SKY_MASSES = 0.62;
 const float RAIN_WALK = ${RAIN_WALK.toFixed(4)};
 const float RAIN_AT = ${RAIN_AT.toFixed(1)};
 const float RAIN_APART = ${RAIN_APART.toFixed(4)};
@@ -83,6 +85,10 @@ void main() {
   // The sheet is brightest overhead, as an overcast is, and greys toward the far picture.
   c *= mix(1.25, 1.7, smoothstep(0.1, 0.5, el));
   c = mix(c, far, low);
+  // The overcast has masses: heavier cloud and thinner, kilometres across, which close up toward the horizon as a level sheet's do. They
+  // lie over the far picture too, so that the sky is one sheet from the hills to overhead and not a card.
+  float masses = smoothstep(0.36, 0.66, textureLod(tNoise, vec3(q * 0.085 + 0.2, 0.44), 0.0).g * 0.75 + mid * 0.25);
+  c *= 1.0 + (0.42 - masses) * SKY_MASSES * smoothstep(0.02, 0.2, el);
   // The raining cloud's belly lies over the far picture's own bellies too: the veil hangs from it.
   c *= 1.0 - 0.45 * belly;
   // The overcast thickens as the rain comes on (the air pass greys the far air with it).
