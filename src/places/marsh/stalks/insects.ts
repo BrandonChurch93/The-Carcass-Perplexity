@@ -98,7 +98,7 @@ const INSECT_PANES = /* glsl */ `
   float along = abs(fract(lane) - 0.5);
   float rung = vUv.x * 11.0 + 0.37 * floor(lane) + 0.15 * sin(floor(lane) * 3.1);
   float across = abs(fract(rung) - 0.5);
-  float vein = max(1.0 - smoothstep(0.38, 0.47, along), 0.8 * (1.0 - smoothstep(0.4, 0.47, across)));
+  float vein = max(smoothstep(0.36, 0.46, along), 0.8 * smoothstep(0.39, 0.47, across));
   vein = max(vein, 1.0 - smoothstep(0.03, 0.07, vUv.y));
   float cell = fract(sin(dot(vec2(floor(lane), floor(rung)), vec2(127.1, 311.7))) * 43758.5453);
   float clear = step(cell, 0.3) * (1.0 - step(0.5, vein)) * isWing;
@@ -120,8 +120,8 @@ ${INSECT_PANES}
   vec3 c;
   if (isWing > 0.5) {
     // A clear skin on pale veins: the sky comes through it, so it is lit from both sides, and it glints where it turns to the sky.
-    vec3 skin = mix(vec3(0.3, 0.27, 0.23), vec3(0.4, 0.33, 0.24), cell);
-    vec3 rib = vec3(0.16, 0.1, 0.055);
+    vec3 skin = mix(vec3(0.27, 0.26, 0.24), vec3(0.36, 0.32, 0.26), cell) * (0.7 + 0.3 * smoothstep(0.0, 0.5, vUv.x));
+    vec3 rib = vec3(0.1, 0.06, 0.035);
     vec3 albedo = mix(skin, rib, vein);
     c = rigShade(vWorld, n, v, albedo, mix(0.25, 0.6, vein), 1.0);
     c += (1.0 - 0.6 * vein) * 0.75 * rigShade(vWorld, -n, v, skin * vec3(1.0, 0.9, 0.75), 0.9, 1.0);
@@ -173,12 +173,12 @@ function insectGeometry(): THREE.BufferGeometry {
     for (const f of [0.08, 0.5, 0.92]) {
       const t = (s + f) / 7;
       const y = -0.57 + 0.55 * t;
-      const girth = (0.018 + 0.05 * Math.pow(t, 0.8)) * (0.78 + 0.22 * Math.sin(Math.PI * f));
+      const girth = (0.024 + 0.06 * Math.pow(t, 0.8)) * (0.78 + 0.22 * Math.sin(Math.PI * f));
       rings.push([y, 0.2 * Math.pow(1 - t, 2), girth, s + f]);
     }
   }
-  for (const [y, r, u] of [[0.0, 0.05, 7.1], [0.07, 0.085, 7.5], [0.17, 0.09, 7.5], [0.26, 0.06, 7.9], [0.29, 0.036, 8.0]] as [number, number, number][]) rings.push([y, 0.012, r, u]);
-  for (const [y, r, u] of [[0.31, 0.04, 9.1], [0.36, 0.055, 9.5], [0.41, 0.042, 9.5], [0.44, 0.012, 9.9]] as [number, number, number][]) rings.push([y, 0.0, r, u]);
+  for (const [y, r, u] of [[0.0, 0.065, 7.1], [0.07, 0.105, 7.5], [0.17, 0.11, 7.5], [0.26, 0.075, 7.9], [0.29, 0.045, 8.0]] as [number, number, number][]) rings.push([y, 0.012, r, u]);
+  for (const [y, r, u] of [[0.31, 0.048, 9.1], [0.36, 0.066, 9.5], [0.41, 0.05, 9.5], [0.44, 0.014, 9.9]] as [number, number, number][]) rings.push([y, 0.0, r, u]);
   rings.forEach((ring, i) => {
     for (let k = 0; k < SIDES; k++) {
       const a = (k / SIDES) * Math.PI * 2;
