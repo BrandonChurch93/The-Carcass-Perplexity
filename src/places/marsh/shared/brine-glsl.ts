@@ -74,7 +74,7 @@ vec3 brineMirror(vec3 p, vec3 n, vec3 v) {
   vec4 q = uMirrorMatrix * vec4(p + turn * reach, 1.0);
   // The mirror's picture is a sixth of the frame: read at its finest where the skin is glass, a level and more down where it is
   // ruffled finer than the lens sees, so that nothing in it is cut out hard.
-  vec3 seen = textureLod(tMirror, clamp(q.xy / max(q.w, 1e-3), 0.003, 0.997), 0.35 + 2.2 * brineRough).rgb;
+  vec3 seen = textureLod(tMirror, clamp(q.xy / max(q.w, 1e-3), 0.003, 0.997), 0.35 + 2.2 * brineRough * mix(1.0, 0.4, smoothstep(0.3, 0.9, brineSheen))).rgb;
   // (What is drawn into the mirror is not always a colour: a part that puts out less than nothing there, or far more than the sky,
   // would stand on the pool as black and glowing dots.)
   seen = clamp(seen, vec3(0.0), vec3(8.0));
@@ -127,7 +127,9 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth, vec2 gx, vec2 gy) {
   body = mix(body, vec3(0.032, 0.0055, 0.0045), smoothstep(0.3, 0.7, depth) * 0.6) * 1.16;
   body = mix(body, vec3(0.0105, 0.0042, 0.0033) * (0.75 + 0.5 * silt), brineMud * 0.88);
   body = mix(body, vec3(0.118, 0.086, 0.072) * (0.8 + 0.4 * silt), brineSlurry * 0.92);
-  vec3 albedo = brineBed * through + body * (1.0 - through);
+  // The bank is wet where the brine lies a finger deep on it and for a hand above the level, where it has soaked: wet mud is dark.
+  float soaked = smoothstep(-0.3, -0.02, s) * (1.0 - 0.6 * smoothstep(0.3, 0.55, brineBed.g));
+  vec3 albedo = brineBed * mix(1.0, 0.36, soaked) * through + body * (1.0 - through);
   albedo = mix(albedo, froth.rgb, foam);
   float open = skyOpen(p);
   // The body is lit from inside the liquid: the ripples do not shade it, they only turn the mirror. Froth stands on it and is lit as it leans.

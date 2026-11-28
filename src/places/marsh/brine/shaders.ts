@@ -41,12 +41,13 @@ const AMBIENT: [number, number, number, string][] = [
 // toward the lens and short across, so a low lens keeps the crests that run toward it and loses the ones that lie across. What is
 // lost is not gone: it is counted, and widens what the pixel mirrors.
 const ambientWaves = AMBIENT.map(([len, turn, lean, patch], i) => {
+  const near = i < 3 ? '' : i < 7 ? ' * nearShort' : ' * nearFine';
   const ang = WIND_ANGLE + turn;
   const k = (Math.PI * 2) / len;
   return `  {
     vec2 d = vec2(${Math.cos(ang).toFixed(4)}, ${Math.sin(ang).toFixed(4)});
     float seenAs = smoothstep(${(0.42 * len).toFixed(4)}, ${(0.14 * len).toFixed(4)}, max(abs(dot(gX, d)), abs(dot(gY, d))));
-    float lets = ${lean.toFixed(3)} * smoothstep(0.3, 0.68, ${patch});
+    float lets = ${lean.toFixed(3)} * smoothstep(0.3, 0.68, ${patch})${near};
     ripples += d * (lets * seenAs * cos(${k.toFixed(3)} * dot(d, bent) - ${omega(len).toFixed(3)} * uTime + ${(i * 2.39).toFixed(2)}));
     lost += lets * lets * (1.0 - seenAs * seenAs);
   }`;
@@ -210,6 +211,9 @@ void main() {
   vec2 ripples = vec2(0.0);
   float lost = 0.0;
   float ruffle = 0.42 + 0.5 * smoothstep(0.35, 0.75, carried.a) + 2.2 * speed + 0.25 * inPool + 1.3 * brineMud;
+  // (No length stops at a line on the pool: each gives out over some strides before the place where it is no longer asked for.)
+  float nearShort = smoothstep(30.0, 21.0, dist);
+  float nearFine = smoothstep(10.0, 6.5, dist);
   if (dist < 120.0) {
 ${ambientLong}
     if (dist < 30.0) {
@@ -220,6 +224,11 @@ ${ambientFine}
     } else lost += ${lostMean(3)};
     ripples *= ruffle;
     lost *= ruffle * ruffle;
+    // From a lens that stands over the place and not in it, a ripple whose crests happen to run toward it would be the only one left, drawn
+    // as ruled lines side by side: far off the light air's ripple is told only if every way of it can be, or it is all counted as lost.
+    float keepFar = mix(smoothstep(0.13, 0.05, px), 1.0, smoothstep(34.0, 18.0, dist) * smoothstep(2.6, 1.8, cameraPosition.y));
+    lost += 0.5 * dot(ripples, ripples) * (1.0 - keepFar * keepFar);
+    ripples *= keepFar;
     if (dist < 60.0 && length(p.xz - ${v2(STIR_MID)}) < ${STIR_REACH.toFixed(2)})
     for (int i = 0; i < ${MAX_STIR}; i++) {
       if (i >= uStirCount) break;
@@ -247,6 +256,8 @@ ${stirWaves}
   float boil = 0.0;
   vec2 swell = vec2(0.0);
   float footFoam = 0.0;
+  // (What a ring that has run some strides still carries when it comes to the bank: there it steepens and breaks.)
+  float surf = 0.0;
   // (Rings whose crests the lens cannot tell apart are not drawn: far off and seen low they would run together into streaks.)
   float told = smoothstep(0.2, 0.07, px);
   if (pool < 16.0) {
@@ -276,7 +287,7 @@ ${stirWaves}
       float three = u.x * (4.0 * u.x * u.x - 3.0);
       float lag = 0.2 * two * own.x + 0.2 * (2.0 * u.x * u.y) * own.y + 0.16 * three * own.z + 0.14 * u.y * (3.0 - 4.0 * u.y * u.y) * own.w;
       float thrown = 0.5 + 0.3 * u.x * own.w + 0.3 * u.y * own.z + 0.2 * two * own.y - 0.2 * three * own.x;
-      float q = r - ring.z - lag * (0.1 + 0.22 * ring.z);
+      float q = r - ring.z - lag * (0.16 + 0.34 * ring.z);
       float env = exp(-q * q / (wide * wide)) * amp * (0.45 + 1.1 * clamp(thrown, 0.0, 1.0));
       if (env < 0.003) continue;
       // The long waves lead and the short ones follow: the crests are closer behind the front than before it.
@@ -284,6 +295,7 @@ ${stirWaves}
       slope += front;
       swell += front;
       boil = max(boil, env * smoothstep(1.5, 0.25, ring.z));
+      surf = max(surf, env * smoothstep(0.6, 1.4, ring.z));
     }
   }
   // Whatever stands in the brine (the contact map has it) is met by it: the brine climbs the thing in a tight lip, the wavelets that reach it
@@ -320,7 +332,9 @@ ${stirWaves}
   // What the flow carries off the banks goes down the channel in thin strings.
   float strings = max(smoothstep(0.66, 0.76, carriedFine.r * 0.55 + carried.g * 0.45) * smoothstep(0.03, 0.1, speed) * 0.7, wake * smoothstep(0.4, 0.6, carriedFine.r) * 0.7);
   // (And scum catches on whatever stands in it.)
-  want = max(max(want, strings), max(max(min(boil * 0.8, 0.45), footFoam * 0.7), collar * smoothstep(0.35, 0.6, fleck.g) * 0.8)) * seen;
+  // A ring breaks on the bank: in the last hand before the lip its front stands up, and leaves a broken line of froth where it fell.
+  float breaks = min(surf * 1.6, 0.75) * smoothstep(-0.34, -0.03, s) * smoothstep(0.25, 0.6, fleck.r * 0.6 + raft.a * 0.4);
+  want = max(max(max(want, breaks), strings), max(max(min(boil * 0.8, 0.45), footFoam * 0.7), collar * smoothstep(0.35, 0.6, fleck.g) * 0.8)) * seen;
   // (Bubbles a finger to a hand across: the froth's picture is laid small, and a second time larger where a clump stands, so no tile shows.)
   float foam = 0.0;
   vec4 froth = vec4(0.0);
@@ -413,11 +427,38 @@ void main() {
   float bulge = 1.0 + (0.07 * sin(az * 2.0 + aLife.y * 30.0) + 0.045 * sin(az * 5.0 + aLife.y * 70.0 + position.y * 4.0)) * smoothstep(0.0, 0.25, position.y);
   float sag = 1.0 - 0.1 * position.y * (0.5 + 0.5 * sin(az * 1.0 + aLife.y * 50.0));
   vec3 q = vec3(position.x * (1.0 + 0.05 * skirt * skirt) * bulge, position.y * sag, position.z * (1.0 + 0.05 * skirt * skirt) * bulge);
+  if (aLife.w > 0.0) {
+    // Torn, the gas is out and nothing holds the skin up. What is left of it falls, slackens into folds that run back from the hole,
+    // is drawn away from the hole as the edge runs, and carries the brine the edge has rolled up as a thick bead along it.
+    vec3 from = normalize(vec3(cos(aLife.y * 40.0) * 0.72, 0.69, sin(aLife.y * 40.0) * 0.72));
+    vec3 at = normalize(position);
+    vec3 side = normalize(cross(from, vec3(0.0, 1.0, 0.0)));
+    vec3 over = cross(side, from);
+    float about = atan(dot(at, side), dot(at, over));
+    float gap = dot(at, from) + aLife.w * (0.1 * sin(about * 3.0 + aLife.y * 20.0) + 0.06 * sin(about * 5.0 - aLife.y * 45.0));
+    float gone = 1.0 - 2.0 * aLife.w * (0.55 + 0.45 * aLife.w);
+    float back = max(gone - gap, 0.0);
+    float fat = 0.035 + 0.07 * aLife.w;
+    float nearEdge = exp(-back / 0.35);
+    float held = smoothstep(0.0, 0.22, position.y);
+    float fold = 0.6 * sin(about * 9.0 + aLife.y * 50.0 + back * 6.0) + 0.4 * sin(about * 17.0 - aLife.y * 31.0);
+    q += at * (fold * 0.06 * aLife.w * held * (0.3 + 0.7 * nearEdge) + 0.8 * fat * exp(-back * back / (fat * fat)));
+    q += (at * dot(at, from) - from) * (0.12 * aLife.w * nearEdge * held);
+    q.y *= 1.0 - 0.5 * aLife.w * aLife.w * (0.5 + 0.5 * nearEdge);
+  }
   vec4 w = modelMatrix * instanceMatrix * vec4(q, 1.0);
   vWorld = w.xyz;
   vLocal = position;
   vLife = aLife;
+#ifdef DROP
+  // (A bead drawn out along its way is no ball: its faces turn as the drawing-out turns them, not as the ball's did.)
+  mat3 im = mat3(instanceMatrix);
+  vNormal = normalize(mat3(modelMatrix) * (im[0] * (normal.x / max(dot(im[0], im[0]), 1e-12)) + im[1] * (normal.y / max(dot(im[1], im[1]), 1e-12)) + im[2] * (normal.z / max(dot(im[2], im[2]), 1e-12))));
+  w = modelMatrix * instanceMatrix * vec4(position, 1.0);
+  vWorld = w.xyz;
+#else
   vNormal = normalize(mat3(modelMatrix) * mat3(instanceMatrix) * normalize(normal + vec3(0.0, 0.7 * skirt * skirt, 0.0)));
+#endif
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
 
@@ -476,8 +517,9 @@ void main() {
   // A bead of dark brine: one small window of the sky on its upper side and no pale limb.
   vec3 rd = reflect(-v, n);
   float td = max(dot(rd, ${DOME_KEY}), 0.0);
-  vec3 bead = vec3(0.085, 0.011, 0.008) * skyIrradiance(n) * (open / 3.14159);
-  bead += skyRadiance(normalize(vec3(rd.x, abs(rd.y) + 0.02, rd.z))) * (0.03 + 0.5 * smoothstep(0.9, 0.99, td)) * mix(1.0, open, 0.5);
+  vec3 bead = vec3(0.11, 0.013, 0.009) * skyIrradiance(n) * (open / 3.14159);
+  float graze = 1.0 - max(dot(n, v), 0.0);
+  bead += skyRadiance(normalize(vec3(rd.x, abs(rd.y) + 0.02, rd.z))) * (0.012 + 0.1 * graze * graze * graze * graze * max(rd.y, 0.0) + 0.7 * smoothstep(0.955, 0.992, td)) * mix(1.0, open, 0.5);
   gl_FragColor = vec4(bead * (1.0 - uSolo), 1.0);
 #else
   vec3 at = normalize(vLocal);
@@ -496,7 +538,10 @@ void main() {
     vec3 from = normalize(vec3(cos(vLife.y * 40.0) * 0.72, 0.69, sin(vLife.y * 40.0) * 0.72));
     // The film that has drawn back is rolled up in the hole's edge, and the edge runs ahead here and hangs back there: no two parts alike.
     vec4 ragged = grainAt(vLocal.xz * 0.13 + vLife.y * 3.0, 0.13);
-    float gap = dot(at, from) + (ragged.g - 0.5) * 0.05 + (ragged.r - 0.5) * 0.11 * vLife.w + (grit.b - 0.5) * 0.03;
+    // (No hole is round: its edge runs ahead in three or five great lobes, the same the skin's own shape is moved by.)
+    vec3 side = normalize(cross(from, vec3(0.0, 1.0, 0.0)));
+    float about = atan(dot(at, side), dot(at, cross(side, from)));
+    float gap = dot(at, from) + vLife.w * (0.1 * sin(about * 3.0 + vLife.y * 20.0) + 0.06 * sin(about * 5.0 - vLife.y * 45.0)) + (ragged.g - 0.5) * 0.05 + (ragged.r - 0.5) * 0.11 * vLife.w + (grit.b - 0.5) * 0.03;
     float gone = 1.0 - 2.0 * vLife.w * (0.55 + 0.45 * vLife.w);
     if (gap > gone) discard;
     // A rolled bead, thicker the further it has run: dark, and round enough to carry a line of the sky along its back.
@@ -610,16 +655,17 @@ void main() {
   float lobe = pow(0.5 + 0.5 * cos(turn), 2.0);
   float own = 0.62 + 0.38 * sin(a * 3.0 + k * 5.0) * sin(a + k * 2.0);
   float jet = pow(0.5 + 0.5 * cos(turn), 6.0) * smoothstep(0.55, 0.85, own);
-  float finger = max(lobe * 0.6, jet);
+  // (The strings and the drops are thrown as bodies of their own: what stands here is only the low swell of the pool's lip.)
+  float finger = lobe * 0.6;
   // Thrown, it only rises and falls. The side the tear reached first is up first, the far side a third of a second after it.
   float lead = ${(0.7 * TEAR).toFixed(3)} / dur * (0.5 - 0.5 * cos(a - aLife.y * 40.0));
   float xa = clamp((x - lead) / (1.0 - lead), 0.0, 1.0);
   float rise = 4.0 * xa * (1.0 - xa);
-  float tall = size * rise * (0.2 + 0.24 * lobe * own + 0.14 * jet) * (0.8 + 0.2 * sin(a * 5.0 + k));
+  float tall = size * rise * (0.07 + 0.22 * lobe * own) * (0.8 + 0.2 * sin(a * 5.0 + k));
   float h = position.y * tall;
   // It leaves the pool leaning out and leans further as it falls; a finger leans more than the wall between.
   float lean = 0.25 + 0.6 * xa + 0.2 * finger;
-  float foot = size * (0.78 + 0.3 * xa) * (1.0 + 0.06 * sin(a * 2.0 + k * 3.0) + 0.04 * sin(a * 5.0 - k));
+  float foot = size * (0.78 + 0.3 * xa) * (1.0 + 0.16 * sin(a * 2.0 + k * 3.0) + 0.09 * sin(a * 3.0 + k * 2.0) + 0.06 * sin(a * 5.0 - k));
   float out2 = foot + lean * h * (0.6 + 0.4 * position.y);
   vec4 w = modelMatrix * instanceMatrix * vec4(cos(a) * out2, h - 0.004, sin(a) * out2, 1.0);
   vWorld = w.xyz;
