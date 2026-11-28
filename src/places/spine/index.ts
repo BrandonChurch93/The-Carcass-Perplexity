@@ -48,9 +48,9 @@ const kiteFlat = step(kiteEdge, kiteBack, KITE_REACH);
 const kiteStand: Vec3 = [kiteFlat[0], kiteEdge[1] - KITE_REACH * Math.tan(KITE_RISE * RAD), kiteFlat[2]];
 const keyKites = aimed(kiteStand, heading(kiteStand, kiteEdge) + 13, KITE_PITCH, KITE_FOV);
 
-const CARCASS_FOV = 30;
-const carcassStand = raised(step(carcassBody, carcassView + 180, 3.1), 0.4);
-const keyCarcass = aimed(carcassStand, carcassView, -5, CARCASS_FOV, 40);
+const CARCASS_FOV = 48;
+const carcassStand = raised(step(carcassBody, carcassView + 180, 2.0), 0.5);
+const keyCarcass = aimed(carcassStand, carcassView + 5, -9, CARCASS_FOV, 40);
 const carcassFrom = aimed(raised(step(carcassStand, carcassView + 176, 9), 2.6), carcassView - 2.5, -8, CARCASS_FOV, 40);
 const carcassTo = aimed(raised(step(carcassStand, carcassView - 4, 0.22), 0.4), carcassView + 0.4, -4.9, CARCASS_FOV, 40);
 const carcassKeyAt = keyPart(shotById('spine-03'));
