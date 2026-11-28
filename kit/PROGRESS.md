@@ -24,24 +24,23 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 230, 2026-11-28 15:38 UTC:
+Status 231, 2026-11-28 16:05 UTC:
 
-- `01-s230-ending-film-and-trial.jpg`: The film's ending at 3:13 (frame 11582) in two versions, cut by the Builder from the two helpers' clips as they came (960x540, draft tier): the film as it is above, the trial with the moving chest glow below, which is not in the film. Both show the same view from orbit: the planet's limb curves from the lower left up to the top middle with a thin warm glow on it at the left edge; beyond it black space with many small white stars, a pale dusty band through them and a small crescent moon. On the dark blue sea, with dim green-brown land along the upper coast, broken blue-white cloud at the left and one spiral storm at the right edge, lies the titan: a pale grey body of bone, the skull with its dark holes at the lower left of centre, the ribs, one arm up to the upper left and the other limbs out to the right. Above, the film: between the ribs a red glow with a bright speckled orange core. Below, the trial at the bottom of its fall: the fire has sunk to a small dull ember at the left of the chest. Nothing else differs to the eye.
-- `02-s230-ending-film-and-trial.jpg`: The same pair 40 frames later (frame 11622), two thirds of a second on: the film as it is above, the trial below, cut by the Builder from the two clips the same way. Above, the film's chest glow is as it was in Still 333. Below, the trial at the top of its swell: the red haze is wider and brighter than the film's and lies over the ribs round a bright core. The rest of the frame is the same in both to the eye: the stars, the moon, the cloud, the storm and the body.
-- `03-s230-chest-strip-film-and.jpg`: The chest alone in twelve frames of the ending, from frame 11486 to 11660 (3:11 to 3:14), cut by the Builder from the two clips and enlarged 2 times: the film as it is in the upper three rows, the trial in the lower three. In the film the fire sits nearly steady: a dull red haze between the ribs with a speckled orange core, a little brighter around 11594 to 11624. In the trial it moves: like the film at 11486 to 11528, dimmer at 11552, shrinking at 11570, nearly out at 11582 with only a small dull patch left, back at 11594 and 11606, brighter and wider than the film's at 11618 and 11624, easing at 11642 and like the film again at 11660. The steps from panel to panel are even: no jump and no flicker is seen in these twelve. At the clip's size the fire is about 30 pixels of 960 across, and it is the one warm thing in the frame.
+- `01-s231-ending-beat-helper.jpg`: The film's ending at 3:08 (frame 11330), one of the frames around the last beat, drawn as a still by a helper on the film as it is (960x540, draft tier) and saved again as a JPEG by the Builder, otherwise as it came. The view from orbit: the planet's limb runs from the left edge up to the top middle with a thin line of light on it, blue-white below and orange-red above; beyond it black space with many small white stars, a pale dusty band and a small grey moon lit from one side. The planet is lit at the left, where white cloud lies on a blue sea, and darkens to the right; dim green-brown land lies at the top, along the bottom left and in the lower right corner, and one spiral storm at the right edge. In the middle lies the titan in pale grey: the skull with its dark holes left of centre, the rib cage, one arm up to the upper left and the other limbs out to the right. In its chest a red-orange fire with a bright core, and a faint dark red at the hip. The still that the other helper drew of this frame on the trial is the same file to the bit, so the trial changes nothing here.
+- `02-s231-ending-fade-film-and.jpg`: The ending at 3:15 (frame 11738), in the fade to black, in two versions, cut and labelled by the Builder from the two helpers' clips as they came (960x540, draft tier): the film as it is above, the trial with the moving chest glow below, which is not in the film. Both halves are much darker than at 3:13: the stars, the pale dusty band and a thin crescent moon at the left, the planet near black-blue with faint cloud and the spiral storm at the right. The body still reads as a body in both: the skull with its dark holes, the ribs, the arm up to the left and the limbs out to the right, in dim grey. The fire in the chest is small and dim orange-red in both, hardly different by eye. Nothing else differs to the eye. Six frames later the picture is black.
 
+Status 230, 2026-11-28 15:38 UTC, showed: The film's ending at 3:13 (frame 11582) in two versions, cut by the Builder from the two helpers' clips as they came (960x540, draft tier)...
 Status 229, 2026-11-28 15:13 UTC, showed: One patch of the Ribs' wall at 0:34 (frame 2078), at full 4K size, as the film has it since 7:48 AM with the mended fix for its fine...
 Status 228, 2026-11-28 14:55 UTC, showed: The Ribs at 0:20 (frame 1241) as the film has it since 7:48 AM, with the mended fix for its fine detail: the whole frame, drawn by the...
-Status 227, 2026-11-28 14:33 UTC, showed: The Ribs at 0:34 (frame 2081) with the mended fix for its fine detail, on the trial merge that is not in the film yet: one patch of the...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-28T15:38:50Z
-phase 6: 13.97 h used of 24.00 h
-build: 13.97 h used of 24.00 h
+2026-11-28T16:05:17Z
+phase 6: 14.41 h used of 24.00 h
+build: 14.41 h used of 24.00 h
 extra rounds: no
 half point: reached
 minutes since the last status: 26
