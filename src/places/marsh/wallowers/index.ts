@@ -117,7 +117,8 @@ export function create(ctx: Context): Piece {
   great0.floor = mireLevel - 0.09;
   young0.floor = Math.max(mireLevel, ctx.rig.land.height(young0.plan.at[0], young0.plan.at[1]) + 0.025) - 0.06;
   const meshes = [...herd.flatMap((h) => [h.beast.mesh, h.beast.feelers]), wet.mesh, ...wallows.map((w) => w.mesh), tread.mesh, mire.mesh, mire.far];
-  ctx.parts.built('wallowers', ...(meshes as [(typeof meshes)[number], ...typeof meshes]));
+  // Marked fallback: finished by step 1 of the fallback chain (kit/03-METHOD.md section 5) in the third polish wave. The wallowers stand or lie and move in place; none walks.
+  ctx.parts.fallback('wallowers', ...(meshes as [(typeof meshes)[number], ...typeof meshes]));
   for (const mesh of meshes) ctx.scene.add(mesh);
 
   const discs = ctx.rig.contactDiscs(herd.length * DISCS);

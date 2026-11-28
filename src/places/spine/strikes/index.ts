@@ -349,7 +349,8 @@ export function create(ctx: Context): Piece {
     group.add(sparks);
 
     group.visible = false;
-    ctx.scene.add(index === 0 ? ctx.parts.built(site.id, group, farGroup) : ctx.parts.built(site.id, group));
+    // Marked fallback: the first strike was finished by step 1 of the fallback chain (kit/03-METHOD.md section 5) in the third polish wave. Strikes 2 to 6 are built.
+    ctx.scene.add(index === 0 ? ctx.parts.fallback(site.id, group, farGroup) : ctx.parts.built(site.id, group));
     // Where the flash is cast from: a point on the channel, and never lower over the tip than CAST_UP, so that level snow a kilometre
     // off is lit from above as the lit cloud lights it and not grazed.
     const cast = new THREE.Vector3().lerpVectors(tip, top, 0.28);

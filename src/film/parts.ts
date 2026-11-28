@@ -15,10 +15,11 @@ export interface FilmPart {
   what: string;
 }
 
+// opening and ending are marked fallback: each was finished by step 1 of the fallback chain (kit/03-METHOD.md section 5) in the third polish wave, not by the plain fallback of a film part. The step is in parts/PARTS.json.
 export const FILM_PARTS: readonly FilmPart[] = [
-  { name: 'opening', state: 'built', drawnBy: 'ribs', what: 'The approach: the shot ribs-01, frames 0 to 1041, the fog bank and the blades that stand out of it' },
+  { name: 'opening', state: 'fallback', drawnBy: 'ribs', what: 'The approach: the shot ribs-01, frames 0 to 1041, the fog bank and the blades that stand out of it' },
   { name: 'handoff', state: 'built', drawnBy: 'eye and reveal', what: 'The join from the Eye into the rise: the rings on deep water that both places draw either side of frame 9541' },
-  { name: 'ending', state: 'built', drawnBy: 'reveal', what: 'The ending: from frame 10881 the day leaves the body, night under a cold moon, the one beat of the Heart on frame 11334, the thinning to frame 11743' },
+  { name: 'ending', state: 'fallback', drawnBy: 'reveal', what: 'The ending: from frame 10881 the day leaves the body, night under a cold moon, the one beat of the Heart on frame 11334, the thinning to frame 11743' },
   { name: 'loop', state: 'built', drawnBy: 'ribs', what: 'The card loop: 480 frames of the Ribs from its establishing key, the camera on a closed path, the animals on the phase of the loop, the rest faded with itself one loop earlier' },
 ];
 

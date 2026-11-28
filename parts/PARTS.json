@@ -949,7 +949,7 @@
         "public/assets/marsh",
         "src/places/marsh"
       ],
-      "hash": "4be413f47897751f",
+      "hash": "fe327219ca6b1083",
       "standIn": {
         "hash": "c8fb76f3a586694b",
         "picture": "out/stills/parts/marsh/land.png",
@@ -971,7 +971,7 @@
         "public/assets/marsh",
         "src/places/marsh"
       ],
-      "hash": "4be413f47897751f",
+      "hash": "fe327219ca6b1083",
       "standIn": {
         "hash": "c8fb76f3a586694b",
         "picture": "out/stills/parts/marsh/crust.png",
@@ -993,7 +993,7 @@
         "public/assets/marsh",
         "src/places/marsh"
       ],
-      "hash": "4be413f47897751f",
+      "hash": "fe327219ca6b1083",
       "standIn": {
         "hash": "c8fb76f3a586694b",
         "picture": "out/stills/parts/marsh/brine.png",
@@ -1015,7 +1015,7 @@
         "public/assets/marsh",
         "src/places/marsh"
       ],
-      "hash": "4be413f47897751f",
+      "hash": "fe327219ca6b1083",
       "standIn": {
         "hash": "c8fb76f3a586694b",
         "picture": "out/stills/parts/marsh/domes.png",
@@ -1037,7 +1037,7 @@
         "public/assets/marsh",
         "src/places/marsh"
       ],
-      "hash": "4be413f47897751f",
+      "hash": "fe327219ca6b1083",
       "standIn": {
         "hash": "c8fb76f3a586694b",
         "picture": "out/stills/parts/marsh/burst.png",
@@ -1059,7 +1059,7 @@
         "public/assets/marsh",
         "src/places/marsh"
       ],
-      "hash": "4be413f47897751f",
+      "hash": "fe327219ca6b1083",
       "standIn": {
         "hash": "c8fb76f3a586694b",
         "picture": "out/stills/parts/marsh/stalks.png",
@@ -1081,7 +1081,7 @@
         "public/assets/marsh",
         "src/places/marsh"
       ],
-      "hash": "4be413f47897751f",
+      "hash": "fe327219ca6b1083",
       "standIn": {
         "hash": "c8fb76f3a586694b",
         "picture": "out/stills/parts/marsh/insects.png",
@@ -1097,13 +1097,13 @@
       "unit": "marsh",
       "name": "wallowers",
       "kind": "solid",
-      "state": "built",
-      "fallbackStep": null,
+      "state": "fallback",
+      "fallbackStep": 1,
       "files": [
         "public/assets/marsh",
         "src/places/marsh"
       ],
-      "hash": "4be413f47897751f",
+      "hash": "fe327219ca6b1083",
       "standIn": {
         "hash": "c8fb76f3a586694b",
         "picture": "out/stills/parts/marsh/wallowers.png",
@@ -1125,7 +1125,7 @@
         "public/assets/marsh",
         "src/places/marsh"
       ],
-      "hash": "4be413f47897751f",
+      "hash": "fe327219ca6b1083",
       "standIn": {
         "hash": "c8fb76f3a586694b",
         "picture": "out/stills/parts/marsh/dead.png",
@@ -1147,7 +1147,7 @@
         "public/assets/marsh",
         "src/places/marsh"
       ],
-      "hash": "4be413f47897751f",
+      "hash": "fe327219ca6b1083",
       "standIn": {
         "hash": "c8fb76f3a586694b",
         "picture": "out/stills/parts/marsh/fliers.png",
@@ -1169,7 +1169,7 @@
         "public/assets/marsh",
         "src/places/marsh"
       ],
-      "hash": "4be413f47897751f",
+      "hash": "fe327219ca6b1083",
       "standIn": {
         "hash": "c8fb76f3a586694b",
         "picture": "out/stills/parts/marsh/sky.png",
@@ -1191,7 +1191,7 @@
         "public/assets/marsh",
         "src/places/marsh"
       ],
-      "hash": "4be413f47897751f",
+      "hash": "fe327219ca6b1083",
       "standIn": {
         "hash": "c8fb76f3a586694b",
         "picture": "out/stills/parts/marsh/air.png",
@@ -1213,7 +1213,7 @@
         "public/assets/marsh",
         "src/places/marsh"
       ],
-      "hash": "4be413f47897751f",
+      "hash": "fe327219ca6b1083",
       "standIn": {
         "hash": "c8fb76f3a586694b",
         "picture": "out/stills/parts/marsh/rain.png",
@@ -1235,7 +1235,7 @@
         "public/assets/marsh",
         "src/places/marsh"
       ],
-      "hash": "4be413f47897751f",
+      "hash": "fe327219ca6b1083",
       "standIn": {
         "hash": "c8fb76f3a586694b",
         "picture": "out/stills/parts/marsh/steam.png",
@@ -1257,7 +1257,7 @@
         "public/assets/spine",
         "src/places/spine"
       ],
-      "hash": "b8d4e27ea293c901",
+      "hash": "3275085c0a94a778",
       "standIn": {
         "hash": "1ace18b8f42222fd",
         "picture": "out/stills/parts/spine/land.png",
@@ -1273,13 +1273,13 @@
       "unit": "spine",
       "name": "strike-1",
       "kind": "solid",
-      "state": "built",
-      "fallbackStep": null,
+      "state": "fallback",
+      "fallbackStep": 1,
       "files": [
         "public/assets/spine",
         "src/places/spine"
       ],
-      "hash": "b8d4e27ea293c901",
+      "hash": "3275085c0a94a778",
       "standIn": {
         "hash": "1ace18b8f42222fd",
         "picture": "out/stills/parts/spine/strike-1.png",
@@ -1301,7 +1301,7 @@
         "public/assets/spine",
         "src/places/spine"
       ],
-      "hash": "b8d4e27ea293c901",
+      "hash": "3275085c0a94a778",
       "standIn": {
         "hash": "1ace18b8f42222fd",
         "picture": "out/stills/parts/spine/strike-2.png",
@@ -1323,7 +1323,7 @@
         "public/assets/spine",
         "src/places/spine"
       ],
-      "hash": "b8d4e27ea293c901",
+      "hash": "3275085c0a94a778",
       "standIn": {
         "hash": "1ace18b8f42222fd",
         "picture": "out/stills/parts/spine/strike-3.png",
@@ -1345,7 +1345,7 @@
         "public/assets/spine",
         "src/places/spine"
       ],
-      "hash": "b8d4e27ea293c901",
+      "hash": "3275085c0a94a778",
       "standIn": {
         "hash": "1ace18b8f42222fd",
         "picture": "out/stills/parts/spine/strike-4.png",
@@ -1367,7 +1367,7 @@
         "public/assets/spine",
         "src/places/spine"
       ],
-      "hash": "b8d4e27ea293c901",
+      "hash": "3275085c0a94a778",
       "standIn": {
         "hash": "1ace18b8f42222fd",
         "picture": "out/stills/parts/spine/strike-5.png",
@@ -1389,7 +1389,7 @@
         "public/assets/spine",
         "src/places/spine"
       ],
-      "hash": "b8d4e27ea293c901",
+      "hash": "3275085c0a94a778",
       "standIn": {
         "hash": "1ace18b8f42222fd",
         "picture": "out/stills/parts/spine/strike-6.png",
@@ -1411,7 +1411,7 @@
         "public/assets/spine",
         "src/places/spine"
       ],
-      "hash": "b8d4e27ea293c901",
+      "hash": "3275085c0a94a778",
       "standIn": {
         "hash": "1ace18b8f42222fd",
         "picture": "out/stills/parts/spine/tether-kites.png",
@@ -1433,7 +1433,7 @@
         "public/assets/spine",
         "src/places/spine"
       ],
-      "hash": "b8d4e27ea293c901",
+      "hash": "3275085c0a94a778",
       "standIn": {
         "hash": "1ace18b8f42222fd",
         "picture": "out/stills/parts/spine/ridge-runners.png",
@@ -1455,7 +1455,7 @@
         "public/assets/spine",
         "src/places/spine"
       ],
-      "hash": "b8d4e27ea293c901",
+      "hash": "3275085c0a94a778",
       "standIn": {
         "hash": "1ace18b8f42222fd",
         "picture": "out/stills/parts/spine/sky.png",
@@ -1477,7 +1477,7 @@
         "public/assets/spine",
         "src/places/spine"
       ],
-      "hash": "b8d4e27ea293c901",
+      "hash": "3275085c0a94a778",
       "standIn": {
         "hash": "1ace18b8f42222fd",
         "picture": "out/stills/parts/spine/air.png",
@@ -1499,7 +1499,7 @@
         "public/assets/spine",
         "src/places/spine"
       ],
-      "hash": "b8d4e27ea293c901",
+      "hash": "3275085c0a94a778",
       "standIn": {
         "hash": "1ace18b8f42222fd",
         "picture": "out/stills/parts/spine/cloud-sea.png",
@@ -1521,7 +1521,7 @@
         "public/assets/spine",
         "src/places/spine"
       ],
-      "hash": "b8d4e27ea293c901",
+      "hash": "3275085c0a94a778",
       "standIn": {
         "hash": "1ace18b8f42222fd",
         "picture": "out/stills/parts/spine/cloud.png",
@@ -1543,7 +1543,7 @@
         "public/assets/spine",
         "src/places/spine"
       ],
-      "hash": "b8d4e27ea293c901",
+      "hash": "3275085c0a94a778",
       "standIn": {
         "hash": "1ace18b8f42222fd",
         "picture": "out/stills/parts/spine/spindrift.png",
@@ -2108,14 +2108,14 @@
       "unit": "film",
       "name": "opening",
       "kind": "effect",
-      "state": "built",
-      "fallbackStep": null,
+      "state": "fallback",
+      "fallbackStep": 1,
       "files": [
         "src/film/cut.ts",
         "src/film/film.ts",
         "src/film/parts.ts"
       ],
-      "hash": "51d802f37e2b75ab"
+      "hash": "a811eb13089eda90"
     },
     {
       "id": "film/handoff",
@@ -2129,21 +2129,21 @@
         "src/film/film.ts",
         "src/film/parts.ts"
       ],
-      "hash": "51d802f37e2b75ab"
+      "hash": "a811eb13089eda90"
     },
     {
       "id": "film/ending",
       "unit": "film",
       "name": "ending",
       "kind": "effect",
-      "state": "built",
-      "fallbackStep": null,
+      "state": "fallback",
+      "fallbackStep": 1,
       "files": [
         "src/film/cut.ts",
         "src/film/film.ts",
         "src/film/parts.ts"
       ],
-      "hash": "51d802f37e2b75ab"
+      "hash": "a811eb13089eda90"
     },
     {
       "id": "film/loop",
@@ -2157,7 +2157,7 @@
         "src/film/film.ts",
         "src/film/parts.ts"
       ],
-      "hash": "51d802f37e2b75ab"
+      "hash": "a811eb13089eda90"
     }
   ]
 }
