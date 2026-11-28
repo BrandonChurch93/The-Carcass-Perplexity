@@ -2,10 +2,10 @@
 // seep pool (part `domes`), and the tearing of a dome: the drops its edge lets go, the mound the pool heaves up, and the rings they leave (part `burst`).
 // All of it is a function of the place's seconds: every dome has a period and a moment in it, and nothing is remembered between frames.
 import * as THREE from 'three';
-import { BURST, HERO_DOME, POOL_R, SMALL_BURST, SMALL_DOME, TAU, fract, keyTime, rel } from '../shared/anchors';
+import { BEASTS, BURST, HERO_DOME, POOL_R, SMALL_BURST, SMALL_DOME, TAU, fract, keyTime, rel } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { landShared } from '../land';
-import { BRINE_DEPTH, BRINE_FRAGMENT, BRINE_VERTEX, CROWN_FRAGMENT, CROWN_LIFE, CROWN_VERTEX, DOME_FRAGMENT, DOME_VERTEX, MAX_RINGS, MAX_SEEPS, TEAR } from './shaders';
+import { BRINE_DEPTH, BRINE_FRAGMENT, BRINE_VERTEX, CROWN_FRAGMENT, CROWN_LIFE, CROWN_VERTEX, DOME_FRAGMENT, DOME_VERTEX, MAX_RINGS, MAX_SEEPS, MAX_STIR, TEAR } from './shaders';
 
 export const PARTS = ['brine', 'domes', 'burst'] as const;
 
@@ -59,6 +59,16 @@ export function create(ctx: Context): Piece {
     return new THREE.Vector4(Math.sin(a) * r, Math.cos(a) * r, seepRng.next(), seepRng.range(0.015, 0.04));
   });
 
+  // The animals keep the brine about them moving: each is a place rings leave from (the surface asks only where it stands and how
+  // far its body reaches; how it moves is the life builder's).
+  const stirCount = Math.min(BEASTS.length, MAX_STIR);
+  const stir = Array.from({ length: MAX_STIR }, (_, i) => {
+    const beast = BEASTS[i];
+    if (!beast) return new THREE.Vector4(0, 0, 0, 0);
+    const at = rel(beast.d, beast.l);
+    return new THREE.Vector4(at[0], at[1], 1.9 * beast.size, fract(0.37 + i * 0.6180339));
+  });
+
   // The mirror: the scene as the level brine sees it, drawn a sixth of the frame's size before every sample.
   const MIRROR_SHARE = 6;
   const mirror = new THREE.WebGLRenderTarget(480, 270, { type: THREE.HalfFloatType, format: THREE.RGBAFormat, minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter, depthBuffer: true });
@@ -74,7 +84,7 @@ export function create(ctx: Context): Piece {
   const surface = new THREE.ShaderMaterial({
     vertexShader: BRINE_VERTEX,
     fragmentShader: BRINE_FRAGMENT,
-    uniforms: { ...uniforms, uWade: { value: new THREE.Vector2(...rel(34.3, 3)) }, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount, uSeeps: { value: seeps }, tFrothN: { value: ctx.assets.texture('mat/froth-nh.png', { kind: 'data', repeat: true, anisotropy: 4 }) }, tBed: { value: ctx.assets.texture('mat/crust.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) }, tFroth: { value: frothSheet } },
+    uniforms: { ...uniforms, uWade: { value: new THREE.Vector2(...rel(34.3, 3)) }, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount, uSeeps: { value: seeps }, uStir: { value: stir }, uStirCount: { value: stirCount }, tFrothN: { value: ctx.assets.texture('mat/froth-nh.png', { kind: 'data', repeat: true, anisotropy: 4 }) }, tBed: { value: ctx.assets.texture('mat/crust.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) }, tFroth: { value: frothSheet } },
     toneMapped: false,
   });
   surface.userData.depthFragment = BRINE_DEPTH;
