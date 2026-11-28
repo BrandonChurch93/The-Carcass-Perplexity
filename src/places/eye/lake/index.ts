@@ -514,6 +514,15 @@ void main() {
     // Three looks are for the wall. Where the lowest of them still passes over its top all three find the sky, which one look tells as well.
     bool drawnOut = false;
     float softer = soft + log2(1.0 + spread * 420.0);
+    // Far out the picture of the far world is pressed many times flatter in the water than it is wide. Read at the level of the
+    // short side it broke into a row of blocks, so past eight to one the long side asks for a softer level.
+    {
+      vec2 hx = heldX * vec2(textureSize(tPlate, 0));
+      vec2 hy = heldY * vec2(textureSize(tPlate, 0));
+      float ha = dot(hx, hx);
+      float hb = dot(hy, hy);
+      softer += clamp(0.5 * log2(max(ha, hb) / max(min(ha, hb), 1e-8)) - 3.0, 0.0, 2.5);
+    }
 #if EYE_LOOKS > 1
     drawnOut = spread > 0.0045;
     if (drawnOut && uPlateTone.w > 0.5) {
