@@ -795,9 +795,15 @@ void main() {
   vec3 dpy = dFdy(p);
   vec2 ux = dFdx(vUv);
   vec2 uy = dFdy(vUv);
-  vec4 a = texture2D(tRock, vec2(vUv.x * 1.39, vUv.y));
-  vec4 b = texture2D(tRock, vec2(vUv.x * 3.86, vUv.y * 2.0) + 0.35 * a.ra);
-  vec4 c = texture2D(tRock, vec2(vUv.x * 10.3, vUv.y * 3.0) + 0.3 * b.ar);
+  // The stains are laid by metres along the rib and metres down and out across it, so that they are as wide on its face as on its top:
+  // laid by the part of a turn they were drawn out into bars down the face.
+  vec2 q = vec2(vUv.x * uRib.z, p.y + length(p.xz));
+  vec4 a = texture2D(tRock, q / 23.0);
+  vec4 b = texture2D(tRock, q / 8.3 + 0.35 * a.ra);
+  vec4 c = texture2D(tRock, q / 3.1 + 0.3 * b.ar);
+  // Drawn out along the rib, for the veins that run with it, and drawn out down it, for what has run off it.
+  vec4 d = texture2D(tRock, vec2(q.x / 5.2, q.y / 1.3) + 0.45 * c.ra);
+  vec4 e = texture2D(tRock, vec2(q.x / 1.9, q.y / 17.0) + 0.1 * b.ra);
   float level = log2(max(max(length(ux * uRib.xy), length(uy * uRib.xy)), 1.0)) - 0.5;
   vec4 tn = textureLod(tRibN, vUv, level);
   vec4 tm = textureLod(tRibM, vUv, level);
@@ -820,17 +826,21 @@ void main() {
   float hollow = tm.b;
   float baked = tn.b;
   // Ivory: paler where the skin stands out, deeper in its lows.
-  vec3 albedo = mix(vec3(0.6, 0.555, 0.47), vec3(0.9, 0.87, 0.795), clamp(0.5 + 1.1 * (a.r - 0.5) + 0.9 * (hollow - 0.5), 0.0, 1.0));
+  vec3 albedo = mix(vec3(0.64, 0.61, 0.54), vec3(0.93, 0.91, 0.855), clamp(0.5 + 1.1 * (a.r - 0.5) + 0.9 * (hollow - 0.5), 0.0, 1.0));
   // Rust: it starts at the cracks and the bare places and runs down round the nose and under the belly, where the water runs. The top
   // keeps its cream, with a wash of it here and there.
   float face = 1.0 - up;
   float broad = b.a + 0.5 * (a.a - 0.5);
   // Veined, as marble is: thin wandering lines of it, which swell to blotches with dark hearts where the broad stain lies.
-  float vein = 1.0 - smoothstep(0.0, 0.12 + 0.18 * smoothstep(0.35, 0.7, broad), abs(c.a + 0.6 * (b.r - 0.5) - 0.5));
+  float vein = 1.0 - smoothstep(0.0, 0.05 + 0.16 * smoothstep(0.35, 0.7, broad), abs(d.a + 0.5 * (c.r - 0.5) - 0.5));
+  vein = max(vein, 0.8 * (1.0 - smoothstep(0.0, 0.035, abs(d.r + 0.4 * (b.r - 0.5) - 0.5))));
   float blotch = smoothstep(0.46, 0.66, broad + 0.25 * (c.r - 0.5));
   float stain = clamp(max(0.85 * vein * (0.35 + 0.65 * smoothstep(0.3, 0.6, broad)), blotch * (0.55 + 0.45 * c.a)) + 0.18 * smoothstep(0.6, 1.0, tm.g), 0.0, 1.0);
   float heart = stain * smoothstep(0.6, 0.85, broad + 0.35 * (c.r - 0.5));
-  albedo = mix(albedo, mix(vec3(0.62, 0.36, 0.15), vec3(0.3, 0.13, 0.05), heart), 0.9 * stain * (0.55 + 0.45 * face));
+  albedo = mix(albedo, mix(vec3(0.62, 0.36, 0.15), vec3(0.3, 0.13, 0.05), heart), 0.95 * stain * (0.7 + 0.3 * face));
+  // What has run down its face: dark threads from the top's edge to the belly.
+  float run = smoothstep(0.56, 0.74, e.a + 0.2 * (c.a - 0.5)) * smoothstep(0.25, 0.7, face);
+  albedo = mix(albedo, vec3(0.2, 0.13, 0.06), 0.6 * run);
   // Dirt in the cracks.
   albedo *= mix(0.58, 1.0, smoothstep(0.1, 0.8, baked));
   // Green and dark with damp where it meets the wall and under its belly.
@@ -840,7 +850,7 @@ void main() {
   float dust = smoothstep(0.8, 0.97, up) * smoothstep(0.65, 0.3, hollow + 0.5 * (a.a - 0.5));
   albedo = mix(albedo, vec3(0.5, 0.47, 0.42), 0.5 * dust);
   // The mist settles on it and runs: a smooth wet skin, duller where a plate has gone and where the dust lies.
-  float rough = mix(mix(0.2, 0.36, smoothstep(0.55, 0.25, hollow)), 0.8, dust);
+  float rough = mix(mix(0.13, 0.3, smoothstep(0.55, 0.25, hollow)), 0.8, dust);
   float occ = vOcc * mix(0.4, 1.0, baked) * mix(0.82, 1.06, hollow);
 
   vec4 land = landAt(p.xz);
@@ -853,6 +863,11 @@ void main() {
   vec3 bounce = (0.55 * uSkyHorizon * uFill + 0.3 * uGlowColour) * (pit * (1.0 - open) * (0.55 + 0.45 * smoothstep(-0.2, 0.6, -n.y + 0.4)));
   bounce += uSunColour * (0.12 * pit * exp(-depth / 30.0));
   colour += albedo * bounce * occ;
+  // Wet: the bright of the sky lies on it as on a tusk in the rain, most where the eye looks along it.
+  vec3 back = reflect(-v, n);
+  back.y = abs(back.y);
+  float along = 1.0 - clamp(dot(n, v), 0.0, 1.0);
+  colour += skyRadiance(back) * ((0.09 + 0.6 * along * along * along) * (1.0 - dust) * (1.0 - 0.7 * damp) * occ * open);
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
