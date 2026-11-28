@@ -257,15 +257,22 @@ ${SEA_SHADE_GLSL}
       vec3 c = at - uWind.xyz * (uTime * uWind.w * 0.6);
       float along = dot(c, uWind.xyz);
       vec3 q = c - uWind.xyz * along;
-      // One size of tear for the whole plume: a size that grew along it would comb it into bars.
-      float torn = noise(vec3(along / (90.0 * size + 30.0), q.y / (14.0 * size + 5.0), (q.x - q.z) / (14.0 * size + 5.0))).r;
+      // Torn at two sizes, both long down the gale: the broad one parts the plume into banks, the fine one frays every bank into
+      // threads. (One size of each for the whole plume: a size that grew along it would comb it into bars.)
+      float tearAcross = 14.0 * size + 5.0;
+      float torn = noise(vec3(along / (90.0 * size + 30.0), q.y / tearAcross, (q.x - q.z) / tearAcross)).r;
+      float frayed = noise(vec3(along / (60.0 * size + 20.0), q.y / (0.13 * tearAcross), (q.x - q.z) / (0.13 * tearAcross)) + 0.41).a;
+      // Gusts go down it at the gale's own pace: where one passes the plume is thick and long, between two it is all but torn through.
       float gust = noise(vec3(along / 260.0, float(i) * 0.37, 0.11)).g;
       float k = x / reach;
-      float body = exp(-d2) * (1.0 - k) * (1.0 - k) * smoothstep(0.0, 0.05, k + 0.01);
-      float thick = clamp(body * smoothstep(0.2, 0.7, torn) * (0.6 + 1.2 * gust) * 2.3, 0.0, 0.46) * uShow.w * uStage.x * clearOf;
+      // It thins from its far end and from outside, in banks, and no bank has an outline: a plume is smoke, drawn out in threads.
+      float eaten = 0.16 + 0.12 * sqrt(d2) + 0.3 * k - 0.3 * (gust - 0.5);
+      float body = smoothstep(eaten, eaten + 0.55, torn) * (0.25 + 1.5 * frayed * frayed) * exp(-d2) * (1.0 - k) * (1.0 - k) * smoothstep(0.0, 0.05, k + 0.01);
+      float thick = clamp(body * (0.5 + 1.3 * gust) * 2.6, 0.0, 0.55) * uShow.w * uStage.x * clearOf;
       // Staged by shot: before the long lens of the strike a plume is a thin smoke of snow, not a bank.
       thick *= 1.0 - 0.75 * uPlate.w;
-      vec3 pale = 0.95 * (skyOn(1.0, rd) + min(strikeLight(at) * 0.25, vec3(0.12, 0.1, 0.2)));
+      // The sky lights it from above: its upper side is the paler.
+      vec3 pale = (0.84 + 0.2 * clamp(off.y / wide, -1.0, 1.0)) * (skyOn(1.0, rd) + min(strikeLight(at) * 0.25, vec3(0.12, 0.1, 0.2)));
       light += through * thick * pale;
       through *= 1.0 - thick;
     }
@@ -385,6 +392,76 @@ ${SEA_SHADE_GLSL}
     vec3 snowV = 0.85 * (skyOn(1.0, rd) + min(strikeLight(ro + rd * (95.0 / lensV)) * 0.2, vec3(0.1, 0.085, 0.17)));
     light = light * (1.0 - driven) + snowV * driven;
     through *= 1.0 - driven;
+  }
+
+  // The snow that flies past the lens. It is not laid on the lens: it flies in sheets of air that lie along the gale some paces apart,
+  // each a place in the world, and a ray takes what it meets where it goes through the two nearest. So a streak has a depth, it runs to
+  // the gale's own vanishing point, the near ones cross faster and broader than the far, and the lens moves among them. Each lane of a
+  // sheet has its own speed and they come in gusts that travel down the sheet slower than the snow: never one veil at one rate.
+  // A lens that looks across the gale meets the sheets that stand on edge; one that looks down it meets the level ones.
+  if (uShow.w * uStage.x > 0.0) {
+    vec3 downS = normalize(vec3(uWind.x, -0.05, uWind.z));
+    vec3 acrossS = normalize(cross(vec3(0.24, 1.0, 0.0), downS));
+    vec3 upS = cross(downS, acrossS);
+    // A long lens sees the same snow farther off and larger: every length here is in the lens's own measure.
+    float unitS = 0.466 / uInvProjection[1][1];
+    // Nothing is finer than the encode can carry or than this pass can draw: a streak thinner than that is drawn that wide and as much fainter.
+    float fine = max(1.5 * uInvProjection[1][1] / 540.0, 5.0 * uInvProjection[1][1] / float(textureSize(tDepth, 0).y));
+    float facing = abs(dot(uCameraWorld[2].xyz, acrossS));
+    float onEdge = smoothstep(0.3, 0.55, facing);
+    float alongRo = dot(ro, downS), alongRd = dot(rd, downS);
+    float fly = 0.0;
+    float hidS = 1.0;
+    for (int j = 0; j < 4; j++) {
+      bool level = j > 1;
+      float share = level ? 1.0 - onEdge : onEdge;
+      if (share <= 0.0) continue;
+      vec3 n = level ? upS : acrossS;
+      vec3 e = level ? acrossS : upS;
+      float gap = (level ? 0.6 : 6.0) * unitS;
+      float side = dot(rd, n);
+      if (abs(side) < 0.02) continue;
+      float sheet0 = dot(ro, n) / gap;
+      float m = side > 0.0 ? floor(sheet0) + 1.0 + float(j & 1) : ceil(sheet0) - 1.0 - float(j & 1);
+      float t = (m - sheet0) * gap / side;
+      float reachS = 12.0 * unitS;
+      if (t > far || t > reachS) continue;
+      float seen = share * smoothstep(0.5 * unitS, 1.8 * unitS, t) * (1.0 - smoothstep(0.55 * reachS, reachS, t));
+      float a = alongRo + t * alongRd;
+      float b = dot(ro, e) + t * dot(rd, e);
+      // The gale tumbles: the lanes of a sheet weave as they go.
+      float carried = (a - uWind.w * 0.8 * uTime) / unitS;
+      b += unitS * (0.1 * sin(carried / 2.3 + m * 1.7) + 0.04 * sin(carried / 0.61 + m * 4.1));
+      float lane = floor(b / (0.22 * unitS));
+      ivec2 laneAt = ivec2(int(lane), int(m) + (level ? 977 : 0));
+      float cellS = 1.1 * unitS;
+      float al = (a - uWind.w * (0.7 + 0.45 * rnd(laneAt, 7u)) * uTime) / cellS + 37.0 * rnd(laneAt, 11u);
+      float ac = floor(al);
+      ivec2 cell = ivec2(int(lane) + 4099 * laneAt.y, int(ac));
+      float chance = rnd(cell, 23u);
+      if (chance > 0.7) continue;
+      float gust = noise(vec3((a - uWind.w * 0.45 * uTime) / (55.0 * unitS), b / (9.0 * unitS), m * 0.37 + (level ? 0.5 : 0.0) + uTime * 0.05)).g;
+      if (chance > 0.7 * smoothstep(0.36, 0.6, gust)) continue;
+      float lengthOf = (0.3 + 0.6 * rnd(cell, 41u)) * unitS;
+      float fa = ((al - ac) * cellS - 0.04 * unitS - (cellS - lengthOf - 0.08 * unitS) * rnd(cell, 31u)) / lengthOf;
+      if (fa <= 0.0 || fa >= 1.0) continue;
+      // A streak is brightest a little behind its head and trails off: drawn out by the open shutter, not a dash.
+      float ends = fa * fa * (1.0 - fa) * 6.75;
+      float sizeOf = rnd(cell, 67u);
+      float wide = (0.008 + 0.02 * sizeOf * sizeOf) * unitS;
+      float drawn = max(wide, fine * t);
+      float db = b - (lane + 0.34 + 0.32 * rnd(cell, 59u)) * 0.22 * unitS + (rnd(cell, 83u) - 0.5) * 0.4 * (fa - 0.5) * lengthOf;
+      // Most are faint, a few are bright; the broad ones are the nearest to the lens and the softest.
+      float bright = rnd(cell, 61u);
+      float flake = exp(-db * db / (drawn * drawn)) * ends * (wide / drawn) * (0.24 + 0.55 * bright * bright) * (1.0 - 0.4 * sizeOf) * seen;
+      fly += hidS * flake;
+      hidS *= 1.0 - flake;
+    }
+    // Against the open sky blown snow is the sky's own tone and all but lost: it shows against the rock and the snow.
+    fly *= uShow.w * uStage.x * (far > 50000.0 ? 0.45 : 1.0) * (uSkyStage.z > 0.0 ? 0.5 : 1.0);
+    vec3 flying = 1.45 * (skyOn(1.0, rd) + min(strikeLight(ro + rd * 6.0) * 0.2, vec3(0.06, 0.05, 0.1)));
+    light = light * (1.0 - fly) + flying * fly;
+    through *= 1.0 - fly;
   }
 
   // The snow before the lens: streaks in the gale, soft and few, each many times longer than it is wide, in gusts, at three depths. Each depth
