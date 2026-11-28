@@ -166,8 +166,8 @@ void main() {
   vec3 rx = dFdx(vRest);
   vec3 ry = dFdy(vRest);
   // The two under the last camera stand before its focus: what is fine in the hide is lost, as through a soft lens.
-  float soft05 = 1.0 + 0.7 * step(0.01, uOwn.w);
-  float px = soft05 * (length(dpx) + length(dpy)) / uOwn.y;
+  float soft05 = 1.0 + 0.4 * step(0.01, uOwn.w);
+  float px = (length(dpx) + length(dpy)) / uOwn.y;
   // Where on the body: along the neck from its root, down the legs, on the flanks of the trunk.
   float along = dot(vRest - vec3(0.0, 2.02, 0.95), vec3(0.0, 0.9407, 0.3393));
   float neck = smoothstep(0.08, 0.4, along) * smoothstep(0.55, 0.75, vRest.z + 0.35 * (vRest.y - 2.0));
@@ -229,9 +229,12 @@ void main() {
     // scar is found twice on one animal, and no two animals wear the same.
     float limb = max(neck, leg);
     float which = smoothstep(0.42, 0.58, n3(at * 0.8 + 3.0));
-    vec3 folded = wornAt(at, dx, dy, ma.x, me.x, w, limb, which);
+    // The two under the last camera wear the loose folds on the neck alone: a back seen from behind and above is drawn tight.
+    float foldsHere = 1.0 - under05 * (1.0 - smoothstep(0.05, 0.6, neck));
+    vec3 folded = vec3(1.0);
+    if (foldsHere > 0.0) folded = wornAt(at, dx, dy, ma.x, me.x, w, limb, which);
     float tone = dot(folded, vec3(0.3, 0.5, 0.2));
-    skin *= mix(vec3(1.0), mix(vec3(tone), folded, 0.75), (0.5 + 0.5 * loose) * (1.0 - 0.9 * under05 * (1.0 - neck)));
+    skin *= mix(vec3(1.0), mix(vec3(tone), folded, 0.75), (0.5 + 0.5 * loose) * foldsHere);
     // The bottom of a fold holds its own shade and the dirt of years: it is dark, and darkest where the hide hangs loosest.
     skin *= mix(vec3(1.0), vec3(0.5, 0.42, 0.38), 0.85 * loose * smoothstep(0.95, 0.6, tone));
     // The fine sheet, twice: the net of creases, and close to, the pores.
@@ -241,7 +244,7 @@ void main() {
     vec3 tiled = sqrt(broad.rgb * fine.rgb) / vec3(0.69, 0.41, 0.32);
     skin *= mix(vec3(1.0), tiled, 0.45) * mix(0.9, 1.0, smoothstep(0.22, 0.52, broad.a)) * (0.94 + 0.12 * fine.a);
     // The folds turn the light: the relief's slope across the screen leans the normal.
-    slope += 0.06 * (1.0 - 0.9 * under05 * (1.0 - neck)) * loose * leanAt(at, rx, ry, ma.x, me.x, w, limb, which);
+    if (foldsHere > 0.0) slope += 0.06 * foldsHere * loose * leanAt(at, rx, ry, ma.x, me.x, w, limb, which);
     vec3 r1 = cross(dpy, n);
     vec3 r2 = cross(n, dpx);
     float det = dot(dpx, r1);
@@ -257,7 +260,7 @@ void main() {
   float run = trunk * (1.0 - smoothstep(0.005, 0.016, px)) * smoothstep(1.5, 2.1, vRest.y) * smoothstep(0.56, 0.74, n3(vec3(at.x * 0.6, at.y * 0.45, at.z * 21.0)));
   // And it lies as a ragged grey saddle from the spine down onto the ribs and the rump, where the animal cannot rub it off.
   float saddle = trunk * smoothstep(1.8, 2.14, vRest.y + 0.5 * (n3(at * vec3(1.6, 1.0, 3.4) + 17.0) - 0.5)) * (0.5 + 0.5 * blotch);
-  float dirt = clamp(0.85 * top * smoothstep(0.2, 0.6, n3(at * vec3(3.0, 3.0, 1.4) + 5.0)) + 0.46 * smear + 0.4 * (1.0 - 0.6 * under05) * run + 0.8 * saddle, 0.0, 1.0);
+  float dirt = clamp(0.85 * top * smoothstep(0.2, 0.6, n3(at * vec3(3.0, 3.0, 1.4) + 5.0)) + 0.46 * smear + 0.4 * (1.0 - 0.6 * under05) * run + 0.8 * (1.0 - 0.5 * under05) * saddle, 0.0, 1.0);
   // Old on the shore: broad streaks of dried mud down the ribs and the haunch, and the long thin scars of thorn and horn, healed dark.
   float aged = uPose.z * trunk * (1.0 - smoothstep(0.05, 0.1, px));
   float streak = smoothstep(1.45, 2.1, vRest.y) * smoothstep(0.5, 0.72, n3(vec3(at.x * 0.6, at.y * 0.45, at.z * 13.0) + 3.0));
@@ -303,7 +306,7 @@ void main() {
   if (near > 0.0) {
     damp = max((1.0 - smoothstep(0.7, 1.25, above + 0.4 * ragged)) * leg, under * smoothstep(0.3, 0.6, n3(at * vec3(2.0, 2.0, 5.0) + 41.0) + 0.5 * under));
     // The two under the last camera have waded to the belly: the hide is dark and damp up the haunch and the flank, to a ragged line.
-    damp = max(damp, 0.75 * under05 * trunk * (1.0 - smoothstep(1.38, 1.8, vRest.y + 0.3 * (ragged - 0.5) + 0.3 * (drift - 0.5))));
+    damp = max(damp, 0.55 * under05 * trunk * (1.0 - smoothstep(1.3, 1.72, vRest.y + 0.3 * (ragged - 0.5) + 0.3 * (drift - 0.5))));
     // Drops hang under the belly and at the back of the legs, swell, and fall: each in a place of its own, each at its own time.
     vec2 cell = vec2(vRest.z * 34.0, vRest.x * 34.0 + vRest.y * 9.0);
     vec2 inCell = fract(cell) - 0.5;
@@ -427,12 +430,12 @@ export function create(ctx: Context): Piece {
   const drawn: Drawn[] = animals.map((animal, i) => {
     const index = cast[i] as number;
     const bones = new Float32Array(BONES * 12);
-    const own = new THREE.Vector4(animal.own, animal.build.size, 0, animal.level === undefined ? 0 : 0.6);
+    const own = new THREE.Vector4(animal.own, animal.build.size, 0, animal.level === undefined ? 0 : 0.5);
     // z: the four of the shore shot, the first four of the list, are seen long and near: they carry the marks of their years.
     const pose = new THREE.Vector3(0, index < CLOSE ? 0 : 0.45, index < 4 ? 1 : 0);
     // Three hides in the herd: pale cream, sand going to rust, and a grey dun. Together they are as light as the one hide was.
     const kindOf = (animal.own * 37.7) % 1;
-    const tone = animal.level !== undefined ? new THREE.Vector3(1.1, 1.05, 0.9) : index < CLOSE ? new THREE.Vector3(1, 1, 1) : kindOf < 0.4 ? new THREE.Vector3(1.1, 1.08, 1.04) : kindOf < 0.75 ? new THREE.Vector3(1.0, 0.95, 0.88) : new THREE.Vector3(0.86, 0.87, 0.9);
+    const tone = animal.level !== undefined ? new THREE.Vector3(1.17, 1.12, 0.97) : index < CLOSE ? new THREE.Vector3(1, 1, 1) : kindOf < 0.4 ? new THREE.Vector3(1.1, 1.08, 1.04) : kindOf < 0.75 ? new THREE.Vector3(1.0, 0.95, 0.88) : new THREE.Vector3(0.86, 0.87, 0.9);
     const near = new THREE.Vector2(index < CLOSE ? 1 : 0, 0);
     const material = new THREE.ShaderMaterial({
       uniforms: { ...ctx.rig.uniforms, uBones: { value: bones }, uOwn: { value: own }, uPose: { value: pose }, uTone: { value: tone }, uKin: { value: near }, tHide, tFolds, tSlope },
