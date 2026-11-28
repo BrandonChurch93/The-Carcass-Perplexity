@@ -115,12 +115,19 @@ void main() {
   // The corners of the sheet beside the line are drawn onto it, so the seam runs as the line does and not in the steps of the sheet.
   float drawn = (1.0 - step(0.045, abs(sd))) * step(0.02, tb) * step(tb, 0.98);
   vec2 onLine = l - vec2(-ba.y, ba.x) / bl * (sd - sign(sd) * 0.004) * drawn;
-  vec4 w = modelMatrix * vec4(onLine.x, position.y - fall * side * hang, onLine.y, 1.0);
+  #ifdef RIM
+  float carried = 0.0;
+  #else
+  vec2 g = (textureLod(tRelief, (l - uField.xy) * uField.z, 0.0).rg - 0.5) * 2.0 * uField.w;
+  // A corner drawn onto the line takes the height of the ground where it now is, by the slope where it was. Left at its own
+  // height, each corner on the flank of a rope stood a finger over or under its neighbour and the seam ran as a zigzag.
+  float carried = dot(g, onLine - l);
+  #endif
+  vec4 w = modelMatrix * vec4(onLine.x, position.y + carried - fall * side * hang, onLine.y, 1.0);
   vWorld = w.xyz;
   #ifdef RIM
   vec3 n = vec3(0.0, 1.0, 0.0);
   #else
-  vec2 g = (textureLod(tRelief, (l - uField.xy) * uField.z, 0.0).rg - 0.5) * 2.0 * uField.w;
   vec3 n = normalize(vec3(-(g.x * uTurn.x - g.y * uTurn.y), 1.0, -(g.x * uTurn.y + g.y * uTurn.x)));
   #endif
   vEmit = emitterIrradiance(vec3(w.x, max(w.y, 0.02), w.z), n);
@@ -357,12 +364,17 @@ void main() {
   #ifndef RIM
   // The split: open lava at the bottom, a skin that still glows on its walls.
   float heat = mk.r * (1.0 + 2.2 * uTearOpen);
-  float hot = smoothstep(0.12, 0.6, heat * (0.8 + 0.4 * small));
+  // The heat comes spread a hand wide. The bright of it is broken by a grain of 2 to 6 cm into cracks and beads that join and
+  // part, so no line is drawn along the facets of the sheet; the rest of the patch is skin that glows dull from under.
+  float bead = vnoise(l * 23.0 + 5.0);
+  float vein = 1.0 - abs(2.0 * vnoise(l * 41.0 + 11.0) - 1.0);
+  float hot = smoothstep(0.34, 0.74, heat * (0.35 + 0.55 * bead + 0.5 * vein * vein) * (0.8 + 0.4 * small));
   // The fire of the split wavers, each length of it in its own time. Every rate is a whole count of turns in 8 s.
   float breath = 22.0 * sin(uTime * 1.5708 + 6.0 * small) + 20.0 * sin(uTime * 3.927 + 4.0 * l.x) + 14.0 * sin(uTime * 8.6394 + 7.0 * l.y + 2.0);
-  float kelvin = mix(980.0, uTearKelvin - 50.0 + 60.0 * small + breath + 50.0 * uTearOpen, hot);
-  c *= 1.0 - 0.9 * smoothstep(0.05, 0.4, heat);
-  c += blackbody(kelvin) * smoothstep(0.04, 0.3, heat);
+  float kelvin = mix(880.0 + 110.0 * bead + 0.5 * breath, uTearKelvin - 50.0 + 60.0 * small + breath + 50.0 * uTearOpen, hot);
+  float lit = smoothstep(0.1, 0.5, heat * (0.6 + 0.8 * bead));
+  c *= 1.0 - 0.9 * lit;
+  c += blackbody(kelvin) * lit;
   // The face of the break. Before the slab goes it is a fine seam, hot in lengths at its foot; when the slab goes the whole
   // face shows the hot inside of the crust, which cools to black and leaves the seam at its foot as it was.
   float fallen = 0.035 + 0.095 * uSlab;
@@ -414,6 +426,12 @@ void main() {
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
 
+/** How light the char of the hull is: the sheet's charcoal is about 0.03 and comes out near 0.07, as charred wood is. */
+const HULL_CHAR = 2.2;
+/** How pale a plate left on a limb is, of what it was: the critics had the plates as pale scale patches. */
+const LEG_PLATE = 0.62;
+/** How much of the pale dried plate is left on a plate of the hull, 0 to 1. */
+const HULL_SLAT = 0.1;
 export const CARCASS_FRAGMENT = /* glsl */ `
 precision highp float;
 varying vec3 vWorld;
@@ -441,7 +459,12 @@ void main() {
   // On the body the streaks of the hide run with the cords it dried in, and wind round the hull as they do; on a limb along the limb.
   float lump = vnoise3(vLocal * 1.1 + 4.0);
   float lump2 = vnoise3(vLocal * 2.7 + 11.0);
+#ifdef HULL
+  // The charred sheet lies on the hull in blocks a hand to a forearm long, wound round it as the cords are.
+  vec2 uvH = vec2(vMap.x * 4.0 + 0.57 * vMap.y + 0.25 * lump, vMap.y * 0.4 + 0.2 * lump2);
+#else
   vec2 uvH = mix(vec2(vMap.x * vMap.z, vMap.y / 0.6), vec2(vMap.x * 6.0 + 0.86 * vMap.y + 0.25 * lump, vMap.y * 0.55 + 0.2 * lump2), isBody);
+#endif
   vec2 uvP = mix(vec2(vMap.x * vMap.z + 0.37, vMap.y / 0.52 + 0.11), vec2(vMap.y * 1.4 + 0.37, vMap.x * 11.0 + 0.11), isBody);
   vec3 hide = texture2D(tHide, uvH).rgb;
   vec4 hideNh = texture2D(tHideNh, uvH);
@@ -452,20 +475,35 @@ void main() {
   // A charred bark of hide: near black on the trunks, grey-brown on the hull, where the creases between its cords hold the soot.
   vec3 bark = vec3(0.118, 0.08, 0.054) * (0.3 + 9.0 * grey) * (0.45 + 1.25 * hideNh.b * hideNh.b) * 0.7;
   // The hull is one dark mass, as dark as the crust round it: its ropes carry the form and the hide only mottles them.
+#ifdef HULL
+  // Burnt through: charcoal on the blocks, a scorched brown where it burnt less, soot in the splits between them. The sheet has its own tones.
+  bark = mix(hide, vec3(dot(hide, vec3(0.3, 0.5, 0.2))) * vec3(1.06, 1.0, 0.94), 0.55) * ${HULL_CHAR.toFixed(2)} * (0.75 + 0.5 * flakeNh.b) * (0.8 + 0.4 * lump2);
+#else
   bark = mix(bark, vec3(0.066, 0.046, 0.033) * (0.55 + 0.9 * hideNh.b) * (0.45 + 1.1 * flakeNh.b) * (0.8 + 0.4 * lump2), isBody);
+#endif
   // The plates that lift off it are the same hide, dried pale.
   float plateTone = 0.68 + 0.5 * smoothstep(0.72, 1.0, vSurf.y);
   // On a limb they are pale and grey, as ash caked on hide; on the hull darker.
-  vec3 scab = mix(vec3(0.235, 0.175, 0.115), vec3(0.225, 0.168, 0.11) * 0.9, isBody) * (0.55 + 5.0 * tone) * (0.7 + 0.5 * flakeNh.b) * plateTone;
+  // What is left of them on a limb is burnt too: grey-brown and broken, never a pale patch.
+  vec3 scab = mix(vec3(0.235, 0.175, 0.115) * ${LEG_PLATE.toFixed(2)}, vec3(0.225, 0.168, 0.11) * 0.9, isBody) * (0.55 + 5.0 * tone) * (0.7 + 0.5 * flakeNh.b) * plateTone;
 
   // From across the lake the plates are not pale slats on a dark hull: the fume between takes their ash tone down to the hull's, and
   // the carcass is one dark grey-brown thing, as the wide picture has it.
   scab *= mix(0.4, 1.0, smoothstep(60.0, 28.0, far));
   float plated = smoothstep(0.35, 0.6, vSurf.y);
   float furrow = isBody * vSurf.w;
+#ifdef HULL
+  // A plate that lifts off the hull is the same char, a little greyer on its back: never a pale slat on it.
+  scab = mix(bark * 1.5, scab, ${HULL_SLAT.toFixed(2)});
+#endif
   vec3 albedo = mix(bark, scab, plated);
   vec2 bump = mix((hideNh.rg - 0.5) * mix(2.6, 1.4, isBody) + (flakeNh.rg - 0.5) * 2.2 * isBody, (flakeNh.rg - 0.5) * 2.6, plated) * (0.35 + 0.65 * close);
   float cavity = mix(0.6 + 0.4 * hideNh.b, 0.6 + 0.4 * flakeNh.b, plated);
+#ifdef HULL
+  // The splits between the blocks are deep: they take the bump of the sheet whole, and no light gets down them.
+  bump = mix((hideNh.rg - 0.5) * 3.4 + (flakeNh.rg - 0.5) * 1.2, bump, 0.5 * plated) * (0.35 + 0.65 * close);
+  cavity = mix(0.2 + 0.8 * smoothstep(0.08, 0.5, hideNh.b), cavity, 0.5 * plated);
+#endif
 
   // Where a plate has gone from a leg: dried flesh, almost black, strung with sinew along the limb.
   float cordAt = vMap.x * vMap.z * 21.0 + 1.5 * vnoise(vec2(vMap.x * vMap.z * 3.0, vMap.y * 0.9));
@@ -507,7 +545,10 @@ void main() {
   albedo *= 1.0 + mix(0.7, 1.0, isBody) * close * fine;
   float up = mix(smoothstep(0.1, 0.7, nl.y), smoothstep(-0.1, 0.45, nl.y), isLeg);
   float dust = up * (0.2 + 0.8 * smoothstep(0.3, 0.65, 1.0 - lump + 0.4 * (grit - 0.5) + 0.5 * (flakeNh.b - 0.5))) * mix(0.3, 1.0, plated) * (1.0 - 0.7 * furrow) * (1.0 - 0.5 * coat) * (1.0 - 0.85 * isBody * (1.0 - plated));
-  albedo = mix(albedo, mix(ASH, uAsh * plateTone, plated) * (0.7 + 0.5 * grit) * (0.7 + 0.6 * mix(hideNh.b, flakeNh.b, plated)), dust * mix(0.4, 0.6, plated) * mix(0.4, 1.0, smoothstep(60.0, 28.0, far)));
+#ifdef HULL
+  dust *= 0.3;
+#endif
+  albedo = mix(albedo, mix(ASH, uAsh * plateTone * mix(${LEG_PLATE.toFixed(2)}, 1.0, isBody), plated) * (0.7 + 0.5 * grit) * (0.7 + 0.6 * mix(hideNh.b, flakeNh.b, plated)), dust * mix(0.4, 0.6, plated) * mix(0.4, 1.0, smoothstep(60.0, 28.0, far)));
 
   // The bump is laid on the surface along its own directions.
   vec3 along = normalize(cross(n, vec3(0.31, 0.9, 0.29)));
