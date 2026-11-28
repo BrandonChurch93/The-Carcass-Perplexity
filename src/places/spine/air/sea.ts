@@ -567,7 +567,9 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     if (needFoot) {
       sea = mix(sea, mix(mix(SEA_COLD * vec3(1.2, 1.25, 1.4), SEA_COLD * vec3(0.3, 0.34, 0.44), plate), domeFar, 0.42) * shape * mix(farBank, 1.0, 1.0 - exp(-t * t / (9.0e8 * seaLens * seaLens))), gone);
       // (Under the storm the foot is the dark wall's and the deck goes into it whole: kept pale there it stood as a ruled line against it.)
-      sea = mix(sea, domeFar, plate > 0.0 ? 0.4 * gone : mix(1.0 - exp(-t * t / (1.3e9 * seaLens * seaLens * seaLens)), gone, inStorm));
+      // (Behind the long lens its last rows are the picture's own sea whole: kept two fifths its own to the end, the deck stopped
+      // against the picture's band in a ruled level line.)
+      sea = mix(sea, domeFar, plate > 0.0 ? gone * mix(0.4, 1.0, smoothstep(14000.0, 40000.0, t)) : mix(1.0 - exp(-t * t / (1.3e9 * seaLens * seaLens * seaLens)), gone, inStorm));
     }
     // (Behind the long lens the deck is slate under the dark sky, and pale only while a stroke lights it.)
     sea += flare * (0.7 * plate);
