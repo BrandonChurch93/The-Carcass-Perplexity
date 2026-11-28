@@ -291,17 +291,17 @@ void main() {
     soaked = step(0.25, vWet);
     float under = clamp(vWet * 2.0 - 1.0, 0.0, 1.0);
     float along = u + 0.16 * (vnoise(vec2(u * 6.0, seed * 13.0)) - 0.5);
-    vec3 flesh = mix(vec3(0.8, 0.62, 0.57), vec3(0.72, 0.5, 0.47), own);
-    vec3 rose = mix(vec3(0.66, 0.51, 0.46), vec3(0.78, 0.63, 0.55), tone);
-    vec3 blood = mix(vec3(0.27, 0.18, 0.13), vec3(0.4, 0.28, 0.2), tone);
+    vec3 flesh = mix(vec3(0.82, 0.64, 0.62), vec3(0.74, 0.52, 0.52), own);
+    vec3 rose = mix(vec3(0.66, 0.49, 0.5), vec3(0.8, 0.63, 0.62), tone);
+    vec3 blood = mix(vec3(0.3, 0.17, 0.16), vec3(0.42, 0.27, 0.24), tone);
     albedo = mix(flesh, rose, smoothstep(0.1, 0.55, along));
     albedo = mix(albedo, blood, 0.7 * smoothstep(0.66, 1.0, along));
     // Ringed and blotched like a worm, not one even colour down its length.
     albedo *= 0.86 + 0.28 * vnoise(vec2(vUv.x * 70.0, seed * 7.0));
     // No two strands are one colour: some are pale and some dark with blood.
     albedo *= mix(vec3(0.72, 0.66, 0.62), vec3(1.1), hash12(vec2(seed * 3.7, 9.0)));
-    // Soaked, a strand is dark and brown: the pink is in the dry ones.
-    albedo = mix(albedo, vec3(0.27, 0.19, 0.13) * (0.7 + 0.6 * tone), (0.2 + 0.5 * smoothstep(0.35, 1.0, along)) * soaked);
+    // Soaked, a strand is darker and keeps its pink: the dark on a wet mop is the weed caught on it.
+    albedo = mix(albedo, vec3(0.4, 0.25, 0.24) * (0.7 + 0.6 * tone), (0.15 + 0.3 * smoothstep(0.35, 1.0, along)) * soaked);
     // The thick ones at the heart of the mop are not one cord each: each is a hank of fine ones stuck together, and reads as strands.
     float hank = smoothstep(0.008, 0.02, vInfo.z);
     float lines = vnoise(vec2(vUv.y * 900.0 + 2.0 * vnoise(vec2(vUv.x * 9.0, seed)), vUv.x * 4.0 + seed));
@@ -309,7 +309,7 @@ void main() {
     occ *= mix(1.0, 0.6 + 0.4 * smoothstep(0.3, 0.6, lines), hank);
     float isWeed = step(1.5, type);
     // What has been dragged through the water has weed caught on its lower half, in patches.
-    float caught = soaked * smoothstep(0.5, 0.72, vnoise(vec2(u * 8.0 + seed * 3.0, tone * 20.0))) * smoothstep(0.3, 0.6, u) * 0.75;
+    float caught = soaked * smoothstep(0.4, 0.6, vnoise(vec2(u * 5.0 + seed * 3.0, tone * 20.0))) * smoothstep(0.25, 0.5, u) * 0.88;
     float weed = max(isWeed, caught);
     albedo = mix(albedo, mix(vec3(0.05, 0.055, 0.02), vec3(0.12, 0.105, 0.04), tone), weed);
     rough = mix(0.5, 0.88, weed);
@@ -400,9 +400,9 @@ void main() {
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
   float edge = pow(1.0 - nv, 2.0) + (0.3 + 1.1 * smoothstep(0.3, 0.7, vnoise(vWorld.xy * 3.1 + vWorld.z * 2.3))) * pow(1.0 - nv, 3.0) * (1.0 - tendril) * smoothstep(-0.1, 0.5, n.y + 0.6 * dot(n, flat_));
   // The rim is the sun's own colour come through skin and blood, and only on the side the sun is on: the relief of the hide breaks it.
-  vec3 through = mix(vec3(1.0, 0.52, 0.36), vec3(1.0, 0.64, 0.54), tendril);
+  vec3 through = mix(vec3(1.0, 0.52, 0.36), vec3(1.0, 0.6, 0.58), tendril);
   // A strand is thin all through, not only at its edge.
-  edge = mix(edge, 0.36, tendril);
+  edge = mix(edge, 0.24, tendril);
   colour += albedo * through * uSunColour * ((1.0 - 0.8 * uMirror) * thin * 2.3 * (0.3 + 0.7 * against * against) * edge * max(lit, 0.6) * (0.5 + 0.5 * occ) * mix(smoothstep(-0.2, 0.5, dot(n, uSunDir)), 0.3, tendril));
   // Staged: the sun breaks through on the one far off in the vapour, so it is paler than the vapour it stands in, and it keeps its body:
   // the back that faces the sun is brightest and the belly and the side in its own shade the least.
