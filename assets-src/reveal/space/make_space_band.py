@@ -12,8 +12,8 @@ from PIL import Image
 from scipy.ndimage import gaussian_filter, median_filter
 
 src = np.asarray(Image.open('assets-src/reveal/space/space-band-source.jpg').convert('RGB')).astype(np.float64) / 255
-# The stretch of it the film sees: 1520 x 480 px about the middle line of the band, the warm core near a third of the way along.
-X0, Y0, W, H = 150, 106, 1520, 480
+# The stretch of it the film sees: 1216 x 320 px about the middle line of the band, the warm core near a third of the way along.
+X0, Y0, W, H = 265, 198, 1216, 320
 part = src[Y0:Y0 + H, X0:X0 + W]
 # The stars out: a median takes the points and keeps the edges of the lanes.
 part = np.stack([median_filter(part[..., c], size=5) for c in range(3)], axis=-1)
@@ -29,8 +29,8 @@ window = ease((1 - np.abs(ys)) / 0.3) * ease(xs / 0.06) * ease((1 - xs) / 0.04)
 part = part * window[..., None]
 Image.fromarray((part * 255 + 0.5).astype(np.uint8)).save('public/assets/reveal/sky/space-band.jpg', quality=88)
 
-# The table: 95 x 30 cells, a letter each, a for none and z for the thickest.
-GW, GH = 95, 30
+# The table: 76 x 20 cells, a letter each, a for none and z for the thickest.
+GW, GH = 76, 20
 lum = part @ np.array([0.3, 0.5, 0.2])
 cells = lum.reshape(GH, H // GH, GW, W // GW).mean(axis=(1, 3))
 cells = cells / cells.max()
