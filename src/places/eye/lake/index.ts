@@ -317,7 +317,7 @@ void main() {
         // It runs in lengths, not in lines: each length on its way down.
         runnel = lifted * min(steepness * 7.0, 1.0) * smoothstep(0.3, 0.62, vnoise(p.xz / 2.6 - down2 * (3.5 * uTime) + 17.0)) * (holdMid * smoothstep(0.07, 0.0, abs(mid - 0.5)) * smoothstep(0.45, 0.7, wide) + holdThin * 0.7 * smoothstep(0.06, 0.0, abs(thin - 0.47)) * smoothstep(0.4, 0.7, mid));
         // The top of a crest breaks white, in bits.
-        runnel += lifted * 1.5 * smoothstep(0.4, 0.85, crested) * smoothstep(0.35, 0.6, mix(wide, thin, holdThin));
+        runnel += lifted * 0.8 * smoothstep(0.4, 0.85, crested) * smoothstep(0.35, 0.6, mix(wide, thin, holdThin));
       }
 #endif
       // Where the water it has lifted runs off it and meets the lake, the lake is churned: a torn band of short steep water round its foot,
@@ -542,12 +542,12 @@ void main() {
 #if EYE_EDGE
     // Beside the edge the wall is sheer. The look is followed down through the water to where it meets the face, which stands out in
     // buttresses and back in gullies; where the look runs out over the shaft it meets nothing, and the water is black-blue.
-    float round = atan(p.x, p.z) * 480.0;
+    float lapAt = atan(p.x, p.z) * 480.0;
     float towards = dot(rf.xz, vec2(lip.z, -lip.y)) / fall;
-    float sheer = 4.2 * (0.4 + 1.2 * vnoise(vec2(round / 7.5, 3.0)) + 0.35 * (vnoise(vec2(round / 1.9, 11.0)) - 0.5));
+    float sheer = 4.2 * (0.4 + 1.2 * vnoise(vec2(lapAt / 7.5, 3.0)) + 0.35 * (vnoise(vec2(lapAt / 1.9, 11.0)) - 0.5));
     float meets = 1.0 + sheer * towards;
     // Under the lip a ledge of the shelf's own stone stands out a little way, here a stride and there three, before the face drops.
-    float ledgeOut = 0.5 + 3.4 * vnoise(vec2(round / 5.3, 9.0)) * vnoise(vec2(round / 23.0, 4.0));
+    float ledgeOut = 0.5 + 3.4 * vnoise(vec2(lapAt / 5.3, 9.0)) * vnoise(vec2(lapAt / 23.0, 4.0));
     float ledgeMeets = 1.0 + 0.7 * towards;
     float onLedge = ledgeMeets > 0.05 ? (0.25 + 0.7 * inside) / ledgeMeets : 400.0;
     float lipDeep = 0.25 + 0.7 * ledgeOut;
@@ -580,7 +580,7 @@ void main() {
 #if EYE_EDGE
     // Far down in the shaft a few pale things stand upright, each on its own, seen only as far as the water lets them be.
     {
-      float cellAt = floor(round / 8.0);
+      float cellAt = floor(lapAt / 8.0);
       for (int i = -1; i <= 1; i++) {
         float cell = cellAt + float(i);
         vec2 rnd = hash22(vec2(cell, 7.3));
@@ -693,7 +693,7 @@ void main() {
     // The face of the swell leans to the eye and looks up past the wall: it holds the open sky of the hour, and every small wave on it holds another part of it.
 #if EYE_SWELL
     // A sheet of water lies smooth on it and is bright with that sky; the runnels between the sheets are broken water and dark.
-    if (skirt > 0.0) refl = mix(refl, skyRadiance(rd) * mix(vec3(0.13, 0.165, 0.22), vec3(0.34, 0.4, 0.5), smoothstep(0.3, 0.85, shed)), max(lifted, 0.7 * skirt) * smoothstep(0.06, 0.3, rd.y));
+    if (skirt > 0.0) refl = mix(refl, skyRadiance(rd) * mix(vec3(0.14, 0.18, 0.24), vec3(0.24, 0.29, 0.37), smoothstep(0.25, 0.9, shed)), max(lifted, 0.7 * skirt) * smoothstep(0.06, 0.3, rd.y));
 #endif
     // From over the water the mirror looks up past the top of the wall: what it holds there is the sky, not the wall drawn out in straight lines.
 #if EYE_LEAVE
