@@ -186,8 +186,8 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   float cAng = atan(vAway.y, vAway.x);
   float cBits = vnoise(vec2(cAng * 2.2 + vSrc.w, cOut * 55.0 - 0.7 * uTime)) * 0.6 + 0.4 * vnoise(xz * 61.0 + 0.4 * uTime);
   float cTail = smoothstep(0.45, 0.95, cLee) * exp(-cOut / 0.3);
-  float cHug = cLeg * exp(-cOut / (0.03 + 0.03 * max(cLee, 0.0))) + (1.0 - cLeg) * (1.0 - smoothstep(0.5 * vSrc.x, 1.3 * vSrc.x, cd)) * 0.75;
-  flecks = max(flecks, vSrc.y * smoothstep(0.52, 0.74, cBits * (0.35 + 0.65 * max(cHug, 0.8 * cTail)) + 0.42 * cHug));
+  float cHug = cLeg * exp(-cOut / (0.045 + 0.05 * max(cLee, 0.0))) + (1.0 - cLeg) * (1.0 - smoothstep(0.5 * vSrc.x, 1.3 * vSrc.x, cd)) * 0.75;
+  flecks = max(flecks, vSrc.y * smoothstep(0.5, 0.72, cBits * (0.4 + 0.6 * max(cHug, 0.9 * cTail)) + 0.42 * cHug));
   stirred = max(stirred, vSrc.y * min(1.0, 3.0 * length(lifted)));
 #endif
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));

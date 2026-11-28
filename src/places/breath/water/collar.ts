@@ -67,7 +67,7 @@ float collarHeight(vec2 away, vec4 src, vec2 drift, float t) {
   float packet = 0.22 + 0.78 * smoothstep(0.2, 0.8, 0.5 + 0.5 * sin(5.0 * out1 - 2.2 * t + 1.7 * src.w));
   float round_ = atan(from.y, from.x);
   float part = 0.55 + 0.45 * sin(2.0 * round_ + 2.3 * src.w + 5.0 * out1) * sin(3.0 * round_ - 1.1 * src.w + 0.5 * t);
-  float ring = 0.014 * fade * packet * part * (1.0 + cos(turn));
+  float ring = 0.02 * fade * packet * part * (1.0 + cos(turn));
   // Under a mop and close round it the strands work the water: a short steep chop that goes nowhere.
   float chop = (1.0 - leg) * (1.0 - smoothstep(0.7 * r0, 1.7 * r0, d)) * 0.0028 * (2.0 + sin(47.0 * away.x + 9.0 * t + src.w) * sin(41.0 * away.y - 7.5 * t) + sin(29.0 * (away.x + away.y) - 11.0 * t + 2.0 * src.w));
   return src.y * (climb + ring + chop);
