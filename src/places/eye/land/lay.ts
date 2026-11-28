@@ -40,6 +40,20 @@ vec4 shoreLay(sampler2D high, vec2 xz) {
   return ha - hb > 0.7 * (2.0 * t - 1.0) ? a : b;
 #endif
 }
+// The height of the sheet for a mesh that is raised by it. A mesh cannot follow a join that runs round single stones, and a step
+// in it would stand out of the water as a sliver: across a join the two layings are mixed, so the ground has no step in it.
+float shoreHigh(sampler2D high, vec2 xz, float lod) {
+#if SHORE_BANDS == 0
+  return textureLod(high, xz / vec2(2.0, 1.125), lod).r;
+#else
+  float k = 7.0 * (0.6 * shoreNoise(xz / 2.9 + 5.3) + 0.4 * shoreNoise(xz / 1.1 + 17.1));
+  float band = floor(k);
+  float t = smoothstep(0.3, 0.7, k - band);
+  float ha = textureLod(high, shoreLayOf(band, xz).xy, lod).r;
+  if (t <= 0.0) return ha;
+  return mix(ha, textureLod(high, shoreLayOf(band + 1.0, xz).xy, lod).r, t);
+#endif
+}
 vec2 shoreLean(vec4 lay, vec2 lean) {
   return vec2(lay.z * lean.x - lay.w * lean.y, lay.w * lean.x + lay.z * lean.y);
 }`;
