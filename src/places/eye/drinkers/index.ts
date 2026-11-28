@@ -251,6 +251,8 @@ void main() {
   skin *= 1.0 + (1.0 - smoothstep(0.022, 0.05, px)) * (0.2 * bone - 0.3 * hollow - 0.11 * (0.4 + 1.2 * w2) * (ribs * (0.5 + w1) - ribbed));
   // Each a tone of its own.
   skin *= mix(vec3(0.88, 0.87, 0.86), vec3(1.06, 1.03, 1.0), fract(own * 7.3)) * uTone;
+  // The herd, far off in the shade, is pale: cream to grey. What warmth the close ones show is the sun's, and there is none on the bank.
+  skin = mix(skin, dot(skin, vec3(0.3, 0.5, 0.2)) * vec3(1.03, 1.0, 0.97), 0.8 * step(0.001, uPose.y)) * (1.0 + 0.55 * uPose.y);
   // Seen close in the evening the bare hide is a grey going to rose, not a cream: the warmth it has is the sun's.
   skin = mix(skin, dot(skin, vec3(0.3, 0.5, 0.2)) * vec3(1.02, 0.95, 0.97), 0.45 * near);
   // And it is not of one colour: broad patches where the skin is darker and greyer, and the small dark spots of age over the back and the haunch.
@@ -318,11 +320,9 @@ void main() {
   // Seen close, a rough hide the low sun only grazes holds little of it: the flank turned half from the sun falls to the sky's cool light, and
   // the sun keeps the faces turned full to it and the outline.
   c -= albedo * uSunColour * (0.62 * near * (1.0 - smoothstep(0.2, 0.75, sunward)) * max(sunward, 0.0) * sunHere * lit * (0.4 + 0.6 * occ) / 3.14159);
-  // The herd stands on a bank the evening shade has taken, and the dark gravel gives nothing back: a hide there is grey, and darkest at
-  // the belly and down the legs. Backs and necks stand up into the last of the sun.
-  c *= max(0.14, 1.0 - uPose.y * (0.5 + 1.15 * (1.0 - smoothstep(0.15, 1.15, above)) + 0.9 * max(-n.y, 0.0)));
-  c += albedo * uSunColour * (vec3(1.0, 0.9, 0.78) * max(sunward, 0.0) + vec3(1.0, 0.7, 0.46) * rim)
-    * (1.6 * uPose.y * (1.0 - sunHere) * smoothstep(0.25, 1.1, above) * (0.4 + 0.6 * occ) / 3.14159);
+  // The herd stands on a bank the evening shade has taken: a hide there has the sky's light alone, and is pale in it, cream to grey. It is
+  // darker at the belly and down the legs, where the dark gravel gives nothing back.
+  c *= max(0.14, 1.0 - uPose.y * (0.7 * (1.0 - smoothstep(0.15, 1.15, above)) + 0.6 * max(-n.y, 0.0)));
   // A hide is not chalk: where it turns from the sun the light goes a little way round and into it, and comes out red.
   float turned = max((sunward + 0.42) / 1.42, 0.0) - max(sunward, 0.0);
   c += albedo * uSunColour * vec3(1.0, 0.7, 0.52) * (0.4 * (1.0 - 0.6 * near) * turned * sunHere * lit * (0.4 + 0.6 * occ) / 3.14159);
@@ -412,7 +412,7 @@ export function create(ctx: Context): Piece {
     const pose = new THREE.Vector3(0, index < CLOSE ? 0 : 0.45, index < 4 ? 1 : 0);
     // Three hides in the herd: pale cream, sand going to rust, and a grey dun. Together they are as light as the one hide was.
     const kindOf = (animal.own * 37.7) % 1;
-    const tone = index < CLOSE ? new THREE.Vector3(1, 1, 1) : kindOf < 0.4 ? new THREE.Vector3(1.09, 1.07, 1.04) : kindOf < 0.75 ? new THREE.Vector3(1.05, 0.93, 0.78) : new THREE.Vector3(0.86, 0.87, 0.9);
+    const tone = index < CLOSE ? new THREE.Vector3(1, 1, 1) : kindOf < 0.4 ? new THREE.Vector3(1.1, 1.08, 1.04) : kindOf < 0.75 ? new THREE.Vector3(1.0, 0.95, 0.88) : new THREE.Vector3(0.86, 0.87, 0.9);
     const near = new THREE.Vector2(index < CLOSE && index !== 4 && index !== 5 ? 1 : 0, 0);
     const material = new THREE.ShaderMaterial({
       uniforms: { ...ctx.rig.uniforms, uBones: { value: bones }, uOwn: { value: own }, uPose: { value: pose }, uTone: { value: tone }, uKin: { value: near }, tHide, tFolds, tSlope },
