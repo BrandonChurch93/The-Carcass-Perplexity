@@ -96,8 +96,10 @@ export const STRIKE = {
  * `lean`, where a row has it, is the way that water climbs the stone: metres along x and z for each metre up. The slam's is 0.5 east
  * and 0.3 north (z falls to the north) for each metre up, the face of OR over [466, 626]: it goes up the dark wall above its own foot
  * and stays in frame, with the line of the burst still broadside to the lens as `out` sets it. A row without it leans as the sea finds.
- * The breaker is STRIKE's second pulse, to the number. The lesser pulse that stood on L1's foot in the first second is not drawn: it was
- * white on a pale blade 800 m off, and the eye is given one event at a time. STRIKE's own numbers stay, for the air's hole in the fog.
+ * The breaker is STRIKE's second pulse, to the number. STRIKE's first pulse, the lesser one on L1's foot, is not a row here: it left the
+ * sea two seconds before the film opens, and the sea draws what is left of it, the white water lying at that foot and running off the
+ * stone, from STRIKE's own numbers. So the eye is given one event at a time. STRIKE's numbers stay, for that and for the air's hole in
+ * the fog.
  */
 export const STRIKES: readonly { blade: string; foot: [number, number, number]; out: [number, number]; half: number; time: number; height: number; lean?: [number, number] }[] = [
   { blade: 'OR', foot: [466, 0, 626], out: [-0.3, 0.954], half: 30, time: -0.95, height: 90, lean: [0.5, -0.3] },
