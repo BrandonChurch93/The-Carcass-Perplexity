@@ -59,17 +59,18 @@ export const STEAM_LOOK = { most: 0.7, near: [0.5, 2.5], foot: [0.56, 0.45, 0.46
 export const RAIN_TOP = 0.1;
 
 /** The raining cloud, for the sky that draws its dark belly and the air that hangs the veil from it: one function, so that the veil
- *  ends where the belly begins. \`lean\` is the bearing from the middle of the rain (radians), \`el\` the tangent of the height over the
- *  horizon, \`own\` the shaft's own number. Returns x how much of the belly stands there, y how far above its underside the direction
+ *  ends where the belly begins. lean is the bearing from the middle of the rain (radians), el the tangent of the height over the
+ *  horizon, own the shaft's own number. Returns x how much of the belly stands there, y how far above its underside the direction
  *  is (0 under it, 1 inside it). Needs tNoise, uRain and uTime. */
 export const RAIN_DECK_GLSL = /* glsl */ `
 vec2 rainDeck(float lean, float el, float own) {
   float u = lean / (uRain.y * (0.9 + 0.4 * own));
+  if (abs(u) > 4.0) return vec2(0.0, 1.0);
   // The mass of the cloud: wide, in lumps that close up toward the horizon as a level sheet's do, and slow.
   vec2 under = vec2(lean, 1.0) / (el + 0.12);
   float lumps = textureLod(tNoise, vec3(under * vec2(0.5, 0.11) + own, 0.3 + uTime * 0.004), 0.0).g;
   float billow = textureLod(tNoise, vec3(under * vec2(1.7, 0.37) + 0.3, 0.55 + uTime * 0.007), 0.0).r;
-  float mass = exp(-u * u * 0.16) * smoothstep(0.22, 0.75, lumps * 0.75 + 0.5 * exp(-u * u * 0.5));
+  float mass = exp(-u * u * 0.16) * smoothstep(4.0, 2.8, abs(u)) * smoothstep(0.22, 0.75, lumps * 0.75 + 0.5 * exp(-u * u * 0.5));
   // Its underside: lower in one place than in another, and never a line.
   float base = ${RAIN_TOP.toFixed(3)} * (0.72 + 0.8 * (lumps - 0.5) + 0.25 * (billow - 0.4));
   float above = smoothstep(base * 0.55, base * 1.5, el);
@@ -85,20 +86,20 @@ export const WALLOW_VEIL = { from: (6263 - 5618) / 60, to: (6586 - 5618) / 60, s
  *  place's second `from`, `amount` of the banks stands, and none nearer the lens than `start` (they come in between its two distances,
  *  metres), so that whatever the lens is set on stands in clear air and the distance goes out behind it. */
 export const BANKS = {
-  steps: 12,
+  steps: 10,
   near: 10,
-  far: 640,
+  far: 420,
   top: 11,
   thick: 0.07,
   across: 170,
   lit: [0.42, 0.385, 0.4] as [number, number, number],
   deep: [0.33, 0.285, 0.28] as [number, number, number],
-  drift: 0.45,
+  drift: 0.9,
   rise: 0.3,
   shots: [
     { from: 0, amount: 0.2, start: [70, 260] },
     { from: (5833 - 5618) / 60, amount: 0.7, start: [16, 60] },
-    { from: (6048 - 5618) / 60, amount: 0.3, start: [45, 180] },
+    { from: (6048 - 5618) / 60, amount: 0.2, start: [60, 220] },
     { from: (6263 - 5618) / 60, amount: 1.0, start: [36, 130] },
     { from: (6586 - 5618) / 60, amount: 0.85, start: [20, 64] },
   ] as { from: number; amount: number; start: [number, number] }[],
@@ -527,15 +528,15 @@ void main() {
     // tile further on (read flat, the veil was a comb of the same few teeth).
     float veils = textureLod(tNoise, vec3(lean * 2.9 + own, el * 0.6 + uTime * 0.006, 0.4 + uTime * 0.012 + lean * 0.83), 0.0).g;
     float torn = textureLod(tNoise, vec3(lean * 8.5, el * 1.3 + 0.3 + uTime * 0.02, 0.8 + uTime * 0.016 + lean * 1.47), 0.0).a;
-    float body = exp(-u * u * 1.2) * smoothstep(0.22, 0.7, veils * 0.62 + torn * 0.38 + 0.3 * exp(-u * u * 2.5));
+    float body = exp(-u * u * 0.9) * smoothstep(0.26, 0.7, veils * 0.62 + torn * 0.38 + 0.26 * exp(-u * u * 2.5));
     // The trails inside a veil: soft, each its own weight, and they come down (the height of the veil in some twenty seconds: it is far off).
-    float fine = textureLod(tNoise, vec3(lean * 47.0, el * 0.8 + uTime * 0.012, 0.13 + lean * 9.86), 0.0).g;
-    float fall = textureLod(tNoise, vec3(lean * 23.0 + 0.4, el * 5.0 + uTime * 0.06, 0.37 + uTime * 0.008 + lean * 5.89), 0.0).a;
-    float trails = 0.78 + 0.5 * smoothstep(0.3, 0.72, fine * 0.55 + fall * 0.45);
+    float fine = textureLod(tNoise, vec3(lean * 29.0, el * 0.8 + uTime * 0.012, 0.13 + lean * 9.86), 0.0).g;
+    float fall = textureLod(tNoise, vec3(lean * 13.0 + 0.4, el * 5.0 + uTime * 0.06, 0.37 + uTime * 0.008 + lean * 5.89), 0.0).a;
+    float trails = 0.62 + 0.75 * smoothstep(0.3, 0.72, fine * 0.55 + fall * 0.45);
     // How far down a veil comes: few come all the way, and each ends in a fringe.
     float reachDown = smoothstep(0.25, 0.7, torn * 0.6 + fine * 0.4);
     float hang = mix(0.25 + 0.75 * reachDown, 1.0, smoothstep(0.0, base * 0.8, el)) * smoothstep(-0.006, 0.012, el);
-    rain = uRain.w * (0.7 + 0.6 * own) * body * hang * trails * (1.0 - above);
+    rain = uRain.w * 1.6 * (0.7 + 0.6 * own) * body * hang * trails * (1.0 - above);
   }
   float show = uShow.x;
   // Where the view ends on the sky only the near air lies over it (the far picture has its own), but for its foot: there the air closes
@@ -587,10 +588,13 @@ ${BANKS.shots.map((shot) => `  weather = mix(weather, vec3(${f(shot.amount)}, ${
     vec2 wind = vec2(-0.96, -0.27) * BANK_DRIFT * uTime;
     vec3 bankLit = BANK_LIT * mix(1.0, dusk, 0.5);
     vec3 bankDeep = BANK_DEEP * mix(1.0, dusk, 0.5);
+    // (Where in its stretch each is read: the texel's own place, moved on by the golden share at each sample of a frame, so that the
+    // frame's samples between them read the whole stretch evenly and the banks come out smooth.)
+    float where = fract(float(hash2(uint(here.x), uint(here.y)) & 1023u) / 1024.0 + float(uSampleIndex) * 0.61803);
     for (int k = 0; k < BANK_STEPS; k++) {
       float t1 = t0 * ratio;
       float dt = t1 - t0;
-      float tk = t0 + dt * jitter;
+      float tk = t0 + dt * where;
       vec3 p = ro + rd * tk;
       vec2 at = p.xz - wind;
       vec4 big = textureLod(tNoise, vec3(at / BANK_ACROSS, 0.37 + uTime * 0.0018), clamp(log2(dt / (BANK_ACROSS / 28.0)), 0.0, 6.0));
