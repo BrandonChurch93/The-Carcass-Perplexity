@@ -30,11 +30,11 @@ export const PARTS: readonly string[] = ['sky', 'air', 'mist'];
 type Four = [number, number, number, number];
 const MIST: Record<'wide' | 'low' | 'edge' | 'shore' | 'centre' | 'over', { a: Four; b: Four; c: Four; d?: Four; e?: Four; tone?: number }> = {
   wide: { a: [420, 2.5, 30, 320], b: [0.5, 0.75, 0.8, 0.4], c: [60, 560, 0.1, 1], e: [0, 0, 0.5, 1.0] },
-  low: { a: [600, 4.0, 44, 420], b: [0.9, 4.4, 0.35, 0.4], c: [0, 0, 0, 1], d: [0.7, 0, 0, 0], e: [1, 0.6, 1.2, 4.4], tone: 0.78 },
+  low: { a: [600, 4.0, 38, 420], b: [0.9, 4.4, 0.35, 0.4], c: [0, 0, 0, 1], d: [0.7, 0, 0, 0], e: [1, 0.6, 1.2, 4.4], tone: 0.72 },
   edge: { a: [560, 2.4, 44, 320], b: [0.25, 1.3, 0.5, 0.4], c: [0, 0, 0.1, 0.3], d: [1, 0, 0, 0], e: [1, 0.8, 0.6, 2.4], tone: 0.6 },
   shore: { a: [520, 3.0, 30, 320], b: [0.35, 1.2, 0.9, 0.3], c: [0, 0, 0.1, 1], d: [1, 0, 0, 0] },
   // The last shot is seen from the water and then from straight above. From the water it is a low torn bank at the foot of the far wall.
-  centre: { a: [520, 3.5, 12, 200], b: [2.4, 3.0, 0.6, 0.35], c: [0, 0, 0.15, 0.6], d: [0.8, 1, 1, 1], e: [1, 1, 0.8, 0.7] },
+  centre: { a: [520, 2.0, 12, 200], b: [2.4, 3.0, 0.6, 0.35], c: [0, 0, 0.15, 0.6], d: [0.8, 1, 1, 1], e: [1, 1, 0.8, 0.7] },
   // From above the same bank has to be seen down through a dozen metres of itself and not along a thousand, and what the lens holds is
   // the shallows and the pool, not the foot of the wall: so as the camera climbs the bank is drawn thicker and stands farther out over
   // the shallows, in heaps as deep as they are long (d.w), without the threads that would lie as white strokes.
@@ -353,13 +353,15 @@ void main() {
         if (a < 0.0015) continue;
         // The sun reaches a point of the mist through the mist that lies toward it, and the long shade of the rim lies in it too.
         float sun = mix(mistSun(p), wallSun, smoothstep(320.0, 60.0, q.z));
-        if (sun > 0.01) {
+        // The mist toward the sun is asked only by a step that holds enough to show its shade.
+        if (sun > 0.01 && a > 0.012) {
           vec3 sq = vec3(dot(uSunDir.xz, vec2(-out2.y, out2.x)), uSunDir.y, -dot(uSunDir.xz, out2));
           lie += 45.0 * mix(sq.xz, vec2(dot(uSunDir.xz, vec2(-toWall.y, toWall.x)), -dot(uSunDir.xz, toWall)), uMistD.w);
           vec3 toward = mistShape(q + sq * 45.0, keptBig, keptTongue);
           float between = toward.x + uMistB.y * toward.z * smoothstep(1.0, 0.3, (q.y + sq.y * 45.0) / max(toward.y, 0.5));
-          sun *= exp(-1.5 * between) * mix(0.7, 1.0, smoothstep(0.1, 1.0, h));
+          sun *= exp(-1.5 * between);
         }
+        sun *= mix(0.7, 1.0, smoothstep(0.1, 1.0, h));
         vec3 lit = skyLight * mix(0.88, 1.0, smoothstep(0.0, 1.0, h)) + uSunColour * (0.2 * sun * phase);
         sum += tr * a * lit / 3.14159 * 2.5;
         tr *= 1.0 - a;
