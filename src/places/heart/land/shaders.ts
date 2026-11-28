@@ -722,16 +722,19 @@ void main() {
   float gap = smoothstep(0.38, 0.56, vnoise(vWorld.xz / 0.33 + vWorld.y * vec2(1.1, 0.8) + 6.4));
   // A heap of crumbs, whole within a forearm of the crack and ragged at its edge: each crumb its own tone, a dark one here and there.
   float crumbTone = vnoise(vWorld.xz / 0.021 + vWorld.y * vec2(31.0, 23.0) + 3.9);
-  #ifdef RUBBLE
-  // On the heap the mound is built: lumps of crystal crust with holes between them. A lump is lemon on its crown and olive down its sides,
-  // and the holes are the dark rock under it: no tone is drawn that the shape does not carry.
-  float crown = smoothstep(0.5, 0.96, n0.y + 0.12 * (knob - 0.5));
-  float mound = smoothstep(0.36, 0.18, segmentDistance(vWorld.xz, vec4(mix(uCrackB.xy, uCrackB.zw, 0.3), mix(uCrackB.xy, uCrackB.zw, 0.7))) + 0.3 * (knob - 0.5) + 0.2 * (1.0 - gap)) * smoothstep(0.1, 0.5, vLand.y) * (0.75 + 0.25 * smoothstep(0.25, 0.45, crumbTone));
-  albedo = mix(albedo, mix(vec3(0.11, 0.09, 0.025), vec3(0.42, 0.36, 0.09), crown) * (0.6 + 0.6 * crumbTone), mound);
-  #else
-  float mound = smoothstep(0.42, 0.2, segmentDistance(vWorld.xz, uCrackB) + 0.2 * (knob - 0.5) + 0.25 * (1.0 - gap)) * (0.55 + 0.45 * smoothstep(0.25, 0.45, crumbTone));
-  albedo = mix(albedo, mix(vec3(0.6, 0.48, 0.1), vec3(1.0, 0.88, 0.36), smoothstep(0.35, 0.8, knob)) * (0.45 + 0.9 * crumbTone), mound);
-  #endif
+  // The crust of the vent, as its picture has it: lemon crystals on what looks up within a stride of the vent, in broken patches a hand or two
+  // across with the bare rock between them, olive where they thin out, on rock sooted near black. The stones there carry the same (rock-shader.ts).
+  float dv = distance(vWorld.xz, 0.5 * (uCrackB.xy + uCrackB.zw));
+  float fume = smoothstep(1.7, 0.6, dv);
+  float mound = 0.0;
+  if (fume > 0.0) {
+    float reach = smoothstep(1.15, 0.3, dv);
+    float lump = vnoise(vWorld.xz / 0.05 + vWorld.y * vec2(7.3, 5.1) + 6.4);
+    float torn = smoothstep(0.425, 0.525, vnoise(vWorld.xz / 0.14 + vWorld.y * vec2(2.1, 1.6) + 1.3) + 0.3 * (reach - 0.62));
+    mound = reach * torn * smoothstep(0.08, 0.5, n0.y + 0.15 * (knob - 0.5)) * smoothstep(0.3, 0.46, lump + 0.35 * (crumbTone - 0.5)) * (0.4 + 0.6 * gap);
+    albedo *= mix(1.0, 0.45, fume);
+    albedo = mix(albedo, mix(vec3(0.36, 0.27, 0.035), vec3(1.0, 0.7, 0.08), smoothstep(0.4, 0.72, lump)) * (0.7 + 0.6 * crumbTone), 0.96 * mound);
+  }
   rough = mix(rough, 0.95, mound);
   if (sd < 1.6) {
     float blot = vnoise(vWorld.xz / 0.9 + vWorld.y * vec2(1.3, 0.7));

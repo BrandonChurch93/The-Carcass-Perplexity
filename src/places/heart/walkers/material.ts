@@ -136,6 +136,8 @@ vec3 lakeBelow(vec3 p, vec3 n) {
 // way round whatever it lights, so a flank that faces a row of fountains 75 m off was as red as its belly. The pictures have them dark against
 // the glow: smoke and the animal's own legs stand between.
 const float FAR_FIRE = 0.08;
+// The share of the same lights that a face seen edge on takes: the warm rim of the pictures, on the side turned to the fire only.
+const float FIRE_RIM = 3.0;
 // The share of the lake's light under it that a down face takes, and the share of the sky that the crust sends back up. Measured on the
 // flank of the feeding picture's hero: 36 26 23 there.
 const float LAKE_UNDER = 0.25;
@@ -230,7 +232,7 @@ void main() {
   float pale = vInfo.x;
   vec3 tone = mix(vec3(1.07, 1.0, 0.93), vec3(0.95, 1.0, 1.06), warm) * (0.78 + 0.5 * sooty);
   // The trunk is ash grey and umber; a leg is darker and browner (45 29 23 in its shade on the picture's hero, about 70 50 40 where the sky finds it).
-  vec3 albedo = skinC * tone * mix(vec3(0.37), vec3(0.17), onLimb) * (0.9 + 0.25 * (pale - 0.4));
+  vec3 albedo = skinC * tone * mix(vec3(0.37), vec3(0.215, 0.195, 0.18), onLimb) * (0.9 + 0.25 * (pale - 0.4));
   albedo *= 1.0 - 0.3 * ringAmp * (1.0 - ridge);
   // The thigh is the ash grey of the trunk; the shin is darker and sootier the nearer the crust.
   float lowLeg = limb * (1.0 - neck) * (1.0 - tendril);
@@ -299,7 +301,7 @@ void main() {
       slope.y += flesh * ((s1 - s0) * 1.8 + (t1 - t0) * 1.4);
     }
     // The torso sheet's own torn hide turns the light on the trunk too, under the folds: flakes of a hand's width with lifted edges.
-    n = normalize(ng + mix((gu * slope.x + gv * slope.y) * 0.75 + slopeW * 0.55 * (1.0 - pole), slopeW * 1.5, bald));
+    n = normalize(ng + mix((gu * slope.x + gv * slope.y) * mix(0.75, 1.15, fine) + slopeW * mix(0.55, 0.9, fine) * (1.0 - pole), slopeW * 1.5, bald));
 
     // A hide the colour of the crust it walks on: charcoal, a little brown, darker in its folds. No two alike: each is sootier or browner than the next.
     float lum = 0.55 * dot(flakeC, vec3(4.0)) + 0.45 * dot(hideC, vec3(5.2));
@@ -308,7 +310,7 @@ void main() {
     crack = mix(crack, 0.75, 0.7);
     float mottle = vnoise(vUv * 0.9 + seed * 7.0);
     // The look of the place deepens the colour of what is dark: a hide a tenth warmer than grey comes out brown-black, as in the pictures.
-    vec3 hide = vec3(0.085, 0.088, 0.09) * mix(vec3(1.05, 1.0, 0.95), vec3(0.97, 1.0, 1.03), warm) * (0.84 + 0.42 * sooty);
+    vec3 hide = vec3(0.128, 0.112, 0.1) * mix(vec3(1.05, 1.0, 0.95), vec3(0.97, 1.0, 1.03), warm) * (0.84 + 0.42 * sooty);
     // pale: a little lighter at the joints and where the skin is worn, never bone.
     albedo = hide * (0.86 + 0.14 * lum) * (0.6 + 0.4 * crack) * (0.82 + 0.3 * mottle + 0.25 * (pale - 0.4)) * (0.8 + 0.4 * fold) * (1.0 - 0.35 * body * smoothstep(0.55, 0.3, fold)) * mix(1.0, 0.5 + 0.75 * strand, flesh);
     // Dried fibre: threads of two or three centimetres that run along the trunk and wander, pale on their backs and black between,
@@ -336,7 +338,7 @@ void main() {
     albedo = mix(albedo, vec3(0.125, 0.115, 0.105) * (0.55 + 0.6 * high), 0.6 * cake * mix(0.7, 0.8, limb));
     // Ash lies pale on every ridge of the trunk that looks up, and the hollows between are black.
     float crest = body * (1.0 - pole) * smoothstep(0.52, 0.72, fold + 0.25 * (high - 0.5)) * smoothstep(-0.35, 0.45, n.y) * fine;
-    albedo = mix(albedo, vec3(0.2, 0.185, 0.17) * (0.6 + 0.5 * high), 0.3 * crest);
+    albedo = mix(albedo, vec3(0.3, 0.245, 0.2) * (0.6 + 0.5 * high), 0.5 * crest);
     albedo *= 1.0 - 0.45 * body * (1.0 - pole) * fine * smoothstep(0.42, 0.22, fold);
     albedo = mix(albedo, skinC * tone * 0.36 * mix(0.55, 1.1, smoothstep(0.2, 0.6, nh.b)), 0.85 * bald);
     // Scab like the crust's own skin, in patches on the back and the rump.
@@ -376,8 +378,16 @@ void main() {
   albedo = mix(albedo, vec3(0.146, 0.146, 0.15) * (0.7 + 0.3 * grit), 0.55 * ash * smoothstep(0.4, 3.0, vWorld.y));
   // The dust is the crust's own: a foot is as dark as what it stands on, and the shin over it is stained with it.
   albedo = mix(albedo, vec3(0.07, 0.062, 0.056) * (0.6 + 0.6 * grit), dust * (0.45 + 0.4 * (1.0 - pit)));
+  // Charred ash is caked on the shins in broken scabs with hard edges, thickest over the pad and gone by the hock: dark grey brown,
+  // a little lighter than the cord under it, never pale.
+  float scabAt = vnoise(vUv * vec2(2.3, 5.5) + seed * 4.0) + 0.5 * (vnoise(vUv * vec2(7.0, 13.0) + seed * 8.0) - 0.5) + 0.3 * (high - 0.5);
+  float shinAsh = smoothstep(0.5, 0.56, scabAt) * smoothstep(5.2, 2.2, vWorld.y) * smoothstep(0.35, 1.0, vWorld.y) * lowLeg * fine;
+  albedo = mix(albedo, vec3(0.104, 0.088, 0.076) * (0.55 + 0.7 * grit) * (0.6 + 0.55 * pit), 0.7 * shinAsh);
   // The foot itself is caked black with what it treads in: wet crust, not ash.
-  float foot = max(smoothstep(0.9, 0.25, vWorld.y) * (1.0 - body), smoothstep(3.4, 3.9, kind) * (1.0 - rag)) * (1.0 - tendril);
+  // A crumb that falls from a pad is dry crust and its dust: grey brown, lighter than the wet cake on the pad.
+  float crumb = smoothstep(4.15, 4.25, kind) * (1.0 - smoothstep(4.35, 4.45, kind));
+  float foot = max(smoothstep(0.9, 0.25, vWorld.y) * (1.0 - body), smoothstep(3.4, 3.9, kind) * (1.0 - rag)) * (1.0 - tendril) * (1.0 - crumb);
+  albedo = mix(albedo, vec3(0.16, 0.14, 0.125) * (0.6 + 0.7 * grit), crumb);
   albedo = mix(albedo, vec3(0.034, 0.03, 0.028) * (0.55 + 0.7 * grit) * (0.6 + 0.5 * pit), 0.85 * foot);
 
   float own = ownBody * (0.5 + 0.5 * crack) * (1.0 - 0.35 * ringAmp * (1.0 - ridge));
@@ -394,7 +404,15 @@ void main() {
   float rim = LEG_RIM * smoothstep(0.55, -0.25, ny) * smoothstep(5.5, 0.8, vWorld.y) * (1.0 + 0.7 * smoothstep(2.2, 0.3, vWorld.y)) * (1.0 - body) * (1.0 - tendril * (0.55 + 0.4 * smoothstep(0.3, 1.8, vWorld.y))) * (1.0 - 0.8 * neck);
   // The flank and the back of the trunk are dark grey brown with ash on them: the warm light belongs under the belly and on the inner legs.
   float flank = body * (1.0 - under);
-  vec3 e = skyIrradiance(n) * open + ((LAKE_UNDER * under * (1.0 - 0.5 * body) * (1.0 - 0.6 * neck) + rim) * lakeBelow(vWorld, mix(ng, n, 0.3)) + FAR_FIRE * (1.0 - 0.6 * flank) * emitterIrradiance(vWorld, normalize(mix(ng, n, 0.25)))) * occ;
+  // The fires behind it (the fall, the river on the far slope, the fountains) rake it from the side and from behind: what is turned to them
+  // AND seen edge on takes their light as a warm rim, broken by the relief of the hide, and what is turned away stays dark. The round lights
+  // are read with the relief's own normal for the rim, so a ridge has a lit side and a dark one.
+  vec3 fireN = normalize(mix(ng, n, 0.25));
+  vec3 fire = emitterIrradiance(vWorld, fireN);
+  float nvg = clamp(dot(ng, v), 0.0, 1.0);
+  float edgeOn = pow(1.0 - nvg, 1.5);
+  float fireRim = FIRE_RIM * edgeOn * (1.0 - tendril) * (1.0 - rag) * mix(0.35, 1.3, smoothstep(0.25, 0.7, high));
+  vec3 e = skyIrradiance(n) * open + ((LAKE_UNDER * under * (1.0 - 0.5 * body) * (1.0 - 0.6 * neck) + rim) * lakeBelow(vWorld, mix(ng, n, 0.3)) + (FAR_FIRE * (1.0 - 0.6 * flank) + fireRim) * fire) * occ;
   // The pool it feeds at lights it from below at any reach (the rig's apron): the belly takes it, the legs and the neck a little less, the back and the flanks next to none.
   // The roots and the crown have the pool's own glare already (poolLight below).
   vec2 poolWay;
