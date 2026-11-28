@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { FILM_ASPECT, HALF_TAN, KM, LIMB, LIMB_FOLLOW, RISE_LAST, X, Z, driftAt, poseAt } from '../shared/anchors';
 import type { Context } from '../shared/context';
-import { NOISE_GLSL, RIG_GLSL, RIG_UNIFORMS_GLSL } from '../shared/glsl';
+import { RIG_GLSL, RIG_UNIFORMS_GLSL } from '../shared/glsl';
 import { BAND_CELLS } from './space-band';
 
 /** How rich the field is: 1 is the film's. The count of stars goes with it, and their brightness a little. */
@@ -28,16 +28,16 @@ const CLUSTERS: [number, number, number, number][] = [
 ];
 /** The faintest star drawn and the brightest, as the peak radiance of its point at 3840 wide. */
 const FAINTEST = 0.0035;
-const BRIGHTEST = 9;
+const BRIGHTEST = 16;
 /** Stars to a square half height of sky that stand out alone, at RICH 1. */
-const BRIGHT = 140;
+const BRIGHT = 100;
 /** Five set by hand in the corner the day shows, so that the small wedge of sky reads as sky at once: where, and how bright. */
 const FIRST: [number, number, number][] = [
-  [-1.72, -0.87, 8],
-  [-1.56, -0.775, 6],
-  [-1.22, -0.955, 9],
-  [-1.06, -0.985, 5],
-  [-1.47, -0.975, 4.5],
+  [-1.72, -0.87, 13],
+  [-1.56, -0.775, 2.2],
+  [-1.22, -0.955, 7],
+  [-1.06, -0.985, 1.4],
+  [-1.47, -0.975, 3.6],
 ];
 
 /** A number from 0 to 1 that depends only on the index and the channel. */
@@ -47,6 +47,18 @@ function hash(i: number, channel: number): number {
   h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
   h = Math.imul(h ^ (h >>> 16), 0x27d4eb2f);
   return ((h ^ (h >>> 15)) >>> 0) / 4294967296;
+}
+/** How thick the field stands at a place of the sky, about 0.35 to 1.75: the sky is not sown evenly, it has thin places and thick. */
+function patchAt(x: number, y: number): number {
+  const u = x / 0.3 + 40;
+  const v = y / 0.3 + 40;
+  const i = Math.floor(u);
+  const j = Math.floor(v);
+  const fu = (u - i) * (u - i) * (3 - 2 * (u - i));
+  const fv = (v - j) * (v - j) * (3 - 2 * (v - j));
+  const at = (a: number, b: number): number => hash(a * 157 + b, 8);
+  const n = (at(i, j) * (1 - fu) + at(i + 1, j) * fu) * (1 - fv) + (at(i, j + 1) * (1 - fu) + at(i + 1, j + 1) * fu) * fv;
+  return 0.35 + 1.4 * n;
 }
 /** How thick the far crowd of the galaxy stands at a place of the sky, 0 to 1: read from the table of its picture, so the grain of stars follows the picture's glow and thins in its dust lanes. */
 function bandAt(x: number, y: number): number {
@@ -105,11 +117,12 @@ void main() {
   float sigma = max(aTint.a * scale, 0.62);
   float peak = position.z * (aTint.a * scale / sigma) * (aTint.a * scale / sigma);
   // (The camera is closed down for the day; as the light goes it opens, and the faint stars come out. They go out with the picture.)
-  float open = uDusk > 0.0 ? pow(uGain, 0.36) * mix(0.5, 1.0, uEmber.w) : 1.0;
+  float open = uDusk > 0.0 ? pow(uGain, 0.26) * mix(0.55, 1.0, uEmber.w) : 1.0;
   // (However far the camera opens, a bright star stays a point: its light is held under a ceiling, so it never swells to a disc.)
   // (The wider a point is drawn the lower its ceiling: the wide ones are soft and coloured, the tight ones hard and white. The
   // ceiling is set so that the brightest still read as points when the picture is shown a quarter of its size.)
-  float ceiling = 6.0 / (aTint.a * aTint.a);
+  // (A very few are let stand higher: the eye finds them first, and the rest fall behind them.)
+  float ceiling = (6.0 + 8.0 * smoothstep(12.0, 24.0, position.z)) / (aTint.a * aTint.a);
   float held = ceiling * (1.0 - exp(-peak * open / ceiling));
   vStar = tint * held * seen * (1.0 - uSolo);
   gl_PointSize = ceil(6.0 * sigma) + 1.0;
@@ -193,7 +206,7 @@ export function createSpace(ctx: Context, space: THREE.Mesh): { geometry: THREE.
     const y = (hash(i, 1) - 0.5) * SIDE;
     if (!maybeSeen(x, y)) continue;
     const band = bandAt(x, y);
-    if (hash(i, 2) * most > 1 + BAND.more * band) continue;
+    if (hash(i, 2) * most * 1.75 > (1 + BAND.more * band) * patchAt(x, y)) continue;
     // (The crowd of the band is the far, faint crowd: what it adds is mostly dim.)
     add(x, y, i, hash(i, 5) * (1 + BAND.more * band) < 1 ? 1 : 0.55);
   }
@@ -206,7 +219,7 @@ export function createSpace(ctx: Context, space: THREE.Mesh): { geometry: THREE.
     }
   }
   // And a few that the eye finds first, alone in the field: they are what is left of the sky on a small screen.
-  for (let k = 0; k < Math.round(BRIGHT * Math.sqrt(RICH) * SIDE * SIDE); k++, n++) put((hash(n, 0) - 0.5) * SIDE, (hash(n, 1) - 0.5) * SIDE, n, 1.5 * Math.pow(BRIGHTEST / 1.5, hash(n, 3)));
+  for (let k = 0; k < Math.round(BRIGHT * Math.sqrt(RICH) * SIDE * SIDE); k++, n++) put((hash(n, 0) - 0.5) * SIDE, (hash(n, 1) - 0.5) * SIDE, n, 0.5 * Math.pow(BRIGHTEST / 0.5, Math.pow(hash(n, 3), 1.3)));
   for (const [x, y, peak] of FIRST) put(x, y, n++, peak);
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(place, 3));
@@ -332,7 +345,6 @@ void main() {
 // the line is one clean line at any size, only fainter where the picture is too small to hold it.
 const EDGE_GLSL = /* glsl */ `
 ${RIG_GLSL}
-${NOISE_GLSL}
 varying vec3 vWorld;
 // The mean, over a width w about x, of a layer that is nothing below 0 and exp(-x / deep) above it.
 float layerOver(float x, float deep, float w) {
@@ -344,8 +356,8 @@ float layerOver(float x, float deep, float w) {
 }
 // The dense air seen edge on, by day: a deep clear blue, never white.
 const vec3 LINE = vec3(0.035, 0.27, 1.0);
-// How bright the aurora stands, before the camera's exposure: an edge, not a show.
-const float AURORA = 0.0042;
+// How bright the arc of airglow stands, before the camera's exposure: an edge, not a show.
+const float NIGHT_ARC = 0.0011;
 // The thin line the dense air still shows against the black by night, before the camera's exposure.
 const vec3 NIGHT_LINE = vec3(0.1, 0.32, 1.0) * 0.0042;
 `;
@@ -380,32 +392,19 @@ void main() {
     vec3 layers = mix(mix(vec3(0.85, 0.13, 0.03), vec3(1.0, 0.46, 0.12), smoothstep(1.0, 12.0, km)), mix(vec3(0.8, 0.78, 0.7), vec3(0.2, 0.4, 0.95), smoothstep(22.0, 62.0, km)), smoothstep(9.0, 30.0, km));
     vec3 arc = mix(glow, layers * exp(-max(km, 0.0) / 34.0) * 0.5 * a, lowSun) * mix(1.0, sunSeen(sunH - 0.05) + 0.03 * skySeen(sunH), uTerm.w);
     float airglow = exp(-pow((km - 16.0) / 20.0, 2.0));
-    // (And over it, as it is seen from orbit by night: a thin green line where the oxygen glows near 95 km, and a far fainter red
-    // well above it. Neither is narrower than a pixel of this picture.)
-    float lineWide = max(8.0, w);
-    vec3 high = vec3(0.3, 0.95, 0.4) * 0.0011 * (8.0 / lineWide) * exp(-pow((km - 95.0) / lineWide, 2.0)) + vec3(0.9, 0.14, 0.07) * 0.00028 * exp(-pow((km - 230.0) / max(70.0, w), 2.0));
-    // An aurora, low over the dark edge and seen edge on: a curtain whose foot stands near 100 km and whose rays thin upward, green
-    // below and red at the top. It stands only where the night is deep, it comes with the dark, and its folds and rays travel
-    // slowly along the edge: all of it from the time alone.
-    vec2 away = vWorld.xz - uLimb.xy;
-    float along = atan(away.y, away.x) * uLimb.z / 100.0;
-    float fold = vnoise(vec2(along * 0.8 - uTime * 0.06, 3.0 + uTime * 0.03));
-    float rays = 0.45 + 0.55 * vnoise(vec2(along * 9.0 - uTime * 0.4, 11.0));
-    // (Rays finer than the picture can hold are drawn as their mean.)
-    rays = mix(0.725, rays, 1.0 - smoothstep(4.0, 11.0, w));
-    float over = km - 100.0 - 34.0 * (vnoise(vec2(along * 0.3 + uTime * 0.04, 7.0)) - 0.5) - 26.0 * (vnoise(vec2(along * 1.9 - uTime * 0.09, 5.0)) - 0.5);
-    float curtain = smoothstep(-12.0 - w, 9.0 + w, over) * exp(-max(over, 0.0) / mix(40.0, 130.0, rays * rays)) * rays * smoothstep(0.2, 0.7, fold);
-    float deep = (1.0 - smoothstep(-0.34, -0.12, sunH)) * smoothstep(0.45, 1.0, uDusk);
-    high += mix(vec3(0.2, 1.0, 0.45), vec3(0.8, 0.12, 0.3), smoothstep(30.0, 150.0, over)) * AURORA * curtain * deep;
-    colour = exposed(arc * uEmber.w * pow(uGain, -0.88) + (vec3(0.2, 0.36, 0.8) * 0.0011 * airglow + (high + NIGHT_LINE * layerOver(km, 6.0, w)) * mix(0.35, 1.0, uEmber.w)) * uDusk * a);
+    // (And over it, as it is seen from orbit by night: one soft even arc where the oxygen glows near 95 km, all along the dark edge,
+    // pale and dim enough that the stars stand white through it. It is never narrower than a pixel of this picture.)
+    float arcWide = max(13.0, w);
+    vec3 high = vec3(0.5, 0.92, 0.55) * NIGHT_ARC * (13.0 / arcWide) * (exp(-pow((km - 95.0) / arcWide, 2.0)) + 0.22 * smoothstep(95.0, 110.0, km) * exp(-max(km - 95.0, 0.0) / 50.0));
+    colour = exposed(arc * uEmber.w * pow(uGain, -0.88) + (vec3(0.2, 0.36, 0.8) * 0.0011 * airglow + (high + NIGHT_LINE * layerOver(km, 6.0, w)) * mix(0.5, 1.0, uEmber.w)) * uDusk * a);
   }
   // (By day the camera is closed down and the band is all but lost; as it opens the band comes up, and it goes out with the picture.
   // The air at the edge hides it as it hides the stars.)
-  float open = uDusk > 0.0 ? pow(uGain, 0.5) * mix(0.9, 1.0, uEmber.w) : 1.0;
+  float open = uDusk > 0.0 ? min(pow(uGain, 0.85), 3.1) * mix(0.9, 1.0, uEmber.w) : 1.0;
   // (Its colour is held back: the far crowd is pale, warm only at its core.)
   band = mix(vec3(dot(band, vec3(0.3, 0.5, 0.2))) * vec3(0.82, 0.95, 1.22), band, 0.3);
   // (And its far arm is lifted toward its core, so that it is one long band across the corner and not a patch.)
-  colour += band * 0.026 * open * mix(1.0, 1.9, smoothstep(0.3, 0.7, lies.x)) * smoothstep(16.0, 90.0, km);
+  colour += band * 0.026 * open * mix(0.8, 2.3, smoothstep(0.22, 0.7, lies.x)) * smoothstep(16.0, 90.0, km);
   gl_FragColor = vec4(colour * (1.0 - uSolo), a * (1.0 - uSolo));
 }`;
 
