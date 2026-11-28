@@ -5,13 +5,15 @@ Writes public/assets/reveal/sky/weather.png, 1024 x 576, on the rectangle WEATHE
 (px of the master: x -2600 to 8200, y -1400 to 4675), as the systems stand at the titan frame (10027). They travel slowly with
 the far low; the cloud itself is the photographs, which stream through them faster (see lowDepth in weather.ts).
 
-  red    how much low cloud a system holds: 0 clear sea, about 0.5 broken cumulus at the edge of a patch, 1 a front, a storm or a deck
+  red    how much low cloud a system holds: 0 clear sea, about 0.5 broken cumulus at the edge of a patch, 1 the heart of a patch
   green  how much thin veil the wind draws out there
-  blue   the kind: 0 open cells (rings of cloud round clear air, behind the front), 0.5 cumulus in chains, 1 closed cells
+  blue   the kind: 0.5 cumulus in chains, 1 closed cells
+
+The map is clear round the two storms (each drawn by its own sheet), over the body's outline (public/assets/reveal/land/relief-a.png,
+read only) and over the other land.
 
 and then sets the red of public/assets/reveal/sky/cover.png (made by make_cover.py, which stands on the ground) to the cloud that
-other land and the ice hold: a deck over the ice edge, banks on the coast that faces the wind, cumulus banked against each island on the side the wind comes from and a street
-in its lee. Green and blue of cover.png are not touched. The mask of other land and ice is the ocean builder's
+other land and the ice hold: a deck over the ice edge, banks off the coast that faces the wind and a street in the lee of each island, none over the land itself. Green and blue of cover.png are not touched. The mask of other land and ice is the ocean builder's
 (assets-src/reveal/land/ocean/ocean-mask.png: px of the master x -1800 to 7416, y -800 to 4834; red other land, green ice); it is
 read and never copied. Without the mask the red of cover.png is left as it is.
 
@@ -33,9 +35,11 @@ MASK_RECT = (-1800.0, -800.0, 7416.0, 4834.0)
 W, H = 1024, 576
 X0, Y0, WIDE, HIGH = -2600.0, -1400.0, 10800.0, 6075.0
 # The far low (LOW2 of weather.ts), the cyclone, the middle of the body, and the way the low wind blows (px of the master, y down).
-LOW2 = (360.0, 1150.0)
+LOW2 = (400.0, 1560.0)
 CYCLONE = (5557.0, 3007.0)
-LOW3 = (470.0, 2760.0)
+# (Half the width of the far low's sheet, and how far the systems travel through the hold: OTHER_STORMS and SYSTEMS_RUN of weather.ts.)
+LOW2_HALF = 900.0
+TRAVEL = 95.0
 # How many storms the sea holds: 1 the cyclone alone, 2 with the far low and its front, 3 with the small one to the south-west.
 STORMS = int(os.environ.get('STORMS', '3'))
 BODY = (3000.0, 1750.0, 2900.0, 1700.0)
@@ -79,40 +83,32 @@ def weather():
     kind = 0.5 + 0.5 * smooth(0.25, 0.75, patch)
     green = 0.8 * smooth(0.45, 0.55, field) * smooth(0.4, 0.7, noise(rng, 7.0, 3.0, turn))
 
-    # The far low and its front: a comma. The band winds out of the low as the low wind winds into it (weather.ts: the turn
-    # falls by 2 for each e-fold of the distance), wide at the head and drawn thin down the tail, which ends in clear air.
-    dx, dy = mx - LOW2[0], my - LOW2[1]
-    r = np.maximum(np.hypot(dx, dy), 1.0)
-    th = np.arctan2(dy, dx)
-    # (How far round the arm a point is: the arm is the curve th + 2 ln r = const; s runs 0 at the head to 1 at the tail's end.)
-    phase = th + 2.0 * np.log(r / 95.0) - np.radians(47.0)
-    off = (phase + np.pi) % (2.0 * np.pi) - np.pi
-    along = np.log(r / 380.0) / np.log(1700.0 / 380.0)
-    width = 0.15 + 40.0 / r
-    ragged = 1.2 * width * (noise(rng, 6.0, 6.0) - 0.5)
-    band = np.exp(-((off + ragged) / width) ** 2) * smooth(-0.3, 0.05, along) * (1.0 - smooth(0.7, 1.05, along))
-    # (The low itself is a storm drawn by its own sheet, sky/index.ts: the band is its front, and it starts at the storm's rim.)
-    front = 0.88 * np.clip(band, 0.0, 1.0)
-    # (Ahead of the front, on the inside of the arm, the air is dry: a clear slot. Behind it, outside, cold air and open cells.)
-    ahead = np.exp(-((off + 2.0 * width) / (1.0 * width)) ** 2) * smooth(0.1, 0.4, along) * (1.0 - smooth(0.85, 1.1, along))
-    behind = np.exp(-((off - 3.2 * width) / (2.2 * width)) ** 2) * smooth(0.25, 0.5, along) * (1.0 - smooth(0.9, 1.2, along))
-    comma = 1.0 if STORMS >= 2 else 0.0
-    front, ahead, behind, _ = front * comma, ahead * comma, behind * comma, 0.0
-    red = red * (1.0 - 0.9 * ahead)
-    red = np.maximum(red, 0.5 * behind * (0.5 + 0.5 * smooth(0.35, 0.6, mid)))
-    kind = kind * (1.0 - behind)
-    red = np.maximum(red, front)
-    kind = np.maximum(kind, front)
-    green = green * (1.0 - 0.8 * ahead)
-
-    # The other storms are drawn by their own sheets (OTHER_STORMS of weather.ts): the sea stands clear under and round each,
-    # as round the cyclone, so nothing of this map is on a storm's disc.
-    for n, (sx, sy, half) in enumerate(((LOW2[0], LOW2[1], 680.0), (LOW3[0], LOW3[1], 640.0))):
-        if STORMS < n + 2:
-            break
-        clear = smooth(0.42 * half, 0.8 * half, np.hypot(mx - sx, my - sy))
+    # The far low is a storm drawn by its own sheet (OTHER_STORMS of weather.ts), front and all: the sea stands clear under and
+    # round it, as round the cyclone, so nothing of this map is on a storm's disc.
+    if STORMS >= 2:
+        clear = smooth(0.35 * LOW2_HALF, 0.7 * LOW2_HALF, np.hypot(mx - LOW2[0], my - LOW2[1]))
         red, green = red * clear, green * clear
         kind = 0.5 + (kind - 0.5) * clear
+
+    # No weather of this map over the body's outline nor over the other land. (The map travels down the wind through the hold,
+    # TRAVEL px of the master at the most: it is clear wherever the land will be under it.)
+    relief = np.asarray(Image.open(os.path.join(PUB, '..', 'land', 'relief-a.png')).convert('RGB'), dtype=np.float32)[..., 2] / 255.0
+    rw, rh = 5295.59, 5295.59 * 9 / 16
+    u = (mx - (2983.67 - rw / 2)) / rw * relief.shape[1] - 0.5
+    v = (my - (1727.13 - rh / 2)) / rh * relief.shape[0] - 0.5
+    body = ndimage.map_coordinates(relief, [v, u], order=1, mode='constant', cval=0.0) > 0.28
+    lands = body.astype(np.float32)
+    if os.path.exists(MASK):
+        mask = np.asarray(Image.open(MASK).convert('RGB'), dtype=np.float32)[..., 0] / 255.0
+        u = (mx - MASK_RECT[0]) / (MASK_RECT[2] - MASK_RECT[0]) * mask.shape[1] - 0.5
+        v = (my - MASK_RECT[1]) / (MASK_RECT[3] - MASK_RECT[1]) * mask.shape[0] - 0.5
+        lands = np.maximum(lands, (ndimage.map_coordinates(mask, [v, u], order=1, mode='constant', cval=0.0) > 0.3).astype(np.float32))
+    px = WIDE / W
+    under = lands.copy()
+    for back in np.arange(0.0, TRAVEL + 1.0, px):
+        under = np.maximum(under, ndimage.shift(lands, (-WIND[1] * back / px, -WIND[0] * back / px), order=1, mode='constant'))
+    off_land = 1.0 - smooth(0.03, 0.3, ndimage.gaussian_filter(under, 75.0 / px))
+    red, green = red * off_land, green * off_land
 
     # Nothing of this map stands over the cyclone's disc, nor crowds it: clear water round it.
     away = np.hypot(mx - CYCLONE[0], my - CYCLONE[1])
@@ -182,7 +178,8 @@ def held():
     for km in range(20, 340, 20):
         wake = np.maximum(wake, shifted(soft(isles, 8.0), float(km) + 25.0) * (1.0 - km / 340.0))
     wake = 0.55 * smooth(0.05, 0.3, wake)
-    red = np.maximum.reduce([0.58 * deck, 0.72 * banks, streets, 0.3 * cap * smooth(0.4, 0.6, lumps), wake])
+    # (No weather over the other land itself: what it holds stands off it, on the sea and on the ice.)
+    red = np.maximum.reduce([0.58 * deck, 0.72 * banks, streets, 0.3 * cap * smooth(0.4, 0.6, lumps), wake]) * (1.0 - smooth(0.05, 0.4, soft(land, 25.0)))
     # (Clear over the cyclone, as the map of the systems is.)
     ys, xs = np.mgrid[0:CH, 0:CW].astype(np.float32)
     away = np.hypot(CX0 + (xs + 0.5) * px - CYCLONE[0], CY0 + (ys + 0.5) * px - CYCLONE[1])

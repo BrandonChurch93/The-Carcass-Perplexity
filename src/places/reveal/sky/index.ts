@@ -192,7 +192,7 @@ void main() {
 // The cyclone: drawn from the Builder's photographs of wind-drawn streaks and of small cumulus, wound round its eye (the cyclone of round 19:
 // the photograph of a whole cyclone that stood here in round 25 read soft and flat at native size).
 // How another storm is drawn out (the cyclone's sheet, below): so much shorter all round, less so much on the side at this angle.
-const DRAWN_OUT = [0.35, 0.8, 0.9] as const;
+const DRAWN_OUT = [1.3, 2.0, 0.9] as const;
 // The part of its square sheet that another storm can reach, as [left, bottom, right, top] with the square -1 to 1: the sheet is
 // cut to it, so the clear sea round a storm that is drawn out to one side is not paid for.
 function reachOfOther(): [number, number, number, number] {
@@ -324,6 +324,8 @@ void main() {
   // Where it is thin it is haze over the sea, and blue as haze is; only the bands are white.
   // (A thin veil of high cloud lies over all of it and is drawn off one side, away down the wind, in long fine threads.)
   float veil = 0.04 * pow(1.0 - smoothstep(0.02, 0.85, r), 1.5) + 0.1 * (1.0 - smoothstep(0.004, 0.05, r));
+  // (Another storm's sheet is cut to its reach: its veil ends with it, well inside the cut.)
+  veil *= 1.0 - uOther.z * smoothstep(0.45, 0.85, r * max(shorter, 1.0));
   float bands = 0.96 * min(1.5 * thick, 1.0);
   float alpha = bands + veil * (1.0 - bands);
   colour = mix(dot(colour, vec3(0.3, 0.55, 0.15)) * vec3(0.6, 0.74, 0.98), colour, bands / max(alpha, 1e-3));
@@ -502,9 +504,9 @@ export function create(ctx: Context): Piece {
   });
   sheet('storm', quad({ x: AT.storm.x - 40, y: AT.storm.y }, 256, 80, 7, 0.03), STORM_FRAGMENT, { uPicture: { value: data('mat/storm.jpg', false) } });
   const cyclone = sheet('cyclone', quad(AT.cyclone, 1250, 1250, 6, 0), CYCLONE_FRAGMENT, { uStreaks: { value: data('mat/streaks.jpg', true) }, uOther: { value: new THREE.Vector4(0, 0, 0, 0) } });
-  // The other storms of the sea (shared/weather.ts, OTHER_STORMS): the far low at the head of its front and a small one to the
-  // south-west, each the cyclone's own sheet at its own size, turned its own way, with arms from another place in the photographs
-  // and no eye. They travel with the weather systems, slowly, down the wind.
+  // The other storms of the sea (shared/weather.ts, OTHER_STORMS): the far low, on the cyclone's own sheet at its own size, turned
+  // its own way, with arms from another place in the photographs, no eye, and drawn out on one side into its front. It travels
+  // with the weather systems, slowly, down the wind.
   const reach = reachOfOther();
   const others = OTHER_STORMS.slice(0, STORMS - 1).map((o) =>
     sheet(

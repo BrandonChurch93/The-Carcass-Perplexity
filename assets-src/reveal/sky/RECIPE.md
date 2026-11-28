@@ -39,22 +39,23 @@ y -820 to 3961.25). Where the weather stands:
 ## `public/assets/reveal/sky/weather.png`
 
 Made by: `assets-src/reveal/sky/make_weather.py` (Python 3 with numpy, scipy and Pillow), committed here
-From: nothing for `weather.png` (seeded noise and the places of the storms); for the red of `cover.png` the ocean builder's mask of other land and ice, `assets-src/reveal/land/ocean/ocean-mask.png`, read and never copied
-Prompt or command: `python3 assets-src/reveal/sky/make_weather.py`, from the root of the repo, after `make_cover.py`; `STORMS=1`, `2` or `3` before it sets how many storms the sea holds (3 is what is committed); no model and no prompt; the only noise is of fixed seeds
-Takes: 9 made (an even field of small cumulus; clusters with lanes; the comma of the far low with its dry slot and open cells; decks kept away from the body; then, after the lead's word that small marks read as an even speckle at 960 x 540, large patches with clear sea between; fewer of them; a third small storm; its arms left whole; the banks of the far coast thinner); the ninth is kept
-Why this one: at 960 x 540 the sea reads as large patches, a front and storms with clear water between, and the body stays clear
+From: seeded noise and the place of the far low; the body's outline from `public/assets/reveal/land/relief-a.png` (blue over 0.28, read only) and the ocean builder's mask of other land and ice, `assets-src/reveal/land/ocean/ocean-mask.png`, read and never copied, as it stands at commit 507b689 of the ocean branch (the same mask sets the red of `cover.png`)
+Prompt or command: `python3 assets-src/reveal/sky/make_weather.py [mask]`, from the root of the repo, after `make_cover.py` (the mask is the repo's own unless one is named; what is committed was made with `git show 507b689:assets-src/reveal/land/ocean/ocean-mask.png` written to a scratch file and named); `STORMS=1` or `2` before it sets how many storms the sea holds (2 is what is committed); no model and no prompt; the only noise is of fixed seeds
+Takes: 10 made (an even field of small cumulus; clusters with lanes; the comma of the far low with its dry slot and open cells; decks kept away from the body; then, after the lead's word that small marks read as an even speckle at 960 x 540, large patches with clear sea between; fewer of them; a third small storm; its arms left whole; the banks of the far coast thinner; then, after the ruling that only a crisp storm reads as weather, the painted front and the third storm taken out, the far low moved to open sea and the map cleared over the body's outline and the other land); the tenth is kept
+Why this one: at 960 x 540 the sea reads as large white patches and two storms with clear water between, and nothing of the map is over the body's outline or the other land
 Date: 2026-11-28
 
 1024 x 576, on the rectangle `WEATHER_RECT` of `src/places/reveal/shared/weather.ts` (px of the master: x -2600 to 8200, y -1400 to 4675).
 The weather systems as they stand at the titan frame; they travel slowly down the wind and the cloud streams through them faster.
 Used by: `src/places/reveal/shared/weather.ts` (`lowDepth`), read by the part `reveal/cloud` and by the shade on the land.
 
-- red: how much low cloud a system holds: 0 clear sea, about 0.5 broken cumulus at the edge of a patch, 1 a front, a storm or a deck.
+- red: how much low cloud a system holds: 0 clear sea, about 0.5 broken cumulus at the edge of a patch, 1 the heart of a patch.
 - green: how much thin veil the wind draws out there.
-- blue: the kind: 0 open cells behind the front, 0.5 cumulus in chains, 1 a patch with a body (closed cells).
+- blue: the kind: 0.5 cumulus in chains, 1 a patch with a body (closed cells).
 
-The systems: large patches over the open sea, few near the body; the far low (`LOW2`, px 300, 900) with its front, a comma; a small
-storm to the south-west (px 60, 3080) with two arms round a whole heart; clear water 850 to 1450 px round the cyclone.
+The systems: large patches over the open sea, none over the body's outline nor over the other land (clear wherever land will be
+under the map as it travels, 95 px at the most); clear water round the far low (`LOW2`, px 400, 1560), which is drawn by its own
+sheet (`OTHER_STORMS` of `shared/weather.ts`, the cyclone's fragment in `sky/index.ts`); clear water 850 to 1450 px round the cyclone.
 
 The same script sets the red of `cover.png` (above); its green and blue are unchanged to the last bit.
 

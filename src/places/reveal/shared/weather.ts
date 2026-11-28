@@ -16,18 +16,15 @@ export const FOG_KM = 0.7;
 /** Km a second: staged far faster than weather, so the held frame is seen to live. */
 export const LOW_DRIFT: [number, number] = [5.4, 1.5];
 /** The small low far off toward the planet's edge, px of the master: the wind winds round it as round the cyclone, a quarter as wide. */
-export const LOW2 = { x: 360, y: 1150 };
-// How many storms the sea holds: 1 the cyclone alone, 2 with the far low at the head of its front, 3 with a small one to the
-// south-west. (The same number is given to assets-src/reveal/sky/make_weather.py as STORMS, which clears the sea round each.)
-export const STORMS = 3;
+export const LOW2 = { x: 400, y: 1560 };
+// How many storms the sea holds: 1 the cyclone alone, 2 with the far low. (The same number is given to
+// assets-src/reveal/sky/make_weather.py as STORMS, which clears the sea round each.)
+export const STORMS = 2;
 // The other storms, each drawn by the cyclone's sheet (sky/index.ts): where (px of the master), the half width of its sheet (the
 // cyclone's is 1250), how it is turned, where in the photographs its arms are taken from, and how much thinner it stands.
-export const OTHER_STORMS = [
-  { at: LOW2, half: 680, turn: 2.1, arms: [0.37, 0.61], thinner: 0.1 },
-  { at: { x: 470, y: 2760 }, half: 640, turn: 4.4, arms: [0.71, 0.23], thinner: 0.2 },
-] as const;
+export const OTHER_STORMS = [{ at: LOW2, half: 900, turn: 0.32, arms: [0.37, 0.61], thinner: 0.0 }] as const;
 // How far the weather systems travel down the wind for each unit of the weather's clock, km.
-export const SYSTEMS_RUN = 2.5;
+export const SYSTEMS_RUN = 0.9;
 /** The rectangle the map of the weather systems lies on (sky/weather.png, assets-src/reveal/sky/make_weather.py), as COVER_RECT is given. */
 export const WEATHER_RECT: [number, number, number, number] = [X(-2600), Z(-1400), 1 / (10800 * KM), 1 / (6075 * KM)];
 const LOW_MUCH = 1.0;
@@ -196,7 +193,7 @@ float lowHeld = 0.0;
 // The body of the low field at the point last asked of lowDepth, soft, 0 to 1: where its clusters, fronts and decks stand, with
 // none of their cells. It is what the moon shows of the weather by night.
 float lowBody = 0.0;
-float lowAmount(vec2 at, vec2 w) {
+float lowAmount(vec2 at) {
   vec3 stands = coverAt(at);
   float lake = smoothstep(100.0, 230.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
   // The sky stands clear over the lake of the Eye, where the rise begins.
@@ -219,8 +216,14 @@ float lowAmount(vec2 at, vec2 w) {
 // chains is clear; and the streak photograph read sharp is the thin veil the wind draws out among them.
 float lowDepth(vec2 at) {
   vec4 gAt = GRADS(at);
-  vec2 w = lowGround(at);
-  float amount = lowAmount(at, w);
+  float amount = lowAmount(at);
+  lowWeigh = vec3(0.0);
+  lowNear = vec2(0.0);
+  lowBody = 0.0;
+  // (Where no cloud can stand, over the body and the clear sea, nothing more is worked out: the wind's map is the dear part of
+  // this function and most of the picture below orbit is such ground. The one change across the pixel that the reads below
+  // are made with, of the ground itself, is taken above, and every other is worked out from it: see GRADS and windG.)
+  if (amount <= 0.02 && lowHeld <= 0.0) return 0.0;
   // (The wind over an ocean does not blow straight: it meanders over a thousand kilometres, and within a few hundred it wanders
   // a few degrees either way. The ground is bent so before the wind's map is taken, by a field that stands on the planet.)
   vec2 bent = at + vec2(
@@ -259,10 +262,6 @@ float lowDepth(vec2 at) {
   // (A deck stands whole over such a place: it has no streets to draw out.)
   float calm = dot(windFp, windFp);
   float slack = smoothstep(0.1, 0.4, calm);
-  lowWeigh = vec3(0.0);
-  lowNear = vec2(0.0);
-  lowBody = 0.0;
-  if (amount <= 0.02 && lowHeld <= 0.0) return 0.0;
   // (The systems, read first, so most of the open sea, which is clear, costs one read and no more: red how much cloud a
   // system holds, green the veil, blue its kind (0 open cells, 0.5 cumulus in chains, 1 closed cells). The reads are all at
   // places and fineness worked out above: see GRADS.)
@@ -302,7 +301,7 @@ float lowDepth(vec2 at) {
   if (wound * closed > 0.0) whole = clamp(0.35 + 0.5 * cloudAt(uMatPopcorn, (at - systemsRun() - uWx * vec2(6.0, 2.0)) / 170.0 + vec2(0.21, 0.63), gAt / 170.0 * lowSoft, 0.34), 0.0, 1.0);
   // (A body is white and whole at its tops and has an edge: the wind-drawn photograph says where it is thick, the larger lay of
   // cumulus breaks it into tops a few pixels wide from orbit with the sea dark between them, and the smaller lay lumps each top.)
-  float form = mix(pow(max(chain - 0.4, 0.0), 1.3), 1.0, 0.7 * smoothstep(0.9, 0.99, systems.r));
+  float form = pow(max(chain - 0.4, 0.0), 1.3);
   float tops = form * (0.42 + 0.58 * smoothstep(0.45, 1.25, puff)) * (0.55 + 0.45 * smoothstep(0.35, 0.9, cell));
   float stood = smoothstep(0.16, 0.34, tops) * (1.0 + 2.6 * tops);
   float dense = max(knots * (0.25 + 1.5 * density) - 1.0, 0.0) + closed * cluster * mix(stood, 1.4 * whole, wound);
