@@ -150,7 +150,7 @@ void main() {
   if (uLive > 0.0) sunOnSea -= uLive * vec2(-20.0, 0.0) * vec2(1.0, 0.48);
   lowColour *= 1.0 - 0.4 * smoothstep(0.2, 0.7, exp(-pow(dot(sunOnSea, sunOnSea) / 55000.0, 0.463)));
   float a = low.x * 0.96;
-  float b = min(high * 0.46, 0.32);
+  float b = min(high * 0.8, 0.72);
   // (The ice is no thicker held than at the titan frame: it stands there already, and held it only travels, ten kilometres
   // over land and sea and across the wind of the low field.)
   // From the ground up: the fog, the low field, the banks, the ice.

@@ -306,9 +306,16 @@ float highDepth(vec2 at) {
     hs += uWx * vec2(62.0, -22.0);
   }
   highUvSheet = mat2(0.9, 0.44, -0.44, 0.9) * hv / 1900.0 + vec2(0.2, 0.6);
-  highUvThread = mat2(0.84, 0.54, -0.54, 0.84) * hs / vec2(1250.0, 900.0) + vec2(0.7, 0.2);
+  // (The wind the ice lies along bends over a thousand kilometres, and the bend travels with the ice: its streets curve and
+  // are of no one slant.)
+  hs += vec2(280.0 * sin(hs.y / 760.0 + 1.2 * sin(hs.x / 1500.0) + 0.8), 320.0 * sin(hs.x / 880.0 + 1.1 * sin(hs.y / 1300.0) + 2.6));
+  hs += vec2(28.0 * sin(hs.y / 100.0 + 1.3 * sin(hs.x / 230.0) + 0.8), 31.0 * sin(hs.x / 115.0 + 1.1 * sin(hs.y / 260.0) + 2.6));
+  highUvThread = mat2(0.84, 0.54, -0.54, 0.84) * hs / vec2(900.0, 820.0) + vec2(0.7, 0.2);
   highGSheet = GRADS(highUvSheet);
   highGThread = GRADS(highUvThread);
+  // (The grain of the ice: the photograph of specks in streets, laid across the streaks, so a filament is made of grains.)
+  vec2 uvGrain = mat2(0.6, 0.8, -0.8, 0.6) * hs / 520.0 + vec2(0.41, 0.13);
+  vec4 gGrain = GRADS(uvGrain);
   if (far <= 0.0) return 0.0;
   // (Where the ice stands at all: two soft swells that cross, carried with it. They are waves and not a picture or a noise of
   // cells, so the pattern has no corner, no step and no flat for the last sun to redden: the fibre of the photographs is all the
@@ -327,8 +334,13 @@ float highDepth(vec2 at) {
   // wide and soft) keeps the low field off, a sheet that travels in thins to a breath, so the bone under it stays white.)
   where *= 0.12 + 0.88 * smoothstep(0.12, 0.4, textureLod(uCover, clamp((at - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0), 5.0).g);
   float sheet = cloudAt(uMatVeil, highUvSheet, highGSheet, 0.27);
-  float thread = cloudAt(uMatStreaks, highUvThread, highGThread, 0.31);
-  float depth = sheet * mix(1.0, thread, 0.55) * where * 1.7 - 0.85;
+  float thread = dot(textureLod(uMatStreaks, highUvThread, fineness(uMatStreaks, highGThread) - 0.5).rgb, vec3(0.3, 0.55, 0.15)) / 0.31;
+  // (The ice is the photograph of wind streaks as it is: fine filaments and grains in streets, open sea between them. Only
+  // the dark of the photograph's sea is taken off; nothing is cut at a level, so a filament thins out through its own grain.
+  // The veil photograph thins and thickens it over hundreds of kilometres.)
+  float wisp = max(thread - 0.9, 0.0);
+  float grain = cloudAt(uMatSpecks, uvGrain, gGrain, 0.2);
+  float depth = where * mix(0.5, 1.3, clamp(0.7 * sheet, 0.0, 1.0)) * 1.4 * pow(wisp, 1.3) * (0.1 + 0.9 * min(grain * grain, 3.0));
   // (Ice in swaths over the land (sky/banks.png, blue) is not drawn: as straight drawn-out fibre it read as scratches on the plate.)
   return (1.0 - exp(-1.1 * max(depth, 0.0))) * far;
 }
