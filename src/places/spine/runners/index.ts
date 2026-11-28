@@ -103,7 +103,9 @@ export function create(ctx: Context): Piece {
   const rng = ctx.rng('runners');
   const strip = lockGeometry(5);
   // The dead one's coat is seen from three metres: every lock of it is drawn as its hairs.
-  const hairs = strandGeometry(6, 8);
+  const hairs = strandGeometry(9, 6, 3);
+  // The herd's is seen from metres off, and hangs straight: fewer hairs to a lock and fewer bends to a hair, and more locks.
+  const hairsFar = strandGeometry(6, 6);
   const tendril = tendrilGeometry();
   // The dead one's are seen close: round, and bent in many places.
   const tendrilFine = tendrilGeometry(10, 44);
@@ -168,7 +170,8 @@ export function create(ctx: Context): Piece {
       uFace: { value: new THREE.Vector4(j.face[0], j.face[1], j.face[2], 0) },
       uLead: { value: new THREE.Vector4(j.lead[0], j.lead[1], j.lead[2], 0) },
       uWrithe: { value: writhe },
-      uStrand: { value: new THREE.Vector4(0.1, 1.0, 0.16, 0.4) },
+      uStrand: { value: role.act === 'dead' ? new THREE.Vector4(0.1, 1.0, 0.16, 0.4) : new THREE.Vector4(0.14, 1.15, 0.3, 0.35) },
+      uHair: { value: role.act === 'dead' ? new THREE.Vector4(0.72, 3.0, 0, 0) : new THREE.Vector4(1, 1.2, 0, 0) },
     };
     const group = new THREE.Group();
     const hide = new THREE.ShaderMaterial({ vertexShader: SKIN_VERTEX, fragmentShader: SKIN_FRAGMENT, uniforms: shared });
@@ -186,8 +189,9 @@ export function create(ctx: Context): Piece {
     const under = role.act === 'dead' ? (_p: [number, number, number], n: [number, number, number]): boolean => n[0] * (j.right[0] as number) + n[1] * (j.right[1] as number) + n[2] * (j.right[2] as number) > 0.45 || (n[2] > 0.5 && n[1] < 0.45) : undefined;
     const c = coat(body, rng, { clumps: role.clumps, locks: role.act === 'dead' ? 6 : 4, broad: role.act === 'dead' ? 0.55 : role.inside ? 0.62 : 1, long: role.long, lengths: role.act === 'dead' ? [0.21, 0.19, 0.08, 0.15, 0.115, 0.085, 0, 0.035] : undefined, burn: role.burn, hang: role.inside ? (role.act === 'stand' ? 0.55 : 0.65) : 0, droop: role.inside ? (role.act === 'stand' ? 0.55 : 1) : 0, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0], skip: under, burnAxis: across, burnNarrow: role.act === 'dead' ? SPLIT_NARROW : BURN_NARROW, lips: role.act === 'dead' });
     const locks = new THREE.InstancedBufferGeometry();
-    const asHair = role.act === 'dead';
-    const lockShape = asHair ? hairs : strip;
+    // Every coat is hair: the dead one's seen from three metres, the herd's from as near as the lens passes it.
+    const asHair = true;
+    const lockShape = role.act === 'dead' ? hairs : hairsFar;
     locks.index = lockShape.index;
     locks.setAttribute('position', lockShape.getAttribute('position'));
     if (asHair) locks.setAttribute('aStrand', lockShape.getAttribute('aStrand'));
@@ -250,7 +254,7 @@ export function create(ctx: Context): Piece {
   ];
 
 
-  const huddle = HUDDLE.map((h, i) => make({ act: h.act, pose: h.pose, size: h.size, cell: 0.018, clumps: 420, long: h.act === 'stand' ? 0.95 : 1, tone: dim(cream(), h.act === 'stand' ? 1.75 : 1.05, h.act === 'stand' ? 0 : 0.5), phase: i * 1.9 + 0.4, inside: true, burn: NONE, tendrils: 34 }));
+  const huddle = HUDDLE.map((h, i) => make({ act: h.act, pose: h.pose, size: h.size, cell: 0.018, clumps: 700, long: h.act === 'stand' ? 0.95 : 1, tone: dim(cream(), h.act === 'stand' ? 1.75 : 1.05, h.act === 'stand' ? 0 : 0.5), phase: i * 1.9 + 0.4, inside: true, burn: NONE, tendrils: 34 }));
   // The walkers on the ridge trail are off: far in the wide lens one of them stood for a person, and the approved wide has the trail alone.
   const WALKERS = false;
   const CROSSING = WALKERS ? 4 : 0;
@@ -260,7 +264,7 @@ export function create(ctx: Context): Piece {
   const dj = deadSkin.joints;
   const wd = (d: 0 | 1 | 2): number => (dj.chest[d] as number) - 0.22 * (dj.fwd[d] as number) - 0.1 * (dj.up[d] as number) - 0.2 * (dj.right[d] as number);
   const wound: [number, number, number, number] = [wd(0), wd(1), wd(2), 0.5];
-  const dead = make({ act: 'dead', pose: DEAD, size: DEAD_SIZE, cell: 0.022, clumps: 1450, long: 0.85, tone: [1.1, 1.02, 0.88], phase: 0, inside: false, burn: wound, tendrils: 40 });
+  const dead = make({ act: 'dead', pose: DEAD, size: DEAD_SIZE, cell: 0.022, clumps: 1450, long: 0.85, tone: [1.17, 1.0, 0.8], phase: 0, inside: false, burn: wound, tendrils: 40 });
 
   // What the one that walks does to the floor: the dark under each foot that is down, the prints where it stood, and the snow a foot
   // kicks up as it leaves. Flat on the floor, or turned to the lens for the snow.

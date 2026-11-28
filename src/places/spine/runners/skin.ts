@@ -737,7 +737,7 @@ export function lockGeometry(segments: number): THREE.BufferGeometry {
 
 // A lock as hairs: so many ribbons side by side in one drawing, each with its own numbers (which hair it is, where round the lock's
 // root it stands, how long it is, how far out it stands), dealt out evenly and not by chance.
-export function strandGeometry(strands: number, segments: number): THREE.BufferGeometry {
+export function strandGeometry(strands: number, segments: number, under = 0): THREE.BufferGeometry {
   const pos: number[] = [];
   const own: number[] = [];
   const index: number[] = [];
@@ -746,7 +746,9 @@ export function strandGeometry(strands: number, segments: number): THREE.BufferG
     const base = h * (segments + 1) * 2;
     const k = h + 1;
     for (let s = 0; s <= segments; s++) {
-      pos.push(-1, s / segments, 0, 1, s / segments, 0);
+      // The last `under` of them are the under-coat: marked in z.
+      const low = h >= strands - under ? 1 : 0;
+      pos.push(-1, s / segments, low, 1, s / segments, low);
       for (let e = 0; e < 2; e++) own.push(part(k * 0.6180339887), part(k * 0.7548776662), part(k * 0.5698402910), part(k * 0.3819660113 + 0.21));
     }
     for (let s = 0; s < segments; s++) {

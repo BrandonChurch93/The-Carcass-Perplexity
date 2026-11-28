@@ -168,7 +168,8 @@ void main() {
   float grain = vnoise3(vRest * vec3(14.0, 40.0, 40.0));
   n = normalize(n + 0.9 * (lie.x - 0.5) * normalize(cross(n, vec3(0.0, 1.0, 0.001))) + 0.9 * (lie.y - 0.5) * vec3(0.0, 1.0, 0.0));
   // Under the locks the roots are in each other's shade.
-  vec3 albedo = uTone.rgb * shag * mix(0.45, 0.95, smoothstep(0.2, 0.7, lie.b));
+  // Under the herd's hair the hide is its under-coat, even in tone: no dark of the picture stands between the hairs as a spot.
+  vec3 albedo = uTone.rgb * mix(shag, vec3(dot(shag, vec3(0.333))) * 0.9 + 0.25, 0.65 * uLockKind) * mix(0.45, 0.95, smoothstep(0.2, 0.7, lie.b));
   float rough = 0.95;
   float occ = 0.55;
   vec3 pelt = albedo;
@@ -201,7 +202,9 @@ void main() {
   if (uWhole > 0.5 && vKind > 6.5) rime *= 0.15;
   // The dead one is seen close: what shows between its locks is the under-coat, pale and matted, with the rime in it in patches.
   if (uWhole > 0.5 && vKind < 4.5) {
-    albedo = uTone.rgb * shag * mix(0.6, 1.05, smoothstep(0.2, 0.7, lie.b));
+    // Its own grain is drawn here, hair fine: the picture of a coat is soft at three metres and would lie blurred between the hairs.
+    float hairs = vnoise3(vRest * vec3(310.0, 520.0, 310.0)) + 0.6 * vnoise3(vRest * 760.0);
+    albedo = uTone.rgb * mix(shag, vec3(dot(shag, vec3(0.333))), 0.5) * mix(0.6, 1.05, smoothstep(0.2, 0.7, lie.b)) * (0.5 + 0.55 * hairs);
     rime *= 0.75 * smoothstep(0.35, 0.7, vnoise3(vRest * 17.0) + 0.3 * (fine - 0.5));
   }
   albedo = mix(albedo, vec3(0.86, 0.88, 0.92), rime);
@@ -243,11 +246,11 @@ void main() {
       vec3 meat = mix(vec3(0.2, 0.042, 0.034), vec3(0.045, 0.014, 0.012), smoothstep(0.25, 0.75, 0.6 * fibre + 0.4 * lump)) * min(0.5 + 2.4 * dot(near, vec3(0.333)), 1.1) * mix(1.0, 0.5, deep);
       float glaze = smoothstep(0.58, 0.78, vnoise3(vRest * 21.0 + 3.0) + 0.25 * (vnoise3(vRest * 120.0) - 0.5));
       float hoar = smoothstep(0.55, 0.8, vnoise3(vRest * 260.0) + 0.5 * glaze - 0.25) * glaze;
-      meat = mix(meat, vec3(0.2, 0.2, 0.22) * (0.5 + 0.8 * lump), 0.55 * glaze);
-      meat = mix(meat, vec3(0.42, 0.45, 0.5), 0.55 * hoar);
+      meat = mix(meat, vec3(0.07, 0.065, 0.07) * (0.5 + 0.8 * lump), 0.5 * glaze);
+      meat = mix(meat, vec3(0.16, 0.16, 0.18), 0.35 * hoar);
       albedo = mix(albedo, (vec3(0.02, 0.015, 0.013) + 0.05 * grain) * (0.5 + 1.2 * vnoise3(vRest * 70.0)), 0.8 * lips);
       albedo = mix(albedo, meat, core);
-      rough = mix(rough, mix(0.22, 0.12, glaze) + 0.5 * hoar, core);
+      rough = mix(rough, mix(0.22, 0.1, glaze) + 0.3 * hoar, core);
       rough = mix(rough, 0.8, lips * (1.0 - core));
       occ = mix(occ, mix(0.8, 0.45, deep), core);
       // The meat lies under the lips of the hide: lit as the hollow faces, its fibres standing in it.
@@ -460,6 +463,8 @@ uniform float uWhole;
 // x: how broad a strand is, as a share of its lock. y: how far the strands of a lock stand apart at the root, in locks' widths.
 // z: how much of that is left at the end. w: how much a strand wanders off its lock.
 uniform vec4 uStrand;
+// x: how long the hair is, as a share of its lock. y: how much the rime clots on it.
+uniform vec4 uHair;
 varying vec3 vLight;
 varying vec3 vFrostLight;
 varying vec4 vAt;
@@ -493,7 +498,9 @@ void main() {
   e.y = max(e.y, groundY(e) + 0.012);
   // Each hair has its own length; a few are long and stand off the lock.
   float stray = step(0.86, hairOut);
-  float reach = mix(0.5, 1.0, hairLong) * (1.0 + 0.12 * stray);
+  // Under the long hair is the under-coat: short, close, standing every way, and never drawn together.
+  float low = position.z;
+  float reach = mix(0.5, 1.0, hairLong) * (1.0 + 0.12 * stray) * uHair.x * mix(1.0, 0.42, low);
   float t = position.y * reach;
   vec3 p = mix(mix(r, c, t), mix(c, e, t), t);
   vec3 way = normalize(mix(c - r, e - c, t) + vec3(0.0, 1e-5, 0.0));
@@ -503,8 +510,8 @@ void main() {
   float w = aCard.x * size * (1.0 - 0.38 * uLockKind);
   // Round the root they stand apart, on a disc; toward the end they are drawn together, the strays less.
   float ang = 6.2832 * hairAng;
-  float rad = sqrt(0.08 + 0.92 * hairOut) * uStrand.y * w;
-  float together = mix(1.0, mix(uStrand.z, 0.75, stray), smoothstep(0.0, 1.0, t));
+  float rad = sqrt(0.08 + 0.92 * hairOut) * uStrand.y * w * (1.0 + 0.9 * low);
+  float together = mix(mix(1.0, mix(uStrand.z, 0.75, stray), smoothstep(0.0, 1.0, t)), 1.0 + 0.5 * t, low);
   // No hair is straight: each is bent its own way, more toward its end.
   float bendA = sin(t * (3.0 + 5.0 * fract(hair * 3.3)) + hair * 40.0 + seed * 9.0);
   float bendB = sin(t * (7.0 + 6.0 * fract(hair * 5.9)) + hair * 71.0 + seed * 23.0);
@@ -524,7 +531,7 @@ void main() {
   float up = nb.y - 0.7 * outline;
   float rimed = smoothstep(0.7, 1.2, up + uCoat.w + 0.7 * (min(aCard.z, 1.0) - 0.5)) * aCard.w;
   float clot = rimed * step(0.45, fract(hair * 5.1 + seed * 2.3)) * smoothstep(0.2, 0.5, t) * (0.6 + 0.4 * sin(t * (17.0 + 9.0 * fract(hair * 2.9)) + hair * 50.0));
-  float own = uStrand.x * w * (0.7 + 0.6 * fract(hair * 7.7)) * (0.25 + 0.75 * taper) * (1.0 + 1.5 * max(clot, 0.0));
+  float own = uStrand.x * w * (0.7 + 0.6 * fract(hair * 7.7)) * (0.25 + 0.75 * taper) * (1.0 + uHair.y * max(clot, 0.0));
   float drawn = max(own, 0.75 * pixel);
   p += side * (position.x * drawn);
   // Hair takes light from all round: it is lit as something between its lock's way out of the body and the open sky, and each hair
@@ -535,7 +542,7 @@ void main() {
   vLight = lit * occ;
   vFrostLight = lit * (uLockKind > 0.5 ? 1.1 : 1.25);
   // x across the strand, y along the lock, z the hair's own number, w how much of the pixel it fills.
-  vAt = vec4(position.x, t, fract(hair * 13.7 + seed), clamp(own / drawn, 0.0, 1.0) * (1.0 - smoothstep(0.93, 1.0, position.y)));
+  vAt = vec4(position.x, t, fract(hair * 13.7 + seed) * (1.0 - 0.3 * low), clamp(own / drawn, 0.0, 1.0) * (1.0 - smoothstep(0.93, 1.0, position.y)));
   // The loose hairs that stand off the coat where it looks up are hoar from their middle: the outline bristles white.
   vInfo = vec4(max(aCard.z, 2.2 * stray * step(0.15, up) * step(0.3, fract(hair * 3.7 + seed))), position.y, up, aCard.w);
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
@@ -560,7 +567,7 @@ void main() {
   float alpha = vAt.w * smoothstep(0.0, 0.55, 1.0 - abs(u));
   float singe = 1.0 - vInfo.w;
   // Cream, each hair its own shade; wet and dark toward the root, where the coat is matted, and paler at its dry end.
-  vec3 albedo = uTone.rgb * mix(vec3(0.74, 0.68, 0.6), vec3(1.0, 0.97, 0.92), smoothstep(0.0, 0.8, t)) * (0.8 + 0.5 * own);
+  vec3 albedo = uTone.rgb * mix(vec3(0.76, 0.66, 0.54), vec3(1.0, 0.95, 0.87), smoothstep(0.0, 0.8, t)) * (0.8 + 0.5 * own);
   albedo *= mix(uLockKind > 0.5 ? 0.62 : mix(0.45, 0.82, uWhole), 1.0, smoothstep(0.0, 0.55, t));
   albedo = mix(albedo, vec3(0.02, 0.016, 0.014), singe * (0.45 + 0.55 * t));
   vec3 c = albedo * vLight * (0.6 + 0.4 * round_);
@@ -685,7 +692,7 @@ void main() {
   float cords = sin(vAt.y * 3.0 + t * (7.0 + 9.0 * fract(vAt.z * 4.1)) + vAt.z * 30.0) + 0.5 * sin(vAt.y * 5.0 - t * 13.0 + vAt.z * 11.0);
   float furrow = smoothstep(-0.9, 0.5, cords);
   albedo = mix(albedo, mix(vec3(0.035, 0.028, 0.025), vec3(0.3, 0.26, 0.23), furrow) * (0.55 + 0.7 * blotch) * (0.75 + 0.4 * rings), 0.92 * uWrithe.y);
-  rime = mix(rime, 0.9 * smoothstep(0.66, 0.92, n.y * 0.5 + 0.5 + 0.4 * (crystals - 0.5) + 0.4 * (vnoise3(vWorld * 45.0) - 0.5) + 0.1 * cords), uWrithe.y);
+  rime = mix(rime, 0.9 * smoothstep(0.66, 0.92, n.y * 0.5 + 0.5 + 0.4 * (crystals - 0.5) + 0.5 * (vnoise3(vWorld * 45.0) - 0.5) + 0.3 * (vnoise3(vWorld * 9.0) - 0.5)), uWrithe.y);
   // On a living one in the cold its own breath has frozen on them: they hang frosted, pale as the coat.
   rime = max(rime, (1.0 - uWrithe.y) * (0.45 + 0.4 * crystals));
   albedo = mix(albedo, vec3(0.74, 0.78, 0.84), rime);

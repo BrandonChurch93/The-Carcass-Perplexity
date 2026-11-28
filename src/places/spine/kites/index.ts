@@ -203,7 +203,8 @@ float outline(float s, float sd) {
   float h2 = fract(sd * 5.9);
   float h3 = fract(sd * 8.3);
   float rise = smoothstep(0.0, 0.2 + 0.14 * h1, s);
-  float tail = 1.0 - smoothstep(0.45 + 0.25 * h2, 1.0, s);
+  // The tail is not drawn out to a point: it stays broad to its end, where it is torn off ragged.
+  float tail = mix(1.0 - smoothstep(0.45 + 0.25 * h2, 1.0, s), 1.0, 0.45 + 0.3 * h1);
   float wander = 0.9 + 0.1 * sin(s * 7.0 + sd * 30.0);
   return pow(max(rise, 1e-6), 1.3) * pow(max(tail, 1e-6), 0.85 + 0.6 * h3) * wander;
 }
@@ -310,7 +311,10 @@ void main() {
   float ragB = vnoise(vec2(q.x * 1.3 + seed * 5.0, 11.0));
   float nickA = vnoise(vec2(q.x * 2.9 + seed * 7.0, 17.0));
   float nickB = vnoise(vec2(q.x * 2.9 + seed * 3.0, 29.0));
-  float rim = 1.0 - mix(0.2 * ragA + 0.1 * smoothstep(0.5, 1.0, nickA), 0.2 * ragB + 0.1 * smoothstep(0.5, 1.0, nickB), side);
+  float toTail = smoothstep(0.5, 1.0, s);
+  float rim = 1.0 - (1.0 + 1.6 * toTail) * mix(0.2 * ragA + 0.1 * smoothstep(0.5, 1.0, nickA), 0.2 * ragB + 0.1 * smoothstep(0.5, 1.0, nickB), side);
+  // Its end is torn: tongues of it run on, each to its own length, and between them it is gone.
+  float endAt = 0.8 + 0.19 * vnoise(vec2(v * 2.6 + seed * 3.0, seed)) - 0.1 * vnoise(vec2(v * 9.0 + seed, 5.0)) ;
   float edgeAt = abs(v) / rim;
   float edgeW = clamp(2.5 * fwidth(edgeAt), 0.03, 1.0);
   // Which way across the skin lies in the world, from how the point and v run over the screen.
@@ -327,6 +331,8 @@ void main() {
   float crease = vnoise(vec2(q.x * 0.45 + seed * 3.0, v * pitch + warp)) + 0.5 * vnoise(vec2(q.x * 1.7 + 0.8 * v + seed, v * 2.4 * pitch - 1.3 * q.x + warp));
   float creaseB = vnoise(vec2(q.x * 0.45 + seed * 3.0, (v + 0.06) * pitch + warp)) + 0.5 * vnoise(vec2(q.x * 1.7 + 0.8 * (v + 0.06) + seed, (v + 0.06) * 2.4 * pitch - 1.3 * q.x + warp));
   float creaseOn = (1.0 - vKite.z) * (1.0 - smoothstep(0.02, 0.09, vW)) * (0.25 + 1.3 * patchy);
+  // A crease is a fold: the lens looks through more of the skin along it, and it stands dark in the clear body.
+  float fold = creaseOn * smoothstep(0.035, 0.11, abs(creaseB - crease));
   n = normalize(n - (dot(acrossWay, acrossWay) > 1e-20 ? normalize(acrossWay) : vec3(0.0)) * ((creaseB - crease) * 2.2 * creaseOn));
   n *= dot(n, toCamera) < 0.0 ? -1.0 : 1.0;
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
@@ -347,7 +353,7 @@ void main() {
   float tearEdge = max(0.04, 2.0 * tearW);
   float hole = isTorn * (1.0 - smoothstep(1.0 - tearEdge, 1.0, tear));
   float lip = isTorn * (1.0 - smoothstep(1.0, 1.22, tear)) * (1.0 - hole);
-  float thick = 0.16 + 0.7 * smoothstep(0.15, 0.9, broad) + 0.5 * patchy * abs(creaseB - crease) * 8.0 * creaseOn + 0.25 * (swell - 0.5) + fine * (0.3 * (fibre - 0.5) + 0.55 * vein + 0.7 * rib) + 0.6 * rolled * (0.4 + 0.6 * fine) + 0.5 * lip;
+  float thick = 0.08 + 0.5 * smoothstep(0.15, 0.9, broad) + 1.5 * fold + 0.25 * (swell - 0.5) + fine * (0.3 * (fibre - 0.5) + 0.55 * vein + 0.7 * rib) + 0.6 * rolled * (0.4 + 0.6 * fine) + 0.5 * lip;
   thick = mix(thick, 0.8, 0.6 * vFar);
   // The lens looks through more of it where it is seen aslant.
   float path = thick / max(nv, 0.5);
@@ -375,7 +381,7 @@ void main() {
   // What it scatters back, and what comes through it from behind, violet and strongest through a single skin. Its veins and its rolled
   // edge are a little darker: more skin, wet.
   vec3 c = own * (uBody.x * onNear * (0.75 + 0.25 * nv) + uBody.y * onFar * through * vec3(0.97, 0.94, 1.03));
-  c *= 1.0 - fine * (0.3 * vein + 0.3 * rib + 0.2 * (fibre - 0.5)) - 0.15 * rolled - 0.12 * lip;
+  c *= (1.0 - fine * (0.3 * vein + 0.3 * rib + 0.2 * (fibre - 0.5)) - 0.15 * rolled - 0.12 * lip) * (1.0 - 0.6 * fold);
   // The last light of the dusk comes through a skin that stands between it and the lens.
   float toDusk = pow(clamp(dot(-toCamera, uWarmDir), 0.0, 1.0), 3.0);
   c += 2.0 * uFilm.y * uWarmColour * toDusk * through;
@@ -410,7 +416,7 @@ void main() {
   // Its edge is let go over a pixel or two, never cut; a strip finer than a pixel is drawn a pixel wide and fainter; its tail runs out.
   float edge = 1.0 - smoothstep(1.0 - edgeW, 1.0, edgeAt);
   float thin = clamp(vKite.w, 0.0, 1.0);
-  float ends = smoothstep(0.0, max(0.02, 3.0 * sW), s) * (1.0 - smoothstep(0.9, 1.0, s));
+  float ends = smoothstep(0.0, max(0.02, 3.0 * sW), s) * (1.0 - smoothstep(endAt - max(0.012, 3.0 * sW), endAt, s));
   float alpha = cover * edge * ends * (1.0 - hole) * (0.25 + 0.75 * thin) * uBody.w;
   alpha *= mix(1.0, 0.78, vFar);
   // From inside the canal the kites stand far off in the bright mouth: there they are let into the air, pale wisps of the sky's own tone.
@@ -447,9 +453,10 @@ void main() {
   vec3 w = cross(u, tangent);
   float far = length(cameraPosition - c);
   // Sinew as thick as a wrist, lumped with ice, knotted where the skin grows from it.
-  float lumps = 0.5 * smoothstep(0.45, 0.85, vnoise(vec2(d * 0.55, kSeed * 31.0))) + 0.22 * vnoise(vec2(d * 2.3, kSeed * 17.0));
+  float lumps = (0.5 * smoothstep(0.45, 0.85, vnoise(vec2(d * 0.55, kSeed * 31.0))) + 0.22 * vnoise(vec2(d * 2.3, kSeed * 17.0))) * (1.0 + 0.5 * uFly.y);
   float knot = (1.0 - kThread) * exp(-((d - kCord) / 0.6) * ((d - kCord) / 0.6));
-  float r = mix(0.03, 0.02, kThread) * (1.0 + lumps + 2.6 * knot) * (1.0 + 1.6 * uStageMore.x);
+  // Before the close lens they are seen for what they are: sinew as thick as a forearm under its ice.
+  float r = mix(0.03, 0.02, kThread) * (1.0 + lumps + 2.6 * knot) * (1.0 + 1.6 * uStageMore.x) * (1.0 + 2.0 * uFly.y);
   r *= kThread > 0.5 ? 1.0 - 0.85 * clamp(d / whole, 0.0, 1.0) : 1.0 - 0.9 * smoothstep(kCord + 0.4, whole, d);
   // The holdfast: the cord's own root, swollen where it grips the rock, knuckled, and a little of it inside the stone.
   float root = exp(-max(d, 0.0) / (0.9 + 0.8 * fract(kSeed * 3.1)));
@@ -920,7 +927,7 @@ export function create(ctx: Context): Piece {
       fly.set(inWide && !inStrike ? 1 : 0, inClose && !inStrike ? 1 : 0, wideShot.from);
       // Seen close the skin is thin and shows its colours; far off it is more of a body.
       // Seen close the film shows its oil colours.
-      body.z = inStrike ? 0.3 : inClose ? 0.32 : 1.0;
+      body.z = inStrike ? 0.3 : inClose ? 0.3 : 1.0;
       film.z = inClose ? 0.7 : 0.35;
       film.w = inClose ? 0.85 : 0.7;
       veil.value = inStrike ? 1 : 0;
