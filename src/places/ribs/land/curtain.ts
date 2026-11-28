@@ -68,11 +68,11 @@ export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeo
     // Where a lens comes near, a frond is a hand or two broad; far off they are broader, so that the wall keeps its hem.
     const arc = (phi0 - options.focus[0]) * reach;
     const far = Math.abs(arc) > 34;
-    // Near, of every breadth: a few threads, most a hand or two, one in five a blade as broad as a forearm is long.
+    // Near, of every breadth: a few threads, most a blade two or three hands broad, one in four as broad as an arm is long.
     const lot = options.next();
-    const breadth = far ? 0.12 + 0.3 * lot : lot < 0.34 ? 0.05 + 0.27 * lot : lot < 0.82 ? 0.15 + 0.36 * (lot - 0.34) : 0.34 + 1.4 * (lot - 0.82);
+    const breadth = far ? 0.12 + 0.3 * lot : lot < 0.22 ? 0.06 + 0.4 * lot : lot < 0.74 ? 0.2 + 0.5 * (lot - 0.22) : 0.46 + 1.0 * (lot - 0.74);
     // A broad blade is a short one.
-    const length = hank.length * (0.55 + 0.45 * options.next()) * (1 - 0.35 * smooth(0.3, 0.55, breadth));
+    const length = hank.length * (0.55 + 0.45 * options.next()) * (1 - 0.35 * smooth(0.4, 0.72, breadth));
     const layer = Math.min(1, hank.layer * 0.8 + 0.25 * options.next());
     const twist = 0.7 * (options.next() - 0.5);
     // Most hang by the fall line; one in six lies across its neighbours.
@@ -83,7 +83,7 @@ export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeo
     const amber = Math.max(hank.amber * options.next(), 0.07 * options.next());
     const yEnd = Math.max(0.5, yTop - length);
     // The wall is no one brown: whole masses of the weed, some strides across, lie in the shade of what hangs over them.
-    const mass = 0.4 + 0.6 * smooth(0.32, 0.68, 0.65 * noise2(arc / 17 + 3.1, yTop / 6.5 + 7.7) + 0.35 * noise2(arc / 5 + 1.3, yTop / 2.6));
+    const mass = 0.32 + 0.68 * smooth(0.32, 0.68, 0.65 * noise2(arc / 17 + 3.1, yTop / 6.5 + 7.7) + 0.35 * noise2(arc / 5 + 1.3, yTop / 2.6));
     // Behind the one who hangs there they lie flat on the wall, in its shade.
     const behind = Math.abs(arc) < 2.6 && yTop > options.focus[1] - 7 && yEnd < options.focus[1] + 2.5;
     const v0 = made * rows * 3;
@@ -213,7 +213,7 @@ void main() {
   float thin = smoothstep(0.1, 0.9, vUv.y) * (0.4 + 0.6 * smoothstep(0.2, 0.9, edge + 0.5 * (wr - 0.5)));
   float gold = (0.22 + 0.78 * vTone.y) * thin;
   // From far off the curtain is one dark mass: each frond stands in the shade of the rest, and no day comes through it.
-  vec3 albedo = mix(olive, amber, gold) * (0.7 + 0.6 * wr2) * mix(0.34, 1.0, close);
+  vec3 albedo = mix(olive, amber, gold) * (0.7 + 0.6 * wr2) * mix(0.28, 1.0, close);
   // What lies under other fronds is in their shade; the gap by the midrib is dark.
   float occ = vTone.z * (0.55 + 0.45 * smoothstep(0.0, 0.5, edge + wr - 0.5));
   float rough = 0.74 + 0.2 * wr - 0.2 * bead;
