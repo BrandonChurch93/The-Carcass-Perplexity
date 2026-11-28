@@ -260,8 +260,10 @@ def outputs():
     low_near = ndimage.gaussian_filter(e * dom, 24.0 * px) / (ndimage.gaussian_filter(dom.astype(np.float32), 24.0 * px) + 1e-3)
     shelf_w = 8.0 + SHELF * (1.0 - smooth(0.05, 0.2, low_near)) * smooth(0.3, 0.7, fbm((H, W), np.random.default_rng(SEED + 13), 150 * px, 3))
     d_sea = ndimage.gaussian_filter(np.maximum(-d_shore, 0.0), 1.5 * px)
-    bars = 0.7 + 0.6 * fbm((H, W), np.random.default_rng(SEED + 14), 28 * px, 4)
-    shelf = (1.0 - smooth(0.55 * shelf_w, shelf_w, d_sea)) * (1.0 - 0.4 * d_sea / shelf_w) * bars * (1.0 - keep)
+    bars = 0.55 + 0.9 * fbm((H, W), np.random.default_rng(SEED + 14), 28 * px, 4)
+    # (No shelf is one sheet of one depth: lanes of deeper water cross it at a larger size than its bars.)
+    lanes = 0.5 + 0.5 * smooth(0.3, 0.7, fbm((H, W), np.random.default_rng(SEED + 15), 80 * px, 3))
+    shelf = (1.0 - smooth(0.55 * shelf_w, shelf_w, d_sea)) * (1.0 - 0.5 * d_sea / shelf_w) * bars * lanes * (1.0 - keep)
     b = np.where(dom, 0.3 + 0.7 * (0.07 + 0.93 * e), np.minimum(np.maximum(relief_old[..., 2], 0.21 * np.clip(shelf, 0.0, 1.0)), 0.25))
     # (The strait of the Ribs: the land sheet lets the sea into the low ground there by this height. Its water stays where the
     # old relief had it, so the coast of the strait does not move.)
