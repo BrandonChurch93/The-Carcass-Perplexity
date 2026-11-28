@@ -11,6 +11,8 @@ attribute vec3 aRest;
 attribute vec3 aRestN;
 attribute vec4 aPic;
 attribute float aLimb;
+attribute vec3 aBake;
+varying vec3 vBake;
 varying vec4 vPic;
 varying float vLimb;
 varying vec3 vRest;
@@ -45,6 +47,7 @@ void main() {
   vRestN = aRestN;
   vPic = aPic;
   vLimb = aLimb;
+  vBake = aBake;
   // The mirror image: the same animal upside down under the level of the water.
   if (uMirror > 0.5) p.y = 2.0 * uSea - p.y;
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
@@ -74,6 +77,8 @@ uniform sampler2D tHide;
 uniform sampler2D tHideNh;
 uniform sampler2D tWader;
 uniform sampler2D tWaderA;
+uniform sampler2D tRelief;
+varying vec3 vBake;
 varying vec4 vPic;
 varying float vLimb;
 ${NOISE_GLSL}
@@ -166,17 +171,26 @@ void main() {
     float crease = fbm(q * vec2(23.0, 31.0) + 3.0) - 0.5;
     // Slack skin in folds across the neck where it leaves the chest, and round every joint.
     float joint = exp(-pow((legT - 0.47) / 0.05, 2.0)) + exp(-pow((legT - 0.94) / 0.03, 2.0));
-    float shank = smoothstep(0.42, 0.52, legT);
+    float shank = smoothstep(0.4, 0.66, legT + 0.07 * (blotch - 0.5) + 0.04 * (mottle - 0.5));
     float fold = 0.5 * (vnoise(vec2(dot(vRest.xy, vec2(0.89, 0.45)) * 46.0 + 3.0 * vnoise(q * 7.0), vRest.z * 9.0 + dot(vRest.xy, vec2(-0.45, 0.89)) * 7.0) + seed) - 0.5) * smoothstep(0.02, 0.12, neckU);
-    height = (0.002 * rib * cage + 0.0045 * (swell - 0.5) + 0.0012 * (grain - 0.5) + 0.012 * drape * (1.0 - 0.7 * cage) * (1.0 - 0.8 * shank) + 0.0035 * crease + 0.004 * fold) * mid;
+    // Its own relief, sculpted on its own shape and baked as seen from the side: every rib its own height, the folds where a leg leaves the
+    // trunk, cords and plates down the shank, old scars. Read at the size a pixel covers here, so it asks nothing of the pixels beside it.
+    float flank = smoothstep(0.1, 0.42, abs(rn.z)) * vBake.z * (1.0 - uDead);
+    vec3 cut = textureLod(tRelief, vBake.xy, clamp(log2(px / 0.0023), 0.0, 7.0)).rgb;
+    float sculpt = (cut.r - 0.5) * 0.0132 * flank;
+    float open = mix(1.0, min(cut.g / 0.88, 1.15), flank * mid);
+    float scar = cut.b * flank * mid;
+    height = (0.002 * rib * cage * (1.0 - flank) + 0.0045 * (swell - 0.5) + 0.0012 * (grain - 0.5) + 0.012 * drape * (1.0 - 0.7 * cage) * (1.0 - 0.8 * shank) + 0.0035 * crease + 0.004 * fold) * mid + 1.3 * sculpt * mid;
     pale = mix(vec3(0.74, 0.63, 0.58), vec3(0.95, 0.89, 0.82), smoothstep(0.2, 0.65, blotch)) * (0.84 + 0.32 * mottle) * clamp(told, 0.0, 2.0);
     albedo = pale * (0.78 + 0.22 * crack) * (1.0 + (0.42 * drape + 0.34 * crease + 0.34 * fold) * mid);
-    occ *= 1.0 - 0.14 * between * mid;
+    occ *= (1.0 - 0.14 * between * mid * (1.0 - flank)) * open;
+    albedo *= mix(vec3(1.0), vec3(0.8, 0.66, 0.62), clamp(1.6 * (1.0 - open), 0.0, 1.0));
+    albedo = mix(albedo, vec3(0.6, 0.27, 0.25), 0.6 * scar);
     albedo = mix(albedo, vec3(0.4, 0.4, 0.52), 0.42 * vein * mid * (1.0 - shank));
     // Raw where bone rubs the skin from inside: the points of the hips, the spine, the joints, the end of the neck.
     float bony = smoothstep(0.55, 0.95, rn.y) * (1.0 - step(0.01, legT)) * (1.0 - smoothstep(0.0, 0.1, neckU));
     float sore = smoothstep(0.42, 0.66, mottle) * (0.25 + 0.45 * smoothstep(0.4, 0.65, blotch)) + 0.5 * smoothstep(0.52, 0.7, fbm(q * vec2(1.3, 1.9) + 3.0)) + 0.3 * bony + 0.75 * joint + smoothstep(0.62, 1.0, neckU) * (0.5 + 0.4 * blotch);
-    albedo = mix(albedo, raw, 0.36 * clamp(sore, 0.0, 0.9));
+    albedo = mix(albedo, raw, 0.46 * clamp(sore, 0.0, 0.9));
     albedo = mix(albedo, vec3(0.62, 0.3, 0.28), 0.35 * pimple * smoothstep(0.4, 0.7, mottle));
     // The belly and the legs are splashed grey with silt; the foot is dark horn.
     float belly = smoothstep(-0.3, -0.9, rn.y) * (1.0 - step(0.01, legT)) * (1.0 - step(0.02, neckU));
@@ -192,17 +206,17 @@ void main() {
     float cover = mix(texture2D(tWaderA, vPic.xy).r, texture2D(tWaderA, vPic.zw).r, limb);
     float shown = smoothstep(0.5, 0.95, cover) * smoothstep(0.02, 0.06, dot(shot, vec3(0.333))) * mid * (1.0 - uDead);
     // The picture is of a whole animal and gives out before the lens is close: the sheet of bare skin, pores, creases, veins and blotches, is laid over it.
-    albedo = mix(albedo, mix(shot, dot(shot, vec3(0.333)) * vec3(1.04, 1.0, 0.93), 0.66) * 3.0 * (0.92 + 0.16 * mottle) * mix(vec3(1.0), clamp(told, 0.0, 2.0), 0.8), 0.88 * shown);
+    albedo = mix(albedo, mix(shot, dot(shot, vec3(0.333)) * vec3(1.04, 1.0, 0.93), 0.66) * 3.0 * (0.92 + 0.16 * mottle) * mix(vec3(1.0), clamp(told, 0.0, 2.0), 0.8), 0.88 * shown * (1.0 - 0.6 * vBake.z * (1.0 - limb)));
     // Bare skin with little blood in it: grey cream, the red left to the blotches and the creases.
-    albedo = mix(dot(albedo, vec3(0.3, 0.5, 0.2)) * vec3(1.06, 0.97, 0.93), albedo, 0.7);
-    height = height * (1.0 - 0.3 * shown) + 0.0035 * (dot(shot, vec3(0.333)) - 0.3) * shown * fine;
+    albedo = mix(dot(albedo, vec3(0.3, 0.5, 0.2)) * vec3(1.06, 0.97, 0.93), albedo, 0.7) * vec3(1.16, 1.06, 1.05);
+    height = height * (1.0 - 0.3 * shown) + 0.0035 * (dot(shot, vec3(0.333)) - 0.3) * shown * fine * (1.0 - 0.8 * flank);
     // Below the joint the leg is hard, scaled and grey with silt; the joints are knotted and raw; the foot is dark horn.
     float scaled = vnoise(q * vec2(70.0, 110.0));
-    vec3 shankC = mix(vec3(0.11, 0.095, 0.085), vec3(0.24, 0.2, 0.175), mottle) * (0.55 + 0.9 * scaled);
-    albedo = mix(albedo, shankC, 0.86 * shank * (1.0 - 0.6 * min(joint, 1.0)) * (1.0 - 0.7 * smoothstep(55.0, 140.0, far)));
+    vec3 shankC = mix(vec3(0.4, 0.3, 0.27), vec3(0.64, 0.52, 0.47), mottle) * (0.7 + 0.6 * scaled);
+    albedo = mix(albedo, shankC, 0.6 * shank * (1.0 - 0.6 * min(joint, 1.0)) * (1.0 - 0.7 * smoothstep(55.0, 140.0, far)));
     // The skin over a joint is slack and creased across the leg.
-    float knuckle = vnoise(vec2(legT * 150.0, q.x * 12.0 + seed));
-    albedo = mix(albedo, vec3(0.52, 0.2, 0.17) * (0.5 + 0.95 * knuckle), 0.7 * min(joint, 1.0));
+    float knuckle = vnoise(vec2(legT * 60.0, q.x * 30.0 + seed));
+    albedo = mix(albedo, vec3(0.56, 0.25, 0.22) * (0.75 + 0.5 * knuckle), 0.6 * min(joint, 1.0));
     height += 0.003 * (knuckle - 0.5) * min(joint, 1.0) * mid;
     albedo = mix(albedo, vec3(0.07, 0.055, 0.05) * (0.7 + 0.6 * crack), horn);
     height += 0.0016 * (scaled - 0.5) * shank * fine;
@@ -213,15 +227,15 @@ void main() {
     // Above it the leg has dried: salt in patches where the water stood, and pale silt caked on the shank above the salt. Only on those
     // that stand in the water or by it.
     float up = vWorld.y - uSea;
-    float along = legT + 0.05 * (blotch - 0.5) + 0.015 * (scaled - 0.5);
+    float along = legT + 0.05 * (blotch - 0.5) + 0.015 * (scaled - 0.5) + 0.09 * (vnoise(vec2(vRest.x * 80.0 + vRest.z * 67.0, seed)) - 0.5);
     float leg = smoothstep(0.3, 0.42, legT) * (1.0 - horn);
-    float below = smoothstep(0.775, 0.805, along) * smoothstep(0.95, 0.6, up);
+    float below = smoothstep(0.7, 0.9, along) * smoothstep(0.95, 0.6, up);
     wet = leg * below;
     float dry = leg - wet;
-    albedo = mix(albedo, vec3(0.46, 0.42, 0.36) * (0.7 + 0.6 * scaled), 0.62 * dry * smoothstep(1.3, 0.5, up) * (0.4 + 0.6 * mottle));
+    albedo = mix(albedo, vec3(0.6, 0.54, 0.48) * (0.7 + 0.6 * scaled), 0.34 * dry * smoothstep(1.3, 0.5, up) * (0.4 + 0.6 * mottle));
     float salt = smoothstep(0.66, 0.76, along) * smoothstep(1.3, 0.8, up) * smoothstep(0.42, 0.7, 0.6 * blotch + 0.4 * scaled + 0.3 * crack);
     albedo = mix(albedo, vec3(0.78, 0.76, 0.71), 0.6 * dry * salt);
-    albedo *= 1.0 - 0.45 * wet;
+    albedo *= 1.0 - 0.2 * wet;
     wet = max(wet, smoothstep(0.3, 0.42, legT) * horn * smoothstep(0.95, 0.6, up));
     thin = mix(0.5, 0.75, smoothstep(0.1, 0.5, neckU)) * (1.0 - 0.3 * shank);
     // The back is damp with the breath of the shaft: it takes a sheen from the low sun.
@@ -353,7 +367,7 @@ void main() {
     rough = 0.92;
     thin *= 0.3;
   }
-  albedo *= 1.0 - (0.62 - 0.44 * tendril) * wet;
+  albedo *= 1.0 - (0.62 - 0.44 * tendril - 0.3 * whole) * wet;
   rough = mix(rough, mix(0.22, max(rough, 0.45), tendril), wet);
   // The slope is taken for every pixel, not behind a test that differs from one pixel to the next.
   vec3 turned = relief(vWorld, n, height);
@@ -372,7 +386,7 @@ void main() {
   vec3 flat_ = normalize(vec3(uSunDir.x, 0.0, uSunDir.z));
   // Far off across the bright shallows the light comes at them from the water and the vapour on every side: they are pale there, not cut-outs.
   float across = smoothstep(55.0, 140.0, far) * (1.0 - uVeiled.z);
-  float fogLight = 0.5 * max(0.05, mix(0.54, 0.4, smoothstep(22.0, 110.0, far)) + 0.34 * dot(n, flat_) + 0.08 * n.y) * (1.0 + 2.2 * across);
+  float fogLight = 0.5 * max(0.05, mix(0.54, 0.4, smoothstep(22.0, 110.0, far)) + 0.34 * dot(n, flat_) + 0.08 * n.y) * (1.0 + 3.0 * across);
   vec3 fogColour = skyIrradiance(normalize(flat_ + vec3(0.0, 0.4, 0.0))) * vec3(1.14, 1.0, 0.86) / 3.14159;
   colour += albedo * (uSunColour * (0.2 * wrap * wrap + 3.0 * (1.0 - 0.3 * tendril) * halo * halo * halo) + fogColour * (4.9 * (1.0 - 0.45 * tendril) * fogLight * (1.0 + 1.2 * (1.0 - lit)))) * (occ * (0.7 + 0.3 * lit) * (1.0 - 0.6 * uDead));
   // Thin bare skin against a low sun: the light comes a little way through at the edge of every limb, warm, and the edge reads bright.

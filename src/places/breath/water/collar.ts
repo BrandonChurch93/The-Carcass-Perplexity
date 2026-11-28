@@ -55,7 +55,10 @@ float collarHeight(vec2 away, vec4 src, vec2 drift, float t) {
   float lee = dot(dir, drift);
   // The meniscus: a finger high on the side the stream comes from, half that in the lee, gone a hand out.
   float out0 = max(d - r0, 0.0);
-  float climb = leg * (0.02 + 0.2 * r0) * (1.0 - 0.5 * lee) * exp(-out0 / (0.016 + 0.6 * r0));
+  // While the foot goes in or comes out (the amount is between none and all) the water is thrown up round it: a crown, for those frames only.
+  float event = 4.0 * src.y * (1.0 - src.y);
+  float climb = leg * (0.02 + 0.2 * r0) * (1.0 - 0.5 * lee) * exp(-out0 / (0.016 + 0.6 * r0)) * (1.0 + 2.5 * event);
+  climb += leg * event * 0.03 * exp(-abs(out0 - 0.07) / 0.03) * (0.6 + 0.4 * sin(5.0 * atan(dir.y, dir.x) + src.w));
   // The rings. The older a ring the further the stream and the wind have carried its middle, so the rings are not round the leg but
   // crowd upstream of it and open out in the lee. The long ones outrun the short ones.
   vec2 from = away - drift * (0.22 * d);
@@ -70,7 +73,19 @@ float collarHeight(vec2 away, vec4 src, vec2 drift, float t) {
   float ring = 0.02 * fade * packet * part * (1.0 + cos(turn));
   // Under a mop and close round it the strands work the water: a short steep chop that goes nowhere.
   float chop = (1.0 - leg) * (1.0 - smoothstep(0.7 * r0, 1.7 * r0, d)) * 0.0028 * (2.0 + sin(47.0 * away.x + 9.0 * t + src.w) * sin(41.0 * away.y - 7.5 * t) + sin(29.0 * (away.x + away.y) - 11.0 * t + 2.0 * src.w));
-  return src.y * (climb + ring + chop);
+  // The strands of a mop dab at the water, each in its own time: small quick rings from several places under it that cross each other.
+  float dabs = 0.0;
+  if (leg < 0.5) {
+    for (int i = 0; i < 3; i++) {
+      float fi = float(i);
+      vec2 at = 0.9 * r0 * vec2(cos(2.1 * fi + src.w), sin(2.1 * fi + 1.3 * src.w));
+      float q = length(away - at - drift * (0.1 * d));
+      float beat = 0.5 + 0.5 * sin(t * (1.9 + 0.7 * fi) + 2.0 * fi + src.w);
+      dabs += beat * exp(-q / 0.45) * (1.0 + cos(44.0 * q - (13.0 + 2.0 * fi) * t + 2.4 * fi));
+    }
+    dabs *= 0.007 * (1.0 - smoothstep(0.5 * reach, 0.94 * reach, d));
+  }
+  return src.y * (climb + ring + chop + dabs);
 }`;
 
 export const COLLAR_VERTEX = /* glsl */ `
@@ -103,14 +118,14 @@ void main() {
   }
   float r0 = c.z;
   float leg = 1.0 - smoothstep(0.07, 0.12, r0);
-  float reach = mix(2.4, 2.0, leg);
+  float reach = mix(2.0, 1.5, leg);
   // The disc begins inside the leg, where the leg hides it; under a mop it is whole.
   float inner = 0.5 * r0 * leg;
   float d = inner + (reach - inner) * pow(position.x, 1.6);
   vec2 away = d * vec2(cos(position.y), sin(position.y));
   vec2 vel = textureLod(tLines, (c.xy - uFlowRect.xy) * uFlowRect.zw, 0.0).gb + 0.1 * uWind;
   vDrift = vel / max(length(vel), 0.22);
-  vSrc = vec4(r0, c.w * near, reach, 17.0 * c.x + 11.0 * c.y);
+  vSrc = vec4(r0, c.w * near, reach, 3.7 * c.x + 2.9 * c.y);
   vAway = away;
   vFade = (1.0 - smoothstep(0.6 * reach, 0.97 * reach, d)) * near;
   vWorld = vec3(c.x + away.x, uSea + collarHeight(away, vSrc, vDrift, uTime), c.y + away.y);

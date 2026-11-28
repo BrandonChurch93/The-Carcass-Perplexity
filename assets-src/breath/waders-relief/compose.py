@@ -43,6 +43,8 @@ def spread(img, have, rounds=24):
         fill = (have < 0.5) & (n > 0)
         img[fill] = acc[fill] / n[fill][:, None]
         have = np.where(fill, 1.0, have).astype(np.float32)
+    # Beyond that nothing is read: one flat value, which costs the file nothing.
+    img[have < 0.5] = (0.5, 0.88, 0.0)
     return img
 
 tiles = []

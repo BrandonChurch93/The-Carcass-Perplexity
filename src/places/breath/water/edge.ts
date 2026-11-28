@@ -200,17 +200,21 @@ void main() {
   // Froth gathers where the stream lays it against the bank: thick in the lee of a stone or a bar, none on a clean reach.
   vec2 fu = (xz + out2 * 0.7 - uFlowRect.xy) * uFlowRect.zw;
   float lee = min(textureLod(tCarried, fu, 0.0).g * 2.0, 1.0);
-  float left = smoothstep(-0.02, -0.004, up) * (1.0 - smoothstep(0.004, 0.02 + 0.016 * lee, up));
+  float left = smoothstep(-0.02, -0.004, up) * (1.0 - smoothstep(0.004, 0.004 + (0.03 + 0.03 * lee) * vnoise(xz * 3.3 + 5.0), up));
   // Above the wet the water has left its salts as it dried: a pale crust, a broken line a finger wide along the top of the wet.
-  float crust = smoothstep(reach - 0.012, reach + 0.004, up) * (1.0 - smoothstep(reach + 0.012, reach + 0.045, up)) * (1.0 - smoothstep(0.1, 0.3, vOut.z));
+  // Far off a finger of crust is less than a pixel and the eye still has the pale line along the bank: the band is as wide as can be seen.
+  float wide = 1.0 + min(far, 90.0) / 12.0;
+  float crust = smoothstep(reach - 0.012, reach + 0.004, up) * (1.0 - smoothstep(reach + 0.012 * wide, reach + 0.045 * wide, up)) * (1.0 - smoothstep(0.1, 0.3, vOut.z));
   // Most of the skin is dry rock above all of these: it is left before any light is worked out.
   if (film + wet + front + left + crust <= 0.0) discard;
   float fine = vnoise(xz * 31.0);
   float mid = vnoise(xz * 9.0 + 1.0);
   float bits = smoothstep(0.38, 0.62, fine * 0.6 + mid * 0.4);
   if (left > 0.0) left *= smoothstep(0.62 - 0.35 * lee, 0.8, vnoise(xz * 1.3 + 2.0) * 0.45 + mid * 0.3 + fine * 0.25);
-  if (crust > 0.0) crust *= smoothstep(0.4, 0.6, vnoise(xz * 2.1 + 7.0) * 0.4 + mid * 0.35 + fine * 0.25);
-  float froth = clamp(front * bits * (0.25 + 0.75 * rising) + left * (0.3 + 0.7 * lee), 0.0, 1.0);
+  // In grains and scabs, not a line: a crust of one width in even dashes read as drawn round every low stone.
+  if (crust > 0.0) crust *= smoothstep(0.42, 0.7, vnoise(xz * 2.1 + 7.0) * 0.3 + vnoise(xz * 5.3 + 2.0) * 0.25 + mid * 0.2 + fine * 0.25) * (0.3 + 0.7 * bits);
+  // What lies along the line is foam in bits, thick only where the stream lays it: a line of one width in even dashes read as drawn.
+  float froth = clamp(front * bits * (0.08 + 0.6 * rising) * smoothstep(0.3, 0.75, vnoise(xz * 57.0 + 3.0)) + left * (0.12 + 0.75 * lee) * (0.35 + 0.65 * bits), 0.0, 1.0);
 
   vec3 v = toEye / far;
   // A wet face is the rock's own face smoothed by the film on it; the film itself lies level.
@@ -241,8 +245,8 @@ void main() {
   vec3 pale = vec3(0.62, 0.59, 0.52) * (skyUp * open + uSunColour * (0.22 * sun));
   colour = mix(colour, pale, 0.8 * froth);
   alpha = mix(alpha, 1.0, 0.8 * froth);
-  colour = mix(colour, pale, 0.55 * crust);
-  alpha = mix(alpha, 1.0, 0.55 * crust);
+  colour = mix(colour, pale, 0.45 * crust);
+  alpha = mix(alpha, 1.0, 0.45 * crust);
   // Gone far off, where a hand of wet rock is less than a pixel.
   float keep = (1.0 - sheet) * inland * (1.0 - smoothstep(110.0, 170.0, far)) * (1.0 - uSolo);
   gl_FragColor = vec4(colour * keep, alpha * keep);
