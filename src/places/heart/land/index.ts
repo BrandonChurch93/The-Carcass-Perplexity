@@ -95,10 +95,6 @@ export function create(ctx: HeartContext): HeartPiece {
     { cell: [1.3, 0.9, 1.3], depth: 0.5, seed: 7 },
     { cell: [0.42, 0.3, 0.42], depth: 0.14, seed: 29 },
   ];
-  const WALL_JOINTS: Joints[] = [
-    { cell: [26, 40, 26], depth: 4.5, seed: 3 },
-    { cell: [10, 16, 10], depth: 2, seed: 11 },
-  ];
   // Where the long lenses look the face is broken once more, into clefts and ledges of some strides, and every joint of it is a dark crease:
   // forms large enough to stand through the air and a lens focused far in front of them.
   const FACE_JOINTS: Joints[] = [
@@ -182,7 +178,7 @@ export function create(ctx: HeartContext): HeartPiece {
   const buttressAll = ribs(buttressHeight, across, 230, 0.6, 0.2, [1.6, 5, 16]);
   trim(buttressAll, -1.2);
   // Its cliffs and its table are broken as the wall's are; the talus against its foot is not.
-  fracture(buttressAll, WALL_JOINTS, (_x, y, _z, ny) => unit01((y - 20) / 25) * Math.max(unit01((0.75 - ny) / 0.25), unit01((y - 70) / 30)));
+  fracture(buttressAll, FACE_JOINTS, (_x, y, _z, ny) => unit01((y - 20) / 25) * Math.max(unit01((0.75 - ny) / 0.25), unit01((y - 70) / 30)));
   const buttressFaces = byFace(buttressAll, { FAR_LIGHT: '', BUTTRESS: '' });
 
   // The bench: 4 m where no camera goes, 1 m round the route, 0.35 m where the camera comes down to it.
