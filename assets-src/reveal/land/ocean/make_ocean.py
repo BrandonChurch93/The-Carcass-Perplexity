@@ -133,6 +133,11 @@ for a0, length, width, high, off, longer, wider in ISLES:
 # end of the body past the frame of the titan. x, y, length, width (master px), height, turn (degrees).
 LOW = [
     (3990, 95, 150, 70, 0.34, 20), (4200, 160, 70, 44, 0.26, -30), (3790, 40, 60, 36, 0.22, 60),
+    # (From amount D a land at the top edge of the titan's frame, right of where the upper hand points, most of it above the frame;
+    # and one beyond the storm, below and right of it, that the pull back uncovers.)
+    *([(3950, 30, 620, 330, 0.62, 12), (4420, 90, 600, 300, 0.7, -14), (4130, 200, 320, 160, 0.5, 25), (4800, -120, 560, 320, 0.55, 30),
+       (4790, 150, 380, 180, 0.5, -8),
+       (5400, 4030, 900, 520, 0.7, -15), (6050, 3960, 800, 460, 0.6, 20), (6600, 3700, 700, 420, 0.62, 50), (5750, 4350, 1100, 500, 0.66, 5)] if MAIN else []),
     (5640, 215, 150, 70, 0.36, -25), (5850, 415, 90, 50, 0.28, 30), (5545, 455, 54, 38, 0.24, 70), (5760, 610, 40, 30, 0.2, 10),
     (6230, 1650, 150, 70, 0.3, 70), (6120, 1950, 70, 44, 0.22, 20), (6400, 1380, 80, 40, 0.2, -40),
 ]
@@ -228,7 +233,7 @@ slope_y = np.clip(0.5 + 0.5 * gy * RISE / 1.6, 0.0, 1.0)
 land_map = np.stack([slope_x, slope_y, blue], axis=-1)
 
 # ---- ocean-bed red: the sea bed ----
-bed = 0.27 + 0.15 * fbm(1500, 4, 51) + 0.04 * fbm(300, 4, 52, ridged=True)
+bed = 0.215 + 0.15 * fbm(1500, 4, 51) + 0.04 * fbm(300, 4, 52, ridged=True)
 # (The floor climbs to the body from far out, on one side early and on another late.)
 bed += 0.17 * np.exp(-body_px / (200.0 * (0.4 + 1.2 * sstep(-1.0, 1.0, fbm(1100, 2, 53)))))
 # (The deepest basin lies west of the skull, which stands out of it alone, and another off the far coast's shelf.)
@@ -258,8 +263,11 @@ bed = np.maximum(bed, np.minimum(1.15 * np.exp(-(land_px / (150.0 + 130.0 * sste
 bed = blur(bed.astype(np.float32), 3.0)
 
 # ---- ocean-bed blue: the ice. A pack off the far coast, widest in its bays; floes, and leads that widen to its margin ----
-ice_reach = (175.0 + 55.0 * fbm(420, 3, 41) + 24.0 * fbm(110, 3, 42)) * ICE
+# (Wide in some reaches and a fringe in others: a band of one width along a coast reads as a drawn line.)
+ice_reach = (230.0 + 330.0 * sstep(-0.35, 0.5, fbm(900, 3, 41)) + 24.0 * fbm(110, 3, 42)) * ICE
 pack = 1.0 - (inside - reach) / np.maximum(ice_reach, 30.0) - 3.0 * (1.0 - ends)    # over 0 inside the pack, 1 at the coast
+# (No ice drifts toward the body: the open water round it stays open.)
+pack = pack - 2.0 * (1.0 - sstep(400.0, 700.0, body_px)) * (1.0 - is_land)
 
 
 def floes(spacing, seed):
@@ -280,22 +288,35 @@ def floes(spacing, seed):
 
 
 lead_big, rnd_big = floes(44.0, 71)
+lead_huge, rnd_huge = floes(125.0, 70)
+lead_giant, rnd_giant = floes(290.0, 69)
 lead_small, rnd_small = floes(16.0, 72)
 loose = sstep(0.75, 0.0, pack)                       # how far toward the margin: there the floes part and thin out
+# (Not evenly: here the pack is driven together, there it lies open.)
+loose = np.clip(loose * (1.0 + 0.9 * fbm(330, 3, 79)) + 0.25 * sstep(0.1, 0.9, fbm(330, 3, 79)) * sstep(1.0, 0.6, pack), 0.0, 1.0)
 # (The margin is torn by the swell at every size: tongues and bights of some tens of km, and the floes themselves.)
-there = sstep(0.0, 0.1, pack + 0.55 * (rnd_small - 0.5) * loose + 0.3 * fbm(260, 5, 73, gain=0.62) + 0.22 * loose * fbm(34, 3, 74))
+# (Its seaward edge is hard and runs along the sides of the rafts: a cloud bank has no such edge.)
+there = sstep(0.0, 0.025, pack + 1.2 * (rnd_giant - 0.5) * loose + 0.5 * (rnd_huge - 0.5) * loose + 0.16 * fbm(260, 5, 73, gain=0.62))
 # (Leads in master px: hair lines in the sheet, open water between the floes of the margin.)
-part_big = sstep(0.1, 0.7, loose)
-part_small = np.clip((loose - 0.25) / 0.75, 0.0, 1.0)
+part_big = 0.5 * sstep(0.1, 0.7, loose)
+part_small = 0.3 * np.clip((loose - 0.25) / 0.75, 0.0, 1.0)
 ice = there * sstep(-2.0 + 3.4 * part_big, 0.3 + 3.7 * part_big, lead_big * S) * sstep(-1.5 + 3.6 * part_small, 0.2 + 4.2 * part_small, lead_small * S)
+# (The largest floes are tens of km across and the water between them is wide and dark: what says ice from far off.)
+ice *= sstep(-1.0 + 9.0 * loose, 1.0 + 16.0 * loose, lead_huge * S)
+# (And those drift apart in rafts a few hundred km across with open sea between: the margin seen from the far orbit.)
+ice *= sstep(-2.0 + 14.0 * loose * (0.4 + 0.6 * rnd_giant), 2.0 + 30.0 * loose * (0.4 + 0.6 * rnd_giant), lead_giant * S)
 # (The sheet itself is whole but for a few long fractures, and it is not one white: old ice is thicker than new.)
 crack = np.minimum(np.abs(fbm(420, 5, 75, gain=0.55)), np.abs(fbm(300, 5, 76, gain=0.55)) + 0.02 * loose)
-ice *= 1.0 - 0.8 * (1.0 - sstep(0.004, 0.03, crack)) * sstep(0.1, 0.4, pack)
+ice *= 1.0 - 0.8 * (1.0 - sstep(0.008, 0.05, crack)) * sstep(0.1, 0.4, pack)
 ice *= 0.72 + 0.28 * sstep(-1.0, 1.0, fbm(190, 4, 77))
-# (The sheet lies on over the far land to the planet's edge: only some headlands of its coast stand bare. No ice on the islands.)
+# (The sheet lies on over the far land to the planet's edge. No ice on the islands.)
 on_far = is_land & (far_land >= isle)
-# (On the sea it is young and thin, a blue grey skin with some thicker floes in it: the white is on the land.)
-ice = np.where(on_far, ice * sstep(-30.0, 90.0, reach - inside + 70.0 * fbm(240, 4, 78)), ice * (1.0 - is_land) * (0.42 + 0.3 * rnd_big * sstep(0.2, 0.9, pack)))
+# (On the sea each floe has its own age: some a blue grey skin, some old and white.)
+# (Where the far land faces the body no pack lies off it: there the sheet stops short of the shore and a strip of bare rock
+# gives it its edge.)
+coast_px = cv2.distanceTransform(is_land.astype(np.uint8), cv2.DIST_L2, 5) * S
+bare = (1.0 - sstep(600.0, 900.0, body_px)) * (1.0 - sstep(0.0, 14.0, coast_px - 45.0 - 50.0 * fbm(240, 4, 78) - 30.0 * rnd_huge))
+ice = np.where(on_far, ice * (1.0 - bare), ice * (1.0 - is_land) * (1.0 - (0.2 + 0.4 * sstep(0.0, 0.6, loose)) * (1.0 - rnd_huge ** 0.7 * (0.6 + 0.4 * rnd_big))))
 cold = sstep(-2.6, 0.2, pack) * (1.0 - is_land)
 ice_map = np.where(ice > 0.02, 0.5 + 0.5 * ice, 0.45 * cold * (1.0 - ice / 0.02))
 
