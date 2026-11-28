@@ -38,6 +38,11 @@ uniform vec3 uDeckEdge;
 uniform vec3 uScud;
 uniform vec3 uBreakWarm;
 uniform float uMirrorLift;
+// The deck's gate and the shade under it, worked out once a frame (rig.ts): what the gaps give the break is uDeckGate.x + uDeckGate.y of the
+// gaps' own edge, which runs from 0 to 1 over uDeckGate.z of the mask from -uDeckGate.w / uDeckGate.z; the sky's light under the deck is
+// uDeckUnder.x + uDeckUnder.y of the cloud's shade.
+uniform vec4 uDeckGate;
+uniform vec2 uDeckUnder;
 uniform vec4 uHeads;
 uniform vec3 uSkyZenith;
 uniform vec3 uSkyHorizon;
@@ -124,7 +129,8 @@ float deckCover(vec2 q, float level) {
   float along = dot(d, uSunDir.xz);
   float along2 = dot(e, uSunDir.xz);
   float wide = uCloudBreak.w * exp(-(dot(d, d) - 0.84 * along * along / sun2) * uCloudBreak.z);
-  float gate = mix(1.0, uDeck.x + uDeck.y * smoothstep(uDeckEdge.x, uDeckEdge.y, m.b), uDeck.z);
+  float t = clamp(m.b * uDeckGate.z + uDeckGate.w, 0.0, 1.0);
+  float gate = uDeckGate.x + uDeckGate.y * (t * t * (3.0 - 2.0 * t));
   return m.r * 0.62 + (wide > 0.0 ? wide * gate : wide) + uCloudBreak2.w * exp(-(dot(e, e) - 0.94 * along2 * along2 / sun2) * uCloudBreak2.z);
 }
 float cloudCover(vec2 q) {
@@ -166,6 +172,7 @@ vec3 domeTone(vec3 c, vec3 d, float el, float mirror) {
   float s = max(dot(d, uSkyBreak), 0.0);
   float s2 = s * s;
   float near = s2 * s2;
+  float glow = near * near;
   near = near * near * near;
   near *= near;
   // Water is ruffled: what mirrors the sky sees the break wider and its white less shut (mirror toward 1) than the dome shows them (0).
@@ -177,7 +184,6 @@ vec3 domeTone(vec3 c, vec3 d, float el, float mirror) {
   c *= mix(1.0 - shut * smoothstep(0.2, 0.7, grey), 1.0 + uDome.z * (1.0 + uMirrorLift * mirror), near);
   // The break is where the low sun comes through: the cloud round it and the air under it take the sun's warmth, widely and
   // faintly, and the rest of the sky keeps its slate.
-  float glow = s2 * s2 * s2 * s2;
   vec3 warm = mix(vec3(1.0), uBreakWarm, glow);
   float veil = 1.0 - exp(-uDome.y / max(d.y, 0.008));
   return uDome.x * warm * mix(c, uHaze * (0.85 + 0.5 * s2 * s2), veil);
@@ -271,7 +277,7 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   float sun = sunBaked(p, land) * gap * occ;
   // Under the shut deck the sky itself is the storm's: a surface takes uDeck.w of the sky's light there, and all of it where a gap
   // stands over it. This is what lays the lit patches beside real shade: the sky's even light was most of what a blade showed.
-  float under = mix(uDeck.w, 1.0, (gap - uCloudShade.w) / (1.0 - uCloudShade.w));
+  float under = uDeckUnder.x + uDeckUnder.y * gap;
   // What stands high stands in the light of the break itself, which is wide: there the light goes round a blade past its edge
   // (six tenths of the way), so its round shows from the lit side to the shade.
   float wide = 0.6 * smoothstep(uHeads.x, uHeads.y, p.y);

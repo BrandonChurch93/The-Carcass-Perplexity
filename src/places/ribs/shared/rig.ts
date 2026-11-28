@@ -454,6 +454,16 @@ export function createRig(): Rig {
   const breakWarm = new THREE.Vector3(1, 1, 1);
   const mirrorLift = { value: 0 };
   const deckEdge = new THREE.Vector3(DECK.from, DECK.to, DECK.dome);
+  const gate = new THREE.Vector4(1, 0, 1, 0);
+  const underAt = new THREE.Vector2(1, 0);
+  /** What every lit pixel would otherwise work out for itself from the deck's numbers. */
+  const deckOnce = (): void => {
+    const k = 1 / (deckEdge.y - deckEdge.x);
+    gate.set(1 - deck.z + deck.z * deck.x, deck.z * deck.y, k, -deckEdge.x * k);
+    const span = (1 - deck.w) / (1 - cloudShade.w);
+    underAt.set(deck.w - span * cloudShade.w, span);
+  };
+  deckOnce();
   const skyBreak = new THREE.Vector3();
   const skyTurn = new THREE.Vector4(0, 0, 0, 0);
   const dome = new THREE.Vector4(DOME.gain, DOME.veil, DOME.lift, DOME.shut);
@@ -544,6 +554,9 @@ export function createRig(): Rig {
     uCloudShade: { value: cloudShade },
     // The deck's gaps: what the break is given where they are shut, what over that where one is open, how far they cut the break; and the edge of a gap.
     uDeck: { value: deck },
+    // The same, worked out once a frame for the shaders (glsl.ts, deckCover and rigShade).
+    uDeckGate: { value: gate },
+    uDeckUnder: { value: underAt },
     uDeckEdge: { value: deckEdge },
     // The sky after the storm, scene linear: slate overhead, pale and a little warm at the horizon where the cloud is thin.
     uSkyZenith: { value: skyZenith },
@@ -737,6 +750,7 @@ export function createRig(): Rig {
         skyGround.multiplyScalar(dim);
         haze.multiplyScalar(dim);
       }
+      deckOnce();
     },
     beforeSample: (renderer, camera) => {
       if (!grid) bake();
