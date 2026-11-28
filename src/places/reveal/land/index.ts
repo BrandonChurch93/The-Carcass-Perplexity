@@ -10,7 +10,7 @@ import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 import { WEATHER_GLSL } from '../shared/weather';
 import { LEVELS, pairFor, type Level } from './levels';
 import { OCEAN_GLSL, oceanUniforms } from './ocean';
-import { BODY_BIAS, BODY_CAST, BODY_COARSE, BODY_GROUND, BODY_LIGHT, BODY_PILE, BODY_PILE_END, BODY_READ, BODY_UNIFORMS, BODY_WET } from './body';
+import { BODY_BIAS, BODY_CAST, BODY_COARSE, BODY_GROUND, BODY_LIGHT, BODY_PAN, BODY_PILE, BODY_PILE_END, BODY_READ, BODY_UNIFORMS, BODY_WET } from './body';
 
 // The window of the first approved picture in the master (references/approved/7-reveal/pullback.json): the bed map covers it.
 const BED = { x: 1126.18, y: 1498.28, w: 293.34, h: 165.09 };
@@ -24,7 +24,7 @@ const FEEDER: [number, number][] = [[1224.0, 1440.0], [1226.8, 1468.5], [1221.0,
 const BODY_RELIEF = Number(import.meta.env.VITE_BODY_RELIEF ?? 1.6);
 const BODY_SHADOW = Number(import.meta.env.VITE_BODY_SHADOW ?? 1.0);
 const BODY_FINE = Number(import.meta.env.VITE_BODY_FINE ?? 0.7);
-const BODY_NIGHT = Number(import.meta.env.VITE_BODY_NIGHT ?? 0.028);
+const BODY_NIGHT = Number(import.meta.env.VITE_BODY_NIGHT ?? 0.018);
 
 export const PARTS = ['sea', 'continent', 'salt', 'lake', 'lava'] as const;
 
@@ -687,6 +687,7 @@ ${BODY_GROUND}
   // and into the sea, in streaks drawn along the fall of the land.
   vec2 fromPan = xz - uSalt;
   float panAt = dot(fromPan, fromPan) < 90000.0 ? (1.0 - smoothstep(0.6, 1.15, length(fromPan / vec2(212.0, 168.0)) + 0.36 * (readTile(uCloudTile, xz / 420.0, 1.0 / 420.0, 1.0).b - 0.5))) * land : 0.0;
+${BODY_PAN}
   float brine = smoothstep(0.17, 0.42, rawBrine);
   float saltFlat = panAt * (1.0 - brine);
   // (Salt in the air of the land round it: white where it is new, grey and tan where the crust is old or wet, never a blank.)
@@ -1028,29 +1029,9 @@ ${BODY_CAST}
   bed = mix(bed, vec3(0.01, 0.06, 0.07) * (0.55 + 0.75 * shelf), 0.88 * shelf);
   // The red of the pan carried out to sea: sediment in the water, thinning as it goes.
   bed = mix(bed, vec3(0.3, 0.06, 0.02), 0.85 * plume * (1.0 - land));
-  // (South of it, round the lower leg, the currents carry ochre silt: long curling threads of it, drawn out by the water.)
+  // (South of it, round the lower leg, three rivers reach the sea and the current carries their silt away: land/ocean.ts.)
 #ifdef ORBIT
-  vec2 fromSilt = (xz - uSalt - vec2(240.0, 350.0)) / vec2(760.0, 400.0);
-  float siltAt = exp(-dot(fromSilt, fromSilt)) * smoothstep(680.0, 1100.0, uViewKm);
-  if (siltAt > 0.05 && land < 1.0) {
-    vec2 sc = xz / 520.0 + 0.5 * (readTile(uCloudTile, xz / 900.0 + vec2(0.2, 0.7) + uTime * vec2(0.0006, -0.0004), 1.0 / 900.0, 1.0).rg - 0.5);
-    float thread = readTile(uCloudTile, sc * vec2(0.8, 1.7) + vec2(0.4, 0.1), 1.7 / 520.0, 0.5).b;
-    // (The currents wind it into plumes: soft threads of unlike width and strength that curl, part and thin out to sea, some reaches clear.)
-    vec2 calm = xz / 300.0 + uTime * vec2(0.0008, -0.0005);
-    vec2 wound = calm * vec2(1.0, 1.7);
-    wound += 0.9 * vec2(vnoise(wound * 1.3 + 3.0), vnoise(wound * 1.3 + 41.0));
-    wound += 0.3 * vec2(vnoise(wound * 3.3 + 7.0), vnoise(wound * 3.3 + 19.0));
-    float wide = 1.0 - abs(2.0 * vnoise(wound * 2.1) - 1.0);
-    float fine = 1.0 - abs(2.0 * vnoise(wound * 4.7 + 13.0) - 1.0);
-    float reach = smoothstep(0.2, 0.62, vnoise(calm * 0.9 + 8.0));
-    // (Each has a dense core and a skirt of thinner water, and its strength comes and goes along its length: silt, not a line.)
-    float along = 0.25 + 0.75 * smoothstep(0.3, 0.7, vnoise(wound * 1.1 + 23.0));
-    float core = smoothstep(0.6, 0.97, wide);
-    float swirl = (0.45 * core + 0.85 * core * core) * reach * along;
-    core = smoothstep(0.6, 0.98, fine);
-    swirl += 0.38 * core * core * (1.0 - 0.6 * reach) * smoothstep(0.3, 0.6, thread);
-    bed = mix(bed, vec3(0.24, 0.15, 0.028), min(0.7, 0.75 * min(1.0, 1.6 * siltAt) * swirl) * exp(min(coastKm, 0.0) / 420.0) * (1.0 - land));
-  }
+  bed = oceanSilt(bed, seaBed, seaSeen * (1.0 - land));
 #endif
   // The lake of the Eye and the pools beside it, one water: its colour is its depth and what stands in it. Deep navy over the
   // deep, darkest far from any shore; a shelf at the shore where the bed shows through, grey green; over the shelf the silt the
@@ -1194,7 +1175,7 @@ ${BODY_CAST}
     water = mix(water, vec3(dot(water, vec3(0.3, 0.55, 0.15))) * vec3(0.8, 0.96, 1.2), 0.8 * uEmber.x);
   }
 #ifdef ORBIT
-  water = oceanOther(water, seaLand, seaBed, light, xz, seaSeen);
+  water = oceanOther(water, seaLand, seaBed, light, glare, xz, mu, seaSeen);
 #endif
   // (The air over the glint is bright too: the land that stands in it is seen through that light.)
   // (A hollow is darker than a crest: less of the sky reaches it.)

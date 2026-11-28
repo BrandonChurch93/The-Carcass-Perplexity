@@ -63,8 +63,8 @@ export const BODY_GROUND = /* glsl */ `
 #ifdef BODY
   ground = mix(ground, body, joined);
   // (By night the bones are broad pale ranges under the moon, each in its whole body, as the high ground stands: not their crest lines alone.)
-  float boneBody = joined * land * smoothstep(0.25, 0.45, height) * smoothstep(0.09, 0.24, dot(coarseGround, vec3(0.3, 0.55, 0.15)));
-  ground = mix(ground, vec3(0.62, 0.59, 0.52), 0.75 * uEmber.x * boneBody);
+  float boneBody = joined * land * smoothstep(0.25, 0.45, height) * smoothstep(0.14, 0.32, dot(coarseGround, vec3(0.3, 0.55, 0.15)));
+  ground = mix(ground, vec3(0.62, 0.59, 0.52), 0.35 * uEmber.x * boneBody);
 #endif
 `;
 
@@ -77,6 +77,8 @@ export const BODY_LIGHT = /* glsl */ `
   bodySlope /= mix(1.0, 0.55, lowness * wide);
 #endif
   slope *= mix(1.0, bodySlope, joined);
+  // (The salt of the pan lies damp and dark by night: no pale disc under the moon.)
+  ground *= 1.0 - 0.45 * saltFlat * uEmber.x * joined;
   // (By night the moon lights the ranges in their whole body, broad, as it does the high ground of any land seen from orbit: the
   // body of a bone stands toward it, and the fine relief is a grain on that, not a wire drawing.)
   slope = mix(slope, 0.7 * slope, uEmber.x * joined) - uBodyRelief2.w * boneBody * uEmber.x * normalize(uMoonDir.xz);
@@ -97,5 +99,13 @@ export const BODY_WET = /* glsl */ `
 mix(0.34, 0.045, smoothstep(940.0, 1380.0, uViewKm))
 #else
 0.34
+#endif
+`;
+
+/** The pan of the hips from orbit: salt on the level floor of its basin and no higher, so its shore is the foot of the ranges
+ *  round it, broken by their headlands, and nothing of it lies as a haze on the country beyond. */
+export const BODY_PAN = /* glsl */ `
+#ifdef BODY
+  panAt = mix(panAt, smoothstep(0.3, 0.5, panAt) * (1.0 - smoothstep(0.13, 0.19, height)), joined);
 #endif
 `;
