@@ -403,44 +403,33 @@ void main() {
 }`;
 
 // The edge of the planet. Inside it the air thickens to a blue band; outside it thins into the black within a few tens of kilometres,
-// and behind the black, once the day is over and the exposure opens, a few stars.
+// and behind the black stand the stars (space.ts: points under the mesh of space, not drawn here).
+import { createStars } from './space';
 const EDGE_FRAGMENT = /* glsl */ `
 ${RIG_GLSL}
-${NOISE_GLSL}
 uniform float uWhich;
 varying vec3 vWorld;
 void main() {
   float d = limbShare(vWorld.xz);
   float km = (d - 1.0) * uLimb.z;
   if (uWhich < 0.5) {
-    // space: the black beyond the edge, the last of the air against it, and the stars
+    // space: the black beyond the edge, and the last of the air against it
     float a = smoothstep(-3.0, 3.0, km);
     // (The air stands in layers, each thinner than the one under it: the dense air is one crisp bright blue line a few kilometres
     // deep against the planet, the clear air above it a narrow deeper blue, and the last thin air is all but black.)
     float up = max(km, 0.0);
     vec3 glow = vec3(0.04, 0.3, 1.0) * 0.8 * exp(-up / 6.0) + vec3(0.03, 0.16, 0.8) * 0.16 * exp(-up / 18.0) + vec3(0.02, 0.06, 0.3) * 0.04 * exp(-up / 60.0);
-    vec2 cell = floor(vWorld.xz / 40.0);
-    vec2 within = fract(vWorld.xz / 40.0) - 0.5;
-    float pick = hash12(cell);
-    vec2 off = vec2(hash12(cell + 7.3), hash12(cell + 19.1)) - 0.5;
-    float star = step(0.94, pick) * exp(-dot(within - 0.6 * off, within - 0.6 * off) * 520.0) * (0.25 + 0.75 * hash12(cell + 3.7)) * smoothstep(20.0, 90.0, km);
     vec3 colour = glow * a;
     if (uDusk > 0.0) {
       // The air at the edge keeps the sun longest, on the side the sun went: a twilight arc, warm against the planet and blue above,
-      // and when that has gone a thin line of airglow all round. The stars come out as the exposure opens.
+      // and when that has gone a thin line of airglow all round.
       float sunH = sunHeight(vWorld.xz) + uTerm.w * 0.08;
-      // (The stars stand with the edge of the planet, not with the ground that slides under the drifting camera.)
-      vec2 fixedSky = vWorld.xz - (uLimb.xy - vec2(${X(LIMB.cx).toFixed(3)}, ${Z(LIMB.cy).toFixed(3)}));
-      vec2 cellSky = floor(fixedSky / 40.0);
-      vec2 withinSky = fract(fixedSky / 40.0) - 0.5;
-      vec2 offSky = vec2(hash12(cellSky + 7.3), hash12(cellSky + 19.1)) - 0.5;
-      star = step(0.94, hash12(cellSky)) * exp(-dot(withinSky - 0.6 * offSky, withinSky - 0.6 * offSky) * 520.0) * (0.25 + 0.75 * hash12(cellSky + 3.7)) * smoothstep(20.0, 90.0, km);
       // (Layered as it is seen from orbit: red against the planet, orange, a pale band, and blue above. Held under the opening exposure.)
       float lowSun = uTerm.w * (1.0 - smoothstep(0.05, 0.32, sunH));
       vec3 layers = mix(mix(vec3(0.85, 0.13, 0.03), vec3(1.0, 0.46, 0.12), smoothstep(1.0, 12.0, km)), mix(vec3(0.8, 0.78, 0.7), vec3(0.2, 0.4, 0.95), smoothstep(22.0, 62.0, km)), smoothstep(9.0, 30.0, km));
       vec3 arc = mix(glow, layers * exp(-max(km, 0.0) / 34.0) * 0.5, lowSun) * mix(1.0, sunSeen(sunH - 0.05) + 0.03 * skySeen(sunH), uTerm.w);
       float airglow = exp(-pow((km - 16.0) / 20.0, 2.0));
-      colour = (exposed(arc * uEmber.w * pow(uGain, -0.88) + vec3(0.2, 0.36, 0.8) * 0.0011 * airglow * uDusk) + vec3(0.85, 0.9, 1.0) * star * 0.3 * pow(uGain, 0.45) * (uEmber.y > 3.0 ? min(1.0, uGain / 5.0) : 1.0)) * a;
+      colour = exposed(arc * uEmber.w * pow(uGain, -0.88) + vec3(0.2, 0.36, 0.8) * 0.0011 * airglow * uDusk) * a;
     }
     gl_FragColor = vec4(colour * (1.0 - uSolo), a * (1.0 - uSolo));
     return;
@@ -521,6 +510,7 @@ export function create(ctx: Context): Piece {
   const ring = (inner: number, outer: number): THREE.BufferGeometry =>
     new THREE.RingGeometry(inner * LIMB.r * KM, outer * LIMB.r * KM, 720, 1).rotateX(-Math.PI / 2).translate(X(centre.x), 12, Z(centre.y));
   const edges = [sheet('space', ring(0.995, 4), EDGE_FRAGMENT, { uWhich: { value: 0 } }), sheet('atmosphere', ring(0.9, 1.03), EDGE_FRAGMENT, { uWhich: { value: 1 } }, true)];
+  made.push(createStars(ctx, edges[0] as THREE.Mesh));
 
   return {
     // (As the camera drifts at the end the edge of the planet goes most of the way with it: shared/anchors.ts.)
