@@ -198,7 +198,7 @@ export function create(ctx: HeartContext): HeartPiece {
   const veilRng = ctx.rng('fall/veils');
   for (let k = 0; k < VEILS; k++) {
     const i = DROPS + k;
-    const from = veilRng.range(14, FAN_FROM + 10);
+    const from = veilRng.range(34, FAN_FROM + 10);
     const p = course.at(from);
     const x = p.x - veilRng.range(16, 44);
     const z = p.z + veilRng.range(-6, 6);
@@ -236,14 +236,15 @@ export function create(ctx: HeartContext): HeartPiece {
       const bodyUnder = under(bodyTau);
       const footUnder = under(footTau);
       shared.uFlare.value = (1 + up * (0.6 + 1.4 * Math.exp(-after / 0.9))) * (1 - 0.16 * mouthUnder * (1 - up));
-      shared.uPass.value.set(seconds >= feedFrom && seconds < feedTo ? 1 : 0, 1 - 0.4 * bodyUnder * (1 - up), 0, 0);
+      const feeding = seconds >= feedFrom && seconds < feedTo ? 1 : 0;
+      shared.uPass.value.set(feeding, 1 - 0.4 * bodyUnder * (1 - up), 0, 0);
       for (let i = 0; i < heats.length; i++) (heats[i] as (typeof heats)[number]).strength = 0.8 * (1.25 - 0.5 * under(heatTau[i] as number));
       for (const f of fumes) f.source.strength = f.strength * (1 + 0.25 * Math.sin((6.2832 * seconds) / f.beat + f.phase));
       shared.uSurge.value.set(front, smooth(-LEAD, 0.1, since), smooth(-LEAD, 0, since) * Math.exp(-after / 0.5), course.length);
       // The round light in the mouth also lights the fume before it, so it rises far less than the river's own light on the rim does.
       mouthLight.radiance.copy(base[0] as THREE.Vector3).multiplyScalar((1 + up * (0.2 + 0.5 * Math.exp(-after / 0.9))) * (1 - 0.15 * mouthUnder));
-      bodyLight.radiance.copy(base[1] as THREE.Vector3).multiplyScalar((1 + 0.8 * smooth(bodyAt - 0.3, bodyAt + 0.5, since)) * (1.1 - 0.3 * bodyUnder));
-      footLight.radiance.copy(base[2] as THREE.Vector3).multiplyScalar((1 + 0.9 * smooth(footLightAt - 0.3, footLightAt + 0.6, since)) * (1.1 - 0.3 * footUnder));
+      bodyLight.radiance.copy(base[1] as THREE.Vector3).multiplyScalar((1 + 0.8 * smooth(bodyAt - 0.3, bodyAt + 0.5, since)) * (1.1 - 0.3 * bodyUnder) * (1 + 0.8 * feeding));
+      footLight.radiance.copy(base[2] as THREE.Vector3).multiplyScalar((1 + 0.9 * smooth(footLightAt - 0.3, footLightAt + 0.6, since)) * (1.1 - 0.3 * footUnder) * (1 + 0.8 * feeding));
       const p = course.at(Math.min(course.length - 10, Math.max(0, front + 6)));
       surgeLight.position.set(p.x, river.height(p.x, p.z) + 5, p.z);
       surgeLight.radius = 10 + 3 * Math.exp(-after / 0.8);

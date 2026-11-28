@@ -298,11 +298,11 @@ ${WINDOW_VERTEX}
 void main() {
   // The surge has height: behind its front the stream stands fuller in its bed, and the front itself is a rounded head a man's height proud of it.
   float full = smoothstep(uSurge.x + 4.0, uSurge.x - 8.0, aFlow.w) * uSurge.y;
-  float head = max(exp(-max(uSurge.x - aFlow.w, 0.0) / 11.0) * smoothstep(uSurge.x + 3.0, uSurge.x, aFlow.w) * uSurge.y, uSurge.z * smoothstep(7.0, -5.0, aFlow.w));
-  float across = aIn.y / max(aFlow.z * (1.0 + 0.5 * full + 1.2 * head), 0.1);
+  float head = max(exp(-max(uSurge.x - aFlow.w, 0.0) / 11.0) * smoothstep(uSurge.x + 7.0, uSurge.x, aFlow.w) * uSurge.y, uSurge.z * smoothstep(7.0, -5.0, aFlow.w));
+  float across = aIn.y / max(aFlow.z * (1.0 + 0.5 * full + 1.0 * head), 0.1);
   vec3 p = position;
   // The stream has a body: it stands a forearm proud of its bed at any time.
-  p.y += (0.32 * smoothstep(1.0, 6.0, aFlow.w) + 0.7 * full + 2.4 * head) * sqrt(max(1.0 - across * across, 0.0)) * (1.0 - smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 12)}, aFlow.w)) * (1.0 - aIn.z);
+  p.y += (0.32 * smoothstep(1.0, 6.0, aFlow.w) + 0.7 * full + 1.8 * head) * sqrt(max(1.0 - across * across, 0.0)) * (1.0 - smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 12)}, aFlow.w)) * (1.0 - aIn.z);
   vWorld = p;
   vNormal = normal;
   vFlow = aFlow;
@@ -619,7 +619,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     vec2 fx = vec2(72.0 * (out_.y * gDx.x - out_.x * gDx.z) / rr, dot(out_, gDx.xz) / max(r, 1.0));
     vec2 fy = vec2(72.0 * (out_.y * gDy.x - out_.x * gDy.z) / rr, dot(out_, gDy.xz) / max(r, 1.0));
     vec3 fm = meltAt(fp, 32.0, fx, fy, 21.0);
-    float fz = clamp(fm.z + 0.5 * smoothstep(0.1, 0.7, lane) * (1.0 - 0.6 * crusted) - 0.03 + 0.22 * behind + 0.25 * smoothstep(26.0, 8.0, r) - 0.3 * smoothstep(40.0, 95.0, r), 0.0, 1.0);
+    float fz = clamp(fm.z + 0.45 * uPass.x + 0.5 * smoothstep(0.1, 0.7, lane) * (1.0 - 0.6 * crusted) - 0.03 + 0.22 * behind + 0.25 * smoothstep(26.0, 8.0, r) - 0.3 * smoothstep(40.0, 95.0, r), 0.0, 1.0);
     // A plate ends at a hard edge and the melt is alight beyond it, orange at once: never a glow that fades into the crust.
     float gap = smoothstep(0.17, 0.22, fz);
     float fheat = max(gap * (0.5 + 0.5 * smoothstep(0.25, 0.8, fz)), 0.08);
@@ -909,7 +909,9 @@ void main() {
   float k = age / aLife.y;
   // It leaves fast over the melt and slows as it cools, and the wind has more of it the higher it stands.
   float rise = aLife.z * age * (1.0 - 0.4 * k);
-  float size = mix(1.3, 5.0 + 4.5 * aLife.w, pow(k, 0.75)) * aWind.y;
+  // A puff leaves small; a veil is broad and faint from the first, or it would stand as a pale knot where it leaves.
+  float big = 5.0 + 4.5 * aLife.w;
+  float size = mix(aWind.y > 1.6 ? 0.55 * big : 1.3, big, pow(k, 0.75)) * aWind.y;
   vec3 centre = aFrom.xyz + vec3(0.65 * rise * (0.35 + 0.65 * k) + aWind.x * age, rise, 0.12 * rise + 0.18 * aWind.x * age) + vec3(sin(age * 0.9 + aSeed.x * 6.28), 0.0, cos(age * 0.7 + aSeed.y * 6.28)) * 0.5 * k * size;
   vec4 view = viewMatrix * vec4(centre, 1.0);
   view.xy += position.xy * 2.0 * size;
@@ -919,7 +921,7 @@ void main() {
   float more = 1.0 + 1.2 * smoothstep(uSurge.x + 4.0, uSurge.x - 12.0, aFrom.w) * uSurge.y;
   // Before the dark of the opening a puff would stand as a pale disc: by the height of the lip it has thinned to nothing.
   float below = smoothstep(${f(TUBE.floor + 3)}, ${f(TUBE.floor - 9)}, centre.y + 0.5 * size);
-  vPuff = vec4(k, aSeed.z, smoothstep(0.0, 0.14, k) * pow(1.0 - k, 1.4) * more * aSeed.w * below, age);
+  vPuff = vec4(k, aSeed.z, smoothstep(0.0, aWind.y > 1.6 ? 0.3 : 0.14, k) * pow(1.0 - k, 1.4) * more * aSeed.w * below, age);
   vCentre = centre;
   // A veil is lit by the fall it drifts before, less the higher it stands and less while crust passes under it.
   vHigh = (rise + position.y * 2.0 * size) / aWind.y + 6.0 * log(1.0 / max(uPass.y, 0.05));
