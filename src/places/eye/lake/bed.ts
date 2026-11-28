@@ -322,7 +322,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
         vec2 qc = mc * (b + gSlide * 0.11 + sway * 0.5) + 0.21;
         vec3 low3 = readAt(tMat, qc, mc, 1.0).rgb;
         float gap = smoothstep(0.55, 0.22, mh);
-        near3 = mix(near3, low3 * vec3(0.7, 0.42, 0.26), 0.85 * gap);
+        near3 = mix(near3, low3 * vec3(0.66, 0.45, 0.28), 0.85 * gap);
       }
       if (fine > 0.0) {
         vec3 tile = readAt(tMatTile, vec2(qa.y, qa.x) * (MAT_A / 2.6) + sway * 0.4, mat2(-0.309, 0.951, 0.951, 0.309) / 2.6).rgb;
@@ -395,7 +395,9 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away, float barsAt
     // Near enough to tell strand from strand they are amber and rust, not the tan of the patch seen whole.
     // The slabs among them are limestone: pale, hardly dyed.
     float slabby = told * smoothstep(0.68, 0.84, mh);
-    weed = max(mix(vec3(dot(weed, vec3(0.3, 0.6, 0.1))), weed, 1.0 + 0.5 * smoothstep(0.03, 0.006, px) * (1.0 - slabby)), 0.0);
+    weed = max(mix(vec3(dot(weed, vec3(0.3, 0.6, 0.1))), weed, 1.0 + 0.28 * smoothstep(0.03, 0.006, px) * (1.0 - slabby)), 0.0) * mix(vec3(1.0), vec3(0.93, 1.07, 0.9), smoothstep(0.03, 0.006, px) * (1.0 - slabby));
+    // Rust is the dye of the deep strands; no bunch near the eye is red through and through.
+    weed.g = max(weed.g, weed.r * 0.56 * smoothstep(0.03, 0.006, px));
     weed = mix(weed, dot(weed, vec3(0.3, 0.6, 0.1)) * vec3(1.0, 0.97, 0.9), 0.7 * slabby);
     // At the torn edge of a patch only the strands that stand highest are left: wisps, not a line.
     float lies = smoothstep(0.0, 0.22, cover * 1.25 - (1.0 - high) * 0.7 * told * smoothstep(0.95, 0.5, cover) - 0.12 * (1.0 - told));
