@@ -384,11 +384,14 @@ void main() {
     }
   }
   // The lid of cloud over the socket, once the lens has climbed into it: it is nearer than everything else in the air.
+  // Until then (EYE_LID 0, the same test of uLid.x made of the frame) it is left out of the program.
+#if EYE_LID
   if (uLid.x > 0.0 && rd.y < 0.0) {
     vec4 lid = lidOver(ro, rd, length(world - ro));
     light = light * lid.a + lid.rgb * (1.0 - uSolo);
     through *= lid.a;
   }
+#endif
   gl_FragColor = vec4(light, through);
 }`;
 
@@ -414,7 +417,7 @@ export function create(ctx: Context): Piece {
     vertexShader: QUAD_VERTEX,
     fragmentShader: VOLUME_FRAGMENT,
     uniforms: { ...ctx.rig.uniforms, ...volumeUniforms(), ...show, ...lid },
-    defines: { EYE_MIST_ROUND: 1, EYE_MIST_TONGUES: 1, EYE_TALL: -1 },
+    defines: { EYE_MIST_ROUND: 1, EYE_MIST_TONGUES: 1, EYE_LID: 1, EYE_TALL: -1 },
     depthTest: false,
     depthWrite: false,
     blending: THREE.NoBlending,
@@ -508,6 +511,7 @@ export function create(ctx: Context): Piece {
       const names: Record<string, number> = {
         EYE_MIST_ROUND: on(show.uMistRound.value),
         EYE_MIST_TONGUES: on((rig.uMistD as THREE.IUniform<THREE.Vector4>).value.x),
+        EYE_LID: on(lidState.x),
         EYE_TALL: tone.w > 1.5 ? 1 : 0,
         ...far,
       };
