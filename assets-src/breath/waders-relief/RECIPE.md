@@ -1,0 +1,12 @@
+# The sculpted relief of the waders
+
+Each wader the lens comes close to wears a relief of its own: the three that feed in the channel and the stocky one at the rim. The relief is sculpted on the animal's own shape at rest, the same shape the film builds, and baked as a view square on from its side.
+
+## `public/assets/breath/waders/relief.jpg`
+
+Made by: `assets-src/breath/waders-relief/export-rest.cjs` (Node 20.20.2, TypeScript of the repository), `assets-src/breath/waders-relief/sculpt.py` and `assets-src/breath/waders-relief/compose.py` with `assets-src/breath/waders-relief/relief.py` (Python 3.11.17, Blender 5.0.1 as the module bpy, Cycles on the processor, numpy 1.26.4, Pillow 13.0.0)
+From: `src/places/breath/waders/animal.ts` and `src/places/breath/waders/body.ts` (the rest shape of each animal); no picture
+Prompt or command: from the repository root, in this order. `npx tsc --ignoreConfig --outDir out/work/js --module commonjs --target es2020 --skipLibCheck --noEmitOnError false src/places/breath/waders/animal.ts`, then a file `out/work/js/package.json` holding `{"type":"commonjs"}`, then `node assets-src/breath/waders-relief/export-rest.cjs out/work/bake`, then `/home/user/bpyenv/bin/python assets-src/breath/waders-relief/sculpt.py out/work/bake N` for N from 0 to 3, then `RELIEF_Q=88 /home/user/bpyenv/bin/python assets-src/breath/waders-relief/compose.py out/work/bake public/assets/breath/waders/relief.jpg`. The sculpt presses the surface in and out along itself (ribs each of its own height and the hollows between them, folds where a leg leaves the trunk, slack folds at the root of the neck, lumps), Cycles finds how hidden each point of the sculpted surface is from the open air (24 samples), and the view is written at 1536 by 1536 for each animal. The composing adds the fine part (knots and creases of the joints, cord and plates of the shank, rings of the foot and neck, a net of wrinkles, scars) and lays the four views two by two, 3072 by 3072: red the height (one half is none, the whole range 12 mm times the animal's size), green how open to the air, blue scars and lumps. Stored linear, JPEG at quality 88 with no chroma subsampling.
+Takes: 1 made, 1 kept (one try for each of the four animals; the rings of the neck were made uneven before the kept run)
+Why this one: every rib, fold and scar is where this animal's own shape has it, so no two of the three seen close carry the same marks.
+Date: 2026-11-27

@@ -45,6 +45,7 @@ export function create(ctx: Context): Piece {
     tHideNh: { value: ctx.assets.texture('waders/hide-nh.png', { kind: 'data' }) },
     tWader: { value: ctx.assets.texture('mat/wader.jpg', { repeat: false }) },
     tWaderA: { value: ctx.assets.texture('mat/wader-a.png', { kind: 'data', repeat: false }) },
+    tRelief: { value: ctx.assets.texture('waders/relief.jpg', { kind: 'data', repeat: false }) },
   };
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,

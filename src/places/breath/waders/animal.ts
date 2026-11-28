@@ -144,6 +144,12 @@ const hash = (n: number): number => {
   const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
   return s - Math.floor(s);
 };
+/** Which of the four sculpted reliefs an animal wears: the three that feed in the channel and the one at the rim each have their own. */
+const RELIEF_OF = [11, 18.31, 25.62, 97.3];
+const reliefTile = (seed: number): number => {
+  const own = RELIEF_OF.findIndex((s) => Math.abs(s - seed) < 0.005);
+  return own >= 0 ? own : Math.floor(hash(seed * 3.3 + 0.7) * 4) % 4;
+};
 
 /** A value read off a few points (u, value), eased between them. */
 /** The trunk's half height and half width, rump (0) to chest (1), for a size of 1: an egg, the deeper end behind the middle, closed and round at both ends. */
@@ -404,7 +410,23 @@ export class Wader {
       const body = buildBody(b, b.cell * k);
       this.skinned = body;
       this.blob = skin.blob(body.count, body.index);
+      // The sculpted relief is a view of the animal at rest square on from its side, the whole of it in a square (assets-src/breath/waders-relief).
+      let x0 = Infinity;
+      let x1 = -Infinity;
+      let y0 = Infinity;
+      let y1 = -Infinity;
       for (let v = 0; v < body.count; v++) {
+        x0 = Math.min(x0, body.rest[v * 3] as number);
+        x1 = Math.max(x1, body.rest[v * 3] as number);
+        y0 = Math.min(y0, body.rest[v * 3 + 1] as number);
+        y1 = Math.max(y1, body.rest[v * 3 + 1] as number);
+      }
+      const square = Math.max(x1 - x0, y1 - y0) + 0.08 * k;
+      const tile = reliefTile(seed);
+      for (let v = 0; v < body.count; v++) {
+        const bx = ((body.rest[v * 3] as number) - (x0 + x1) / 2) / square + 0.5;
+        const by = ((body.rest[v * 3 + 1] as number) - (y0 + y1) / 2) / square + 0.5;
+        skin.sculpted(this.blob.start + v, ((tile % 2) + bx) / 2, (Math.floor(tile / 2) + by) / 2, 1);
         skin.describeAt(
           this.blob.start + v,
           [body.rest[v * 3] as number, body.rest[v * 3 + 1] as number, body.rest[v * 3 + 2] as number],
