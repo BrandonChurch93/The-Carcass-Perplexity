@@ -672,11 +672,11 @@ void main() {
   // its faces do, the gaps between fragments are closed to the sky, and half of whatever colour was laid on a steep slope gives way to grey.
   // The crag of the line view is the one rock under that lens that is a face and no heap: it is broken as every other slope is.
   float cragFace = smoothstep(1.0, 1.8, vWorld.y) * step(-512.5, vWorld.x) * step(vWorld.x, -501.0) * step(196.0, vWorld.z) * step(vWorld.z, 207.5);
-  float jagged = smoothstep(0.06, 0.24, slope) * (1.0 - byLens * (1.0 - cragFace)) * (1.0 - 0.8 * sheet);
+  float jagged = smoothstep(0.1, 0.26, slope) * (1.0 - byLens * (1.0 - cragFace)) * (1.0 - 0.8 * sheet);
   if (jagged > 0.0) {
     const float BED = 11.0;
     vec2 drift = vec2(big, -big) * 1.5;
-    float side = smoothstep(0.3, 0.6, slope);
+    float side = smoothstep(0.38, 0.52, slope);
     vec3 top = vec3(0.5);
     vec3 face = vec3(0.5);
     if (side < 0.997) top = PICK(tAa, vWorld.xz / BED + drift, wx.xz / BED, wy.xz / BED).rgb;
@@ -809,8 +809,7 @@ void main() {
   float longLens = smoothstep(0.3, 0.1, px) * (1.0 - steep) * smoothstep(110.0, 80.0, vWorld.y);
   if (longLens > 0.0) {
     float chips = smoothstep(0.63, 0.7, vnoise3(vWorld / 0.34 + 1.1));
-    float clods = smoothstep(0.58, 0.64, vnoise3(vWorld / 1.3 + 3.3));
-    albedo *= mix(1.0, 0.55 * (1.0 + 3.6 * chips) * (1.0 - 0.55 * clods), longLens);
+    albedo *= mix(1.0, 0.47 * (1.0 + 3.6 * chips), longLens);
     // And the scree is fragments in fact (aa-nh, the built bed of broken basalt, here with its largest block a stride and a half across):
     // each stands with a lit top over a dark gap, and its faces bend the light.
     vec3 bed = PICK(tAa, vWorld.xz / 7.0 + vec2(big, -big) * 1.5, wx.xz / 7.0, wy.xz / 7.0).rgb;
