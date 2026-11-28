@@ -709,6 +709,11 @@ void main() {
     // Over the mats the wall is still in the water, dim: nearer than that the mirror is whole, and no line is drawn where it ends.
     refl *= mix(vec3(1.0), vec3(0.36, 0.39, 0.46), staged);
     refl = mix(refl, dot(skyRadiance(normalize(vec3(rd.x, 0.85, rd.z))), vec3(0.3, 0.5, 0.2)) * uMirror.rgb, 0.9 * staged * smoothstep(uMirrorSpan.y * 0.45, uMirrorSpan.y * 1.5, away));
+#elif EYE_EDGE
+    // Beside the edge the water over the shelf gives the evening sky back as slate, and the lit wall dimmer than it stands.
+    // The glare of the low sky is held to the brightness of the sky overhead first: slate has no white field in it.
+    float overhead = 1.6 * dot(skyRadiance(normalize(vec3(rd.x, 0.85, rd.z))), vec3(0.3, 0.5, 0.2));
+    refl *= mix(vec3(1.0), uMirror.rgb * (overhead / max(dot(refl, vec3(0.3, 0.5, 0.2)), overhead)), staged);
 #else
     // Where the tone cools the water, the wall's lit gold stays gold in it: it is the shade and the sky that go to slate.
     refl *= mix(vec3(1.0), mix(uMirror.rgb, vec3(1.0), step(uMirror.r, uMirror.b) * smoothstep(1.45, 2.2, refl.r / max(refl.b, 1e-4))), staged);
@@ -1061,14 +1066,14 @@ void main() {
       // Over the mats the far water is the pool: ruffled, it holds the high sky and the wall's shade more than the wall's gold, and is dark and blue.
       // It comes on where the mats end, a few metres out, and against the far shore the wall is given back as it is.
       else if (during('eye-02')) mirrorTone.value.set(0.06, 0.14, 0.3, 0.8);
-      else if (during('eye-03')) mirrorTone.value.set(0.62, 0.6, 0.58, 1);
+      else if (during('eye-03')) mirrorTone.value.set(0.4, 0.43, 0.5, 0.8);
       else mirrorTone.value.set(1, 1, 1, 1);
       (material.uniforms.uRuffle as THREE.IUniform<number>).value = during('eye-02') ? 0.0009 : 0;
       const span = material.uniforms.uMirrorSpan as THREE.IUniform<THREE.Vector4>;
       if (during('eye-02')) span.value.set(4, 16, 90, 300);
       else if (during('eye-04')) span.value.set(3, 26, 1e6, 2e6);
       // Beside the edge the water over the shelf is in the wall's shade for a way out, and under the far wall it is given back as it is.
-      else if (during('eye-03')) span.value.set(4, 22, 150, 500);
+      else if (during('eye-03')) span.value.set(4, 22, 380, 900);
       else span.value.set(12, 90, 1e6, 2e6);
       // Beside the edge the wall is near enough to be rock (EYE_EDGE), and it falls more steeply than the wide shot draws it.
       (material.uniforms.uWallFall as THREE.IUniform<number>).value = during('eye-03') ? 1.2 : 1;
