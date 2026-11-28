@@ -385,10 +385,20 @@ void main() {
     float lift = 0.048 * (tops - 0.38);
     // (The picture's sea ends at 0.281 of its height. The line was taken at 0.32, in the middle of the band.)
     float over = uvQ.y - 0.281 - lift;
+    // (Over a raised top the sky is not drawn down to meet it: every row of the picture between its level and the top, the foot of the
+    // band among them, then lay in a hair along the top as a red line. The top stands before the sky, and its edge is a pixel soft.)
+    float seam = 0.0;
     if (over < 0.0) uvQ.y -= lift * exp(-over * over / 0.0036);
-    else if (lift > 0.0) uvQ.y -= lift * (1.0 - smoothstep(0.0, 0.002, over));
+    else if (lift > 0.0) seam = 1.0 - smoothstep(0.0, 0.0008, over);
     else uvQ.y = max(uvQ.y, 0.281 + 0.003 * clamp(over / max(-lift, 1e-5), 0.0, 1.0));
     vec3 held = plateCloud(uvQ, 0.0);
+    if (seam > 0.0) held = mix(held, plateCloud(vec2(uvQ.x, 0.281), 0.0), seam);
+    // The picture's own sea, under its level, is the far end of the deck the air pass draws, and answers a stroke as that deck does.
+    // Left dark while the deck went pale under it, it lay on the deck's last row as a dark bar with a ruled foot, the frame across.
+    float sunkP = smoothstep(0.004, -0.012, over) * (1.0 + smoothstep(-0.008, -0.03, over));
+    if (uStrikeTop.w > 0.0) held += STRIKE_COLOUR * vec3(0.86, 0.84, 1.0) * (min(uStrikeTop.w * 0.008, 0.05) * sunkP);
+    // And it stands in the air the deck stands in: between strokes too the deck's last row is slate, and the picture's sea was black on it.
+    held += vec3(0.005, 0.0068, 0.0125) * sunkP;
     // On the storm's side of the long lens stands the wall of falling snow: the fall of the whole sky's picture, seen large and soft, where
     // the strike's own picture is only dark.
     vec2 uvW = vec2(0.03 + 0.3 * uvQ.x + 0.0006 * uTime, 0.1 + 0.75 * (uvQ.y - 0.32));
