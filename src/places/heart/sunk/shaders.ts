@@ -386,7 +386,7 @@ void main() {
   float seamKelvin = 900.0 + 190.0 * uSeam + 300.0 * (0.5 + 0.3 * sin(l.x * 6.7 + 5.0) + 0.2 * sin(l.x * 11.9 + 1.0)) + 60.0 * (small - 0.5) + 0.6 * breath;
   float faceKelvin = mix(760.0, 1310.0, uFlare) + 70.0 * (small - 0.5) + 60.0 * (grainNh.b - 0.5) + 0.5 * breath * uFlare;
   // What glows, lights: the skin within a hand or two of the seam is warmed by it.
-  c += albedo * blackbody(seamKelvin) * (0.08 * seamLit * (1.0 + 3.0 * uFlare)) * exp(-abs(vBreak.y) / 0.15) * (1.0 - onFace) * step(0.02, vBreak.z + vBreak.x + step(vBreak.y, 0.0));
+  c += albedo * blackbody(seamKelvin) * (0.2 * seamLit * (1.0 + 1.2 * uFlare)) * exp(-abs(vBreak.y) / 0.22) * (1.0 - onFace) * step(0.02, vBreak.z + vBreak.x + step(vBreak.y, 0.0));
   c = mix(c * (1.0 - 0.7 * onFace), blackbody(mix(faceKelvin, max(faceKelvin, seamKelvin), standing)), max(flaring, standing));
   #endif
 
@@ -429,7 +429,7 @@ void main() {
 /** How light the char of the hull is: the sheet's charcoal is about 0.03 and comes out near 0.07, as charred wood is. */
 const HULL_CHAR = 2.2;
 /** How pale a plate left on a limb is, of what it was: the critics had the plates as pale scale patches. */
-const LEG_PLATE = 0.62;
+const LEG_PLATE = 0.5;
 /** How much of the pale dried plate is left on a plate of the hull, 0 to 1. */
 const HULL_SLAT = 0.1;
 export const CARCASS_FRAGMENT = /* glsl */ `
