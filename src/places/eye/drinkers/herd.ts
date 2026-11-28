@@ -30,6 +30,8 @@ export interface Drinker {
   gives?: number;
   /** How far it lifts its muzzle past level when that takes it. */
   lifts?: number;
+  /** How far round it turns its head to what takes it, in radians, to its own left. */
+  looks?: number;
   /** It walks: how, when and on what way. It is where it is placed, facing as it is placed, at the gait's key. */
   gait?: Gait;
   /** Hooves it moves at moments of its own: which leg, when, and how far to the side and forward, in its own sizes. It stands as placed at its key. */
@@ -169,8 +171,8 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
       { leg: 2, at: SHORE_KEY + 1.75, by: [0, 0.12] },
     ]),
     // The two of the last shot, below the camera with their backs to it, cut by the foot of the frame. Each lifts its head to the swell, not together.
-    seenFromBehind({ ...one(centre[0] - 1.42, centre[2] - 13.5, 3, 1.12, (t) => 0.8 - 0.5 * ease(riseAt + 0.95, riseAt + 1.65, t) - 0.05 * ease(riseAt + 2.4, riseAt + 4.5, t) + 0.012 * Math.sin(t * 0.9), true, false), level: centre[1] - 3.74, alert: riseAt + 0.9, gives: 0.2, lifts: 0.22, key: riseAt + 1.7 }, { head: 0.7, neck: 0.8, girth: 1.12, depth: 1.05, stem: 0.86 }),
-    seenFromBehind({ ...one(centre[0] + 0.85, centre[2] - 18.5, -13, 0.82, (t) => 0.86 - 0.62 * ease(riseAt + 1.2, riseAt + 1.75, t) - 0.05 * ease(riseAt + 3.0, riseAt + 5.0, t) + 0.012 * Math.sin(t * 0.8 + 2), true, false), level: centre[1] - 3.55, alert: riseAt + 1.15, lifts: 0.16, key: riseAt + 1.7 }, { head: 0.6, neck: 1.04, girth: 0.95, stem: 0.7, long: 0.92 }),
+    seenFromBehind({ ...one(centre[0] - 1.42, centre[2] - 13.5, 3, 1.12, (t) => 0.39 - 0.09 * ease(riseAt + 0.95, riseAt + 1.65, t) - 0.05 * ease(riseAt + 2.4, riseAt + 4.5, t) + 0.012 * Math.sin(t * 0.9), true, false), level: centre[1] - 3.74, alert: riseAt + 0.9, gives: 0.2, lifts: 0.1, looks: -0.3, key: riseAt + 1.7 }, { head: 0.74, neck: 0.8, girth: 1.12, depth: 1.05, stem: 0.74 }),
+    seenFromBehind({ ...one(centre[0] + 0.85, centre[2] - 18.5, -13, 0.82, (t) => 0.43 - 0.15 * ease(riseAt + 1.2, riseAt + 1.75, t) - 0.05 * ease(riseAt + 3.0, riseAt + 5.0, t) + 0.012 * Math.sin(t * 0.8 + 2), true, false), level: centre[1] - 3.55, alert: riseAt + 1.15, lifts: 0.16, key: riseAt + 1.7 }, { head: 0.62, neck: 0.9, girth: 0.95, stem: 0.78, long: 0.92 }),
     // The ones of the mats shot. One is near, alone, side on with its head down, as the approved picture has it; two are far off behind it, one
     // of them upright and watching.
     // It shifts a hind hoof and then a fore hoof in the shot, and the lake rings at each.
@@ -444,6 +446,12 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
   const free = (1 - 0.85 * sipping) * (d.alert === undefined ? 1 : 1 - 0.9 * ease(d.alert, d.alert + 0.45, t));
   for (let i = 0; i < 4; i++) turn[i] = 0.12 * neckTurn * free;
   turn[4] = 0.52 * headTurn * free;
+  // What rises is off to one side of where it faces: the neck turns a little to it and the head the rest of the way.
+  if (d.alert !== undefined && d.looks) {
+    const to = d.looks * ease(d.alert + 0.05, d.alert + 0.75, t);
+    for (let i = 0; i < 4; i++) turn[i] += 0.1 * to;
+    turn[4] += 0.6 * to;
+  }
   // The tail hangs and now and then flicks.
   const flickEvery = 3.2 + 4 * hash(o * 23);
   const fu = t / flickEvery + hash(o * 67);

@@ -191,12 +191,13 @@ void main() {
   // ribs, the hip and the rump it is drawn tight.
   vec3 fromShoulder = (vRest - vec3(0.0, 1.62, 0.62)) / vec3(1.0, 0.42, 0.3);
   vec3 fromStifle = (vRest - vec3(0.0, 1.5, -0.5)) / vec3(1.0, 0.36, 0.26);
-  float slackNeck = neck * root * (1.0 - 0.7 * uPose.x);
+  float slackNeck = neck * root * (1.0 - 0.7 * uPose.x * (1.0 - 0.45 * under05));
   float loose = clamp(slackNeck + exp(-dot(fromShoulder.yz, fromShoulder.yz)) + exp(-dot(fromStifle.yz, fromStifle.yz))
     + trunk * smoothstep(-0.1, -0.7, rn.y) + 0.8 * leg * joint, 0.0, 1.0);
   loose = mix(0.1, 1.0, loose * smoothstep(0.15, 0.8, n3(at * 1.9 + 7.0)) * 1.5);
   loose = min(loose, 1.0);
-  float relief = slackNeck * (0.004 + 0.002 * near) * rings
+  // Under the last camera the thick necks are ringed deep, and no two rings alike: one stands proud, the next is hardly there.
+  float relief = slackNeck * (0.004 + 0.002 * near) * (1.0 + under05 * (1.3 * n3(vec3(along * 7.0, own * 17.0, 3.0)) - 0.45)) * rings
     + leg * joint * 0.0026 * legRings
     + ribs * (1.0 - 0.65 * under05) * (1.0 - smoothstep(0.005, 0.016, px)) * 0.0022 * (0.5 + w1) * cos(6.2832 * (vRest.z + 0.3 * (vRest.y - 1.9) + 0.03 * w1) / 0.15);
   // The bones under a thin hide: the point of the hip, the blade and the point of the shoulder stand out, and the flank falls in between the
