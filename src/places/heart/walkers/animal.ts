@@ -152,7 +152,7 @@ const LOOP = Math.PI / 4;
 /** Seconds a pad is in the air when one that stands re-places it. */
 const STEP = 1.6;
 /** Crumbs a pad drops in one swing. */
-const GRIT = 12;
+const GRIT = 30;
 const BODY_RINGS = 128;
 const BODY_SIDES = 48;
 const NECK_RINGS = 46;
@@ -322,7 +322,8 @@ export class Animal {
       if (hash(n, seed + 31) < 0.6) continue;
       const node = 1 + (n & 1);
       const rag = this.rag(40 + n, (0.15 + 0.4 * Math.pow(hash(n, seed + 32), 2)) * k, (0.025 + 0.06 * hash(n, seed + 33)) * k);
-      rag.at = [(hash(n, seed + 34) - 0.5) * 0.2 * k, -(0.1 + 0.08 * hash(n, seed + 35)) * k * b.legR, (hash(n, seed + 36) - 0.5) * 0.2 * k];
+      // It is torn from the joint's own skin: it starts inside the knob, never beside it in the air.
+      rag.at = [(hash(n, seed + 34) - 0.5) * 0.07 * k * b.legR, -(0.04 + 0.05 * hash(n, seed + 35)) * k * b.legR, (hash(n, seed + 36) - 0.5) * 0.07 * k * b.legR];
       this.shreds.push({ ...rag, leg: n >> 2, node });
     }
 
@@ -376,7 +377,8 @@ export class Animal {
       for (let n = 0; n < GRIT; n++) {
         const tube = skin.tube(3, 3);
         const local = new Float32Array(3 * 3 * 2);
-        const size = (0.05 + 0.08 * hash(n, seed + j * 5 + 70)) * Math.sqrt(k);
+        // Most are crumbs of three or four centimetres; one in five is a clod as big as a fist.
+        const size = (0.05 + 0.16 * Math.pow(hash(n, seed + j * 5 + 70), 2.5)) * Math.sqrt(k);
         for (let r = 0; r < 3; r++) {
           for (let side = 0; side < 3; side++) {
             const a = (side / 3) * Math.PI * 2 + n;
@@ -384,11 +386,11 @@ export class Animal {
             local[(r * 3 + side) * 2] = Math.cos(a) * w;
             local[(r * 3 + side) * 2 + 1] = Math.sin(a) * w;
           }
-          for (let side = 0; side <= 3; side++) skin.describe(tube, r, side, r * size + n, side * size, 0.3, 0.55, size, seed, 4, 0);
+          for (let side = 0; side <= 3; side++) skin.describe(tube, r, side, r * size + n, side * size, 0.3, 0.55, size, seed, 4.3, 0);
         }
         const turn = hash(n, seed + j * 7 + 72) * 6.283;
         const far = b.padR * Math.sqrt(hash(n, seed + j * 7 + 73));
-        this.grit.push({ tube, local, leg: j, when: 0.03 + 0.6 * hash(n, seed + j * 3 + 74), ox: Math.cos(turn) * far, oz: Math.sin(turn) * far, size });
+        this.grit.push({ tube, local, leg: j, when: 0.03 + 0.72 * Math.pow(hash(n, seed + j * 3 + 74), 1.5), ox: Math.cos(turn) * far, oz: Math.sin(turn) * far, size });
       }
     }
 
@@ -1082,7 +1084,11 @@ export class Animal {
           const e = smooth(0.05, 0.96, g.when);
           const e2 = e * e * (3 - 2 * e) * 0.25 + e * 0.75;
           const fell = (foot.w - g.when) * foot.dur;
-          const y = foot.high * Math.pow(Math.sin(Math.PI * Math.pow(g.when, 0.85)), 1.3) + 0.1 * k - 4.9 * fell * fell;
+          // It falls through hot air that rises off the crust: a crumb is slowed by it, a clod hardly.
+          const slow = lerp(0.42, 0.9, smooth(0.06, 0.2, g.size));
+          // It leaves the pad where the pad was then, however high the step carried it.
+          const raised = plan.stepUp ? plan.stepUp(seconds - fell, j) * Math.pow(Math.sin(Math.PI * g.when), 2) : 0;
+          const y = foot.high * Math.pow(Math.sin(Math.PI * Math.pow(g.when, 0.85)), 1.3) + raised + 0.1 * k - 4.9 * slow * fell * fell;
           if (y > 0) {
             const left = env.drift(lerp(foot.from[0], foot.to[0], e2), lerp(foot.from[1], foot.to[1], e2), seconds);
             gx = left[0] + g.ox;
