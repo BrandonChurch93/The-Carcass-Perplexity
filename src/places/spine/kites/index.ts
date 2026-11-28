@@ -297,7 +297,11 @@ void main() {
   vec2 q = vec2(vAt.z / vSkin.x, 0.5 * v);
   // Everything that asks how fast a thing runs over the screen is asked here, before any branch.
   float vW = fwidth(v);
-  float tear = vnoise(q * vec2(0.9, 1.7) + vec2(seed * 9.1, seed * 4.0));
+  // One torn place on some of them: long down the blade, its outline uneven. How far a point is from it, 1 at its lip.
+  float tornAt = 0.42 + 0.3 * fract(seed * 1.93);
+  float tornLong = 0.55 + 0.6 * fract(seed * 2.77);
+  vec2 tornOff = vec2((q.x - tornAt * vSkin.y / vSkin.x) / tornLong, (v - 0.5 * (fract(seed * 4.31) - 0.5)) / (0.3 + 0.2 * fract(seed * 6.13)));
+  float tear = length(tornOff) + 0.5 * (vnoise(q * vec2(2.6, 3.4) + vec2(seed * 9.1, seed * 4.0)) - 0.5) + 0.25 * (vnoise(q * vec2(7.0, 9.0) + seed * 2.0) - 0.5);
   float tearW = fwidth(tear);
   float sW = fwidth(s);
   // The edge is not ruled: it comes in and goes out along the blade, each side its own way, with a nick here and there.
@@ -316,9 +320,13 @@ void main() {
   vec3 n = dot(vNormal, vNormal) > 1e-10 ? normalize(vNormal) : toCamera;
   // Creases: the skin is drawn long by the gale and wrinkles down its length, finely. The light catches along them.
   float broad = vnoise(q * vec2(1.1, 2.0) + seed);
-  float crease = vnoise(vec2(q.x * 0.7 + seed * 3.0, v * 7.0 + 2.5 * broad));
-  float creaseB = vnoise(vec2(q.x * 0.7 + seed * 3.0, (v + 0.06) * 7.0 + 2.5 * broad));
-  float creaseOn = (1.0 - vKite.z) * (1.0 - smoothstep(0.02, 0.09, vW));
+  // They are not pleats: a patch is wrinkled close, the next lies smooth, and the wrinkles run a little aslant and into each other.
+  float warp = 3.2 * broad + 2.4 * vnoise(q * vec2(2.3, 1.1) + seed * 7.0);
+  float patchy = smoothstep(0.3, 0.72, vnoise(q * vec2(0.8, 1.5) + seed * 11.0));
+  float pitch = 3.2 + 3.0 * fract(seed * 0.73);
+  float crease = vnoise(vec2(q.x * 0.45 + seed * 3.0, v * pitch + warp)) + 0.5 * vnoise(vec2(q.x * 1.7 + 0.8 * v + seed, v * 2.4 * pitch - 1.3 * q.x + warp));
+  float creaseB = vnoise(vec2(q.x * 0.45 + seed * 3.0, (v + 0.06) * pitch + warp)) + 0.5 * vnoise(vec2(q.x * 1.7 + 0.8 * (v + 0.06) + seed, (v + 0.06) * 2.4 * pitch - 1.3 * q.x + warp));
+  float creaseOn = (1.0 - vKite.z) * (1.0 - smoothstep(0.02, 0.09, vW)) * (0.25 + 1.3 * patchy);
   n = normalize(n - (dot(acrossWay, acrossWay) > 1e-20 ? normalize(acrossWay) : vec3(0.0)) * ((creaseB - crease) * 2.2 * creaseOn));
   n *= dot(n, toCamera) < 0.0 ? -1.0 : 1.0;
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
@@ -335,11 +343,11 @@ void main() {
   float rolled = smoothstep(0.78, 1.0, edgeAt);
   // Where it is torn: toward its tail the thin places have gone, long ways down it, and the skin round each is drawn thin and rolled.
   float torn = fract(seed * 0.61);
-  float open = mix(1.2, mix(0.74, 0.56, torn), smoothstep(0.3, 0.95, s) * step(0.25, torn));
-  float tearEdge = max(0.07, 2.5 * tearW);
-  float hole = smoothstep(open, open + tearEdge, tear);
-  float lip = smoothstep(open - 0.1, open, tear) * (1.0 - hole);
-  float thick = 0.22 + 0.9 * smoothstep(0.15, 0.9, broad) + 0.25 * (swell - 0.5) + fine * (0.3 * (fibre - 0.5) + 0.55 * vein + 0.7 * rib) + 0.6 * rolled * (0.4 + 0.6 * fine) + 0.5 * lip;
+  float isTorn = step(0.55, torn);
+  float tearEdge = max(0.04, 2.0 * tearW);
+  float hole = isTorn * (1.0 - smoothstep(1.0 - tearEdge, 1.0, tear));
+  float lip = isTorn * (1.0 - smoothstep(1.0, 1.22, tear)) * (1.0 - hole);
+  float thick = 0.16 + 0.7 * smoothstep(0.15, 0.9, broad) + 0.5 * patchy * abs(creaseB - crease) * 8.0 * creaseOn + 0.25 * (swell - 0.5) + fine * (0.3 * (fibre - 0.5) + 0.55 * vein + 0.7 * rib) + 0.6 * rolled * (0.4 + 0.6 * fine) + 0.5 * lip;
   thick = mix(thick, 0.8, 0.6 * vFar);
   // The lens looks through more of it where it is seen aslant.
   float path = thick / max(nv, 0.5);
@@ -360,13 +368,13 @@ void main() {
   onNear /= 1.0 + dot(onNear, vec3(0.3, 0.5, 0.2)) / 0.2;
   onFar /= 1.0 + dot(onFar, vec3(0.3, 0.5, 0.2)) / 0.2;
   // Lilac grey whatever lights it: the skin keeps the light's brightness and a part of its colour.
-  onNear = mix(onNear, dot(onNear, vec3(0.3, 0.5, 0.2)) * vec3(0.96, 0.93, 1.1), 0.6);
-  onFar = mix(onFar, dot(onFar, vec3(0.3, 0.5, 0.2)) * vec3(0.96, 0.93, 1.1), 0.6);
+  onNear = mix(onNear, dot(onNear, vec3(0.3, 0.5, 0.2)) * vec3(1.0, 1.0, 1.03), 0.75);
+  onFar = mix(onFar, dot(onFar, vec3(0.3, 0.5, 0.2)) * vec3(1.0, 1.0, 1.03), 0.75);
   float through = exp(-0.55 * path);
-  vec3 own = mix(vec3(0.93, 0.9, 1.04), vec3(0.86, 0.84, 1.08), fract(seed * 3.3)) * (0.85 + 0.3 * fract(seed * 5.3));
+  vec3 own = mix(vec3(0.97, 0.96, 1.0), vec3(0.93, 0.94, 1.02), fract(seed * 3.3)) * (0.85 + 0.3 * fract(seed * 5.3));
   // What it scatters back, and what comes through it from behind, violet and strongest through a single skin. Its veins and its rolled
   // edge are a little darker: more skin, wet.
-  vec3 c = own * (uBody.x * onNear * (0.75 + 0.25 * nv) + uBody.y * onFar * through * vec3(0.86, 0.74, 1.16));
+  vec3 c = own * (uBody.x * onNear * (0.75 + 0.25 * nv) + uBody.y * onFar * through * vec3(0.97, 0.94, 1.03));
   c *= 1.0 - fine * (0.3 * vein + 0.3 * rib + 0.2 * (fibre - 0.5)) - 0.15 * rolled - 0.12 * lip;
   // The last light of the dusk comes through a skin that stands between it and the lens.
   float toDusk = pow(clamp(dot(-toCamera, uWarmDir), 0.0, 1.0), 3.0);
@@ -384,14 +392,14 @@ void main() {
   mirror /= 1.0 + dot(mirror, vec3(0.3, 0.5, 0.2)) / 0.8;
   float depth = (0.7 + 1.3 * broad + 0.5 * swell) * sqrt(max(1.0 - (1.0 - nv * nv) / 1.9, 0.0));
   vec3 pearl = 0.5 + 0.5 * cos(6.2832 * (depth * vec3(1.0, 1.22, 1.5) + vec3(0.0, 0.33, 0.6) + seed));
-  pearl = mix(vec3(dot(pearl, vec3(0.34, 0.33, 0.33))), pearl, 0.5) * vec3(1.02, 0.84, 1.14) + 0.25;
+  pearl = mix(vec3(dot(pearl, vec3(0.34, 0.33, 0.33))), pearl, 0.6) + 0.25;
   vec3 above = normalize(vec3(-0.45, 0.72, 0.5));
   vec3 key = dot(skyIrradiance(above), vec3(0.3, 0.5, 0.2)) * 0.3183 * vec3(0.92, 0.9, 1.1);
   key /= 1.0 + dot(key, vec3(0.3, 0.5, 0.2)) / 0.6;
   float ndh = clamp(dot(n, normalize(above + toCamera)), 0.0, 1.0);
   float ndw = clamp(dot(n, normalize(uWarmDir + vec3(0.0, 0.25, 0.0) + toCamera)), 0.0, 1.0);
   vec3 shine = mirror * fres * mix(vec3(1.0), pearl, 0.5 * uFilm.z)
-    + key * pearl * uFilm.z * (0.55 * pow(max(ndh, 1e-4), 9.0) + 0.3 * aslant * aslant * sqrt(aslant))
+    + key * uFilm.z * (0.4 * pow(max(ndh, 1e-4), 9.0) + 0.5 * pearl * aslant * aslant * sqrt(aslant))
     + key * (0.3 * rolled * fine)
     + key * uFilm.w * (1.6 * pow(max(ndh, 1e-4), 90.0) + 0.9 * pow(max(ndw, 1e-4), 60.0) * vec3(1.3, 0.9, 0.6))
     + stroke * (0.2 * aslant * aslant + 0.25 * pow(max(ndh, 1e-4), 9.0)) * mix(vec3(1.0), pearl, 0.4);
@@ -912,7 +920,7 @@ export function create(ctx: Context): Piece {
       fly.set(inWide && !inStrike ? 1 : 0, inClose && !inStrike ? 1 : 0, wideShot.from);
       // Seen close the skin is thin and shows its colours; far off it is more of a body.
       // Seen close the film shows its oil colours.
-      body.z = inStrike ? 0.45 : inClose ? 0.85 : 1.2;
+      body.z = inStrike ? 0.3 : inClose ? 0.32 : 1.0;
       film.z = inClose ? 0.7 : 0.35;
       film.w = inClose ? 0.85 : 0.7;
       veil.value = inStrike ? 1 : 0;
