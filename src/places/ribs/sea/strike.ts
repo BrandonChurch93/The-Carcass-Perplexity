@@ -91,7 +91,7 @@ void main() {
   float toSun = kind < 1.5 ? 0.12 + 0.95 * aLook.w : 0.5;
   vLight = (skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.5 + 0.7 * open) + sunCool * toSun * sun) / 3.14159;
   // White water in a stone's shade is still white: the sky's blue goes out of it where it is a body, and it takes the light of all the open sea before it.
-  vLight = mix(vLight, vec3(dot(vLight, vec3(0.3333))) * vec3(0.97, 1.0, 1.03) * (1.3 + 0.35 * dense), slam * (0.6 + 0.3 * dense));
+  vLight = mix(vLight, vec3(dot(vLight, vec3(0.3333))) * vec3(0.97, 1.0, 1.03) * (1.4 + 1.9 * dense), slam * (0.6 + 0.4 * dense));
   // Between the lens and the light it burns: the sun, or the break in the cloud, comes forward through it.
   vec3 ray = normalize(aAt.xyz - cameraPosition);
   float throughSun = pow(max(dot(ray, uSunDir), 0.0), 3.0);
