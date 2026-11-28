@@ -13,7 +13,7 @@ import { NOISE_SIZE } from './noise';
 export const MAX_BODIES = 32;
 
 /** March steps of the vapour of the main shaft. The cost of the pass is close to linear in this wherever the vapour is in view. */
-export const STEPS = 24;
+export const STEPS = 20;
 
 export const VOLUME_FRAGMENT = /* glsl */ `
 precision highp float;
