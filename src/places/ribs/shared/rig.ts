@@ -73,8 +73,6 @@ const HAZE = [0.172, 0.232, 0.312] as const;
 const SKY_LIGHT = { zenith: [0.14, 0.18, 0.25], horizon: [0.33, 0.39, 0.48], ground: [0.085, 0.095, 0.11] } as const;
 /** What the sun's colour of the anchors is given: the break's light is the one warm light of the place. */
 const SUN_WARM = [1.04, 0.995, 0.9] as const;
-/** How hard the lumps cut the edge between a cloud's body and its head on the dome: 0 leaves the picture's own soft edge. */
-const DOME_CUT = 1.2;
 /** What a shot's `warm` adds to the sky's light and the haze, by channel. */
 const SKY_WARM = [0.09, 0.0, -0.11] as const;
 /** What the sky and its air take of the sun's warmth at the break itself, falling off round it. */
@@ -534,8 +532,6 @@ export function createRig(): Rig {
     uBreakWarm: { value: breakWarm },
     // How much more of the break a mirror of the sky is given than the dome (glsl.ts, domeTone).
     uMirrorLift: mirrorLift,
-    // How hard the lumps cut the dome picture's soft edges anew (glsl.ts, skyDome).
-    uDomeCut: { value: DOME_CUT },
     uSolo: { value: 0 },
     tLand: { value: null },
     uLandRect: { value: rect(LAND) },

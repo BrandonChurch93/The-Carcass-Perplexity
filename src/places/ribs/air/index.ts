@@ -194,17 +194,21 @@ void main() {
       // some ten seconds): thick under a bank and taller there, nearly gone between two. Each is summed whole along the stride by its
       // own fall with height, so neither has a top that shows, and the bank is read at the level a stride can follow.
       float level = clamp(log2(dt) - 2.6, 3.5, 9.0);
-      float banks = textureLod(tCloudShade, p.xz / 640.0 - uDrift.x * vec2(0.011, 0.019), level).r;
-      // The gusts cross the strait faster than the banks go down it: where the two meet the mist stands up, and it works as it goes,
-      // so no bank keeps its shape for longer than a few seconds.
-      float gusts = textureLod(tCloudShade, p.xz / 410.0 + 0.37 - uDrift.x * vec2(0.049, 0.015), level).g;
-      float bank = smoothstep(0.1, 0.42, banks * gusts);
-      // uDrift: the seconds the banks stand at. In the card loop they go twice, a loop apart: the banks that leave thin as the ones
-      // behind them come up (z their share), so mist goes down the strait all through the loop and its last frame meets its first.
-      if (uDrift.z > 0.0) {
-        float banks2 = textureLod(tCloudShade, p.xz / 640.0 - uDrift.y * vec2(0.011, 0.019), level).r;
-        float gusts2 = textureLod(tCloudShade, p.xz / 410.0 + 0.37 - uDrift.y * vec2(0.049, 0.015), level).g;
-        bank = mix(bank, smoothstep(0.1, 0.42, banks2 * gusts2), uDrift.z);
+      // Nearer than uNearMist.x the low mist is not there at all: its banks are not read.
+      float bank = 0.0;
+      if (tm > uNearMist.x) {
+        float banks = textureLod(tCloudShade, p.xz / 640.0 - uDrift.x * vec2(0.011, 0.019), level).r;
+        // The gusts cross the strait faster than the banks go down it: where the two meet the mist stands up, and it works as it goes,
+        // so no bank keeps its shape for longer than a few seconds.
+        float gusts = textureLod(tCloudShade, p.xz / 410.0 + 0.37 - uDrift.x * vec2(0.049, 0.015), level).g;
+        bank = smoothstep(0.1, 0.42, banks * gusts);
+        // uDrift: the seconds the banks stand at. In the card loop they go twice, a loop apart: the banks that leave thin as the ones
+        // behind them come up (z their share), so mist goes down the strait all through the loop and its last frame meets its first.
+        if (uDrift.z > 0.0) {
+          float banks2 = textureLod(tCloudShade, p.xz / 640.0 - uDrift.y * vec2(0.011, 0.019), level).r;
+          float gusts2 = textureLod(tCloudShade, p.xz / 410.0 + 0.37 - uDrift.y * vec2(0.049, 0.015), level).g;
+          bank = mix(bank, smoothstep(0.1, 0.42, banks2 * gusts2), uDrift.z);
+        }
       }
       // It pools where a blade's foot shuts the land's horizon, and the pool goes and comes with the banks that pass over it.
       vec4 land = landAt(p.xz);

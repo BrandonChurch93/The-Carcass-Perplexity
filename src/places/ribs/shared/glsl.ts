@@ -37,7 +37,6 @@ uniform vec4 uDeck;
 uniform vec3 uDeckEdge;
 uniform vec3 uScud;
 uniform vec3 uBreakWarm;
-uniform float uDomeCut;
 uniform float uMirrorLift;
 uniform vec4 uHeads;
 uniform vec3 uSkyZenith;
@@ -216,11 +215,6 @@ vec3 skyDome(vec3 d) {
   vec2 b = texture2D(tCloudShade, q * 3.7 + 0.19).rg - 0.5;
   vec2 at = uv + 0.012 * work + (2.4 * a + 0.5 * b) * vec2(0.0022, 0.0039);
   vec3 c = texture2D(tDome, at).rgb;
-  // The picture's edges are soft at the widest frame, where one of its texels is over three of the frame's. What it holds finer than
-  // eight texels is given back stronger (the picture less its own coarser level), and the lumps say where: a cloud's edge is then
-  // crisp in one place and soft in the next, as a torn edge is, and no line is drawn that the picture does not hold.
-  vec3 coarse = textureLod(tDome, at, 3.0).rgb;
-  c = max(c + uDomeCut * (0.75 + 1.5 * (a.y + b.y)) * (c - coarse), 0.0);
   // Scud: lower, nearer shreds of the same storm cross before it three times as fast, so cloud goes across the blades' heads while
   // a lens is held. They are the picture's own dark bodies read larger (a nearer cloud is a larger one), laid end to end mirrored;
   // the picture is larger than the frame there at every size, so its finest level is named.
