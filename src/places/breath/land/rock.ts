@@ -836,7 +836,7 @@ void main() {
   float hollow = tm.b;
   float baked = tn.b;
   // Ivory: paler where the skin stands out, deeper in its lows.
-  vec3 albedo = mix(vec3(0.52, 0.49, 0.425), vec3(0.84, 0.815, 0.755), clamp(0.5 + 1.1 * (a.r - 0.5) + 0.9 * (hollow - 0.5), 0.0, 1.0));
+  vec3 albedo = mix(vec3(0.64, 0.61, 0.54), vec3(0.93, 0.91, 0.855), clamp(0.5 + 1.1 * (a.r - 0.5) + 0.9 * (hollow - 0.5), 0.0, 1.0));
   // Rust: it starts at the cracks and the bare places and runs down round the nose and under the belly, where the water runs. The top
   // keeps its cream, with a wash of it here and there.
   float face = 1.0 - up;
@@ -861,10 +861,7 @@ void main() {
   albedo = mix(albedo, vec3(0.5, 0.47, 0.42), 0.5 * dust);
   // The mist settles on it and runs: a smooth wet skin, duller where a plate has gone and where the dust lies.
   float rough = mix(mix(0.13, 0.3, smoothstep(0.55, 0.25, hollow)), 0.8, dust);
-  // A rib is round: its belly is shut in under itself and dark with what drips from it, and its face sees less of the sky than its top.
-  float belly = smoothstep(0.15, -0.55, n.y);
-  albedo = mix(albedo, vec3(0.2, 0.1, 0.045) * (0.7 + 0.6 * a.r), 0.55 * belly);
-  float occ = vOcc * mix(0.4, 1.0, baked) * mix(0.82, 1.06, hollow) * mix(0.72, 1.0, up) * mix(1.0, 0.5, belly);
+  float occ = vOcc * mix(0.4, 1.0, baked) * mix(0.82, 1.06, hollow);
 
   vec4 land = landAt(p.xz);
   float pit = smoothstep(-6.0, -30.0, land.r) * smoothstep(1.5, -1.5, p.y);
