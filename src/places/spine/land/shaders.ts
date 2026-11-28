@@ -284,15 +284,20 @@ const SCORCH_BLOCK = /* glsl */ `#if SCORCH == 1
       // Seen low across it, the plate's fine bright lines would lie down into ripples like water: it is read soft, and its contrast is held in.
       vec3 sc = textureGrad(tScorch, uvS, uvSx, uvSy).rgb;
       float lum = dot(sc, vec3(0.3, 0.5, 0.2));
-      // Burned rock is dark and wet; under the lens the burn's own close picture (2.4 m) gives it its cracks and glass.
-      vec3 near_ = textureGrad(tScorchD, dS / 2.4, dSx / 2.4, dSy / 2.4).rgb;
-      float close = smoothstep(0.02, 0.004, spanS);
-      sc = clamp(sc * 3.2 * mix(vec3(1.0), near_ / 0.16, 0.9 * close), vec3(0.018, 0.018, 0.02), vec3(0.6));
       // The plate's own snow goes into the snow of the place at its rim; its burn keeps to the middle, ragged by the picture's own dark.
       float out_ = length((uvS - 0.5) * vec2(1.0, 0.9)) / 0.31;
       // Tongues of new snow lie across it down the gale.
       float tongue = vnoise(vec2(dot(vWorld.xz, uWind.xz) * 0.35, dot(vWorld.xz, vec2(-uWind.z, uWind.x)) * 1.6));
       float scorch = 0.85 * smoothstep(1.0, 0.55, out_ + 0.9 * (lum - 0.3) + 0.7 * (tongue - 0.45));
+      // (Where the burn's share is nought, which is most of the plate's rectangle, nothing below is seen: every line of it is mixed in
+      // by that share. It is left here; the surface's way is still made one long, as the mix below would leave it.)
+      if (scorch <= 0.0) {
+        n = normalize(n);
+      } else {
+      // Burned rock is dark and wet; under the lens the burn's own close picture (2.4 m) gives it its cracks and glass.
+      vec3 near_ = textureGrad(tScorchD, dS / 2.4, dSx / 2.4, dSy / 2.4).rgb;
+      float close = smoothstep(0.02, 0.004, spanS);
+      sc = clamp(sc * 3.2 * mix(vec3(1.0), near_ / 0.16, 0.9 * close), vec3(0.018, 0.018, 0.02), vec3(0.6));
       vec2 px = 4.0 / vec2(textureSize(tScorchH, 0));
       float h0 = textureGrad(tScorchH, uvS, uvSx, uvSy).r;
       float du = (textureGrad(tScorchH, uvS + vec2(px.x, 0.0), uvSx, uvSy).r - h0) / (px.x * 10.5);
@@ -320,6 +325,7 @@ const SCORCH_BLOCK = /* glsl */ `#if SCORCH == 1
       // (Slab by slab: one is wet glass, the next is dull.)
       rough = mix(rough, mix(mix(0.34, 0.26 + 0.4 * slab.y, ledges) + 0.4 * smoothstep(0.25, 0.6, h0), 0.9, slush), scorch);
       occ = mix(occ, (0.6 + 0.4 * h0) * (1.0 - 0.3 * joint), scorch);
+      }
     }
   }
 #endif`;
