@@ -4,7 +4,7 @@
 import * as THREE from 'three';
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { RIG_UNIFORMS_GLSL } from '../shared/glsl';
-import { breakdown, envelope, figure, restruck, strokeAt, timingOf, type Line, type Strokes } from './bolt';
+import { breakdown, envelope, figure, restruck, timingOf, type Line, type Strokes } from './bolt';
 import { createChannel } from './channel';
 import { UNIT, WIND, WIND_SPEED, carcassBody, carcassView, step, strikeTip } from '../shared/anchors';
 import { cut, secondsInPlace } from '../../../film/cut';
@@ -29,10 +29,9 @@ const FLASH_OF = [5.5, 2.6, 0.9, 3.2, 0.6, 0.15];
  * the lift would fill the animals and the pulse is the picture. */
 const CLOUD_OF = [1.6, 0.5, 0.8, 0.75, 0.45, 0.85];
 const PULSE_OF = [1, 0.7, 0.8, 0.75, 0.45, 2.5];
-const ROUND_OF = [0.02, 0.2, 0.2, 0.7, 0.02, 0.15];
-/** The cloud comes up before its first stroke: over this many seconds, to this share of the stroke's light in it. The sky answers a
- * little light with much, so the share is small. */
-const PRE_OVER = 0.07;
+const ROUND_OF = [0.25, 0.2, 0.2, 0.7, 0.02, 0.15];
+/** The cloud comes up over the four frames before its stroke, to this share of the stroke's light in it. The sky answers a little
+ * light with much, so the share is small. */
 const PRE_CLOUD = 0.6;
 /** Each strike's share of the light in the cloud about its root. */
 const ROOT_OF = [1, 0.8, 0.9, 0.8, 0.7, 0.8];
@@ -47,10 +46,12 @@ const INNER_GLOW = 0.02;
 const INNER_SPAN = new THREE.Vector3(10, 40, 260);
 const INNER_CLOUD = 0.5;
 const INNER_PULSE = 1.1;
-/** What stays between the strokes, as shares of the last stroke's light: on the land and in the cloud, which glows along the line the
- * channel took. The channel itself is not drawn between them: at a share of its light it shows as a broken thread. */
-const HOLD_LAND = 0.78;
-const HOLD_CLOUD = 0.88;
+/** What the land takes of the cloud's rise before a stroke, as a share of the stroke's light. */
+const LAND_RISE = 0.2;
+/** The same for a stroke on the last frame of a shot, whose light swells into the cut (bolt.ts). */
+const SWELL_LAND = 0.8;
+/** What burns at the tip while the channel goes on burning, as a share of the channel's light. */
+const BURN_OF_CHANNEL = 0.75;
 const SPARKS = 44;
 /** The least height over the struck tip from which each strike's flash is cast, metres. */
 const CAST_UP = [480, 1100, 320, 110, 320, 320];
@@ -75,7 +76,7 @@ const FAR_BEARING = 6.6;
 const FAR_OFF = 9000;
 const FAR_HEAD = 1250;
 const FAR_FOOT = -260;
-const FAR_STROKES: Strokes = { at: [0, 3 / 60], share: [1, 0.72], fore: null };
+const FAR_STROKES: Strokes = { hold: 3 / 60, fore: null };
 const FAR_WIDE = 1150;
 /** Nine kilometres of the storm's air stand before it: its heart is violet, not white, and a tenth as hot. */
 const FAR_HEART = new THREE.Vector3(0.62, 0.47, 1);
@@ -259,7 +260,7 @@ export function create(ctx: Context): Piece {
   const rootPicture = ctx.assets.texture('mat/litcloud.jpg', { kind: 'colour', repeat: false });
   // The far strike of key spine-1: a channel and the cloud about its head. It is drawn with the first strike's part.
   const farKey = (cut.keyFrames as Record<string, number>)['spine-1'];
-  const farSeconds = farKey === undefined ? -1e9 : secondsInPlace(UNIT, farKey) - (FAR_STROKES.at[1] as number);
+  const farSeconds = farKey === undefined ? -1e9 : secondsInPlace(UNIT, farKey) - FAR_STROKES.hold;
   const farFoot = step(carcassBody, carcassView + FAR_BEARING, FAR_OFF, FAR_FOOT);
   const farSite: StrikeSite = { id: 'far', seconds: farSeconds, to: farFoot, rise: FAR_HEAD - FAR_FOOT, lean: [260, 0, -180], branch: null, spire: 0 };
   const farLines = figure(ctx.rng('strikes/far'), farSite);
@@ -421,11 +422,11 @@ export function create(ctx: Context): Piece {
         if (live) {
           const e = envelope(FAR_STROKES, age);
           const level = 0.4 * Math.min(1.2, e.channel);
-          farChannel.env.set(level, strokeAt(FAR_STROKES, age) === 0 ? e.branch : 0.6 * level, 0, 0);
+          farChannel.env.set(level, 0.6 * level, 0, 0);
           farChannel.group.visible = level > 0.0005;
-          const rising = age < 0 ? Math.max(0, 1 + age / PRE_OVER) : 0;
-          farGlow.copy(TINT).multiplyScalar(ROOT_GLOW * 2.2 * Math.max(Math.max(0, e.main - 0.09), 0.8 * e.glow, 0.6 * PRE_CLOUD * rising * rising));
-          farDie.set(Math.min(1, Math.max(0, 1 - Math.max(e.main, e.glow))), strokeAt(FAR_STROKES, age));
+          const lit = Math.max(e.glow, 0.9 * e.channel);
+          farGlow.copy(TINT).multiplyScalar(ROOT_GLOW * 2.2 * Math.max(lit, 0.6 * PRE_CLOUD * e.rise));
+          farDie.set(Math.min(1, Math.max(0, 1 - lit)), 1);
         }
       }
       channelLight.radiance.set(0, 0, 0);
@@ -437,49 +438,40 @@ export function create(ctx: Context): Piece {
       flashTop.set(0, 0, 0, 0);
       bolts.forEach((b, index) => {
         const age = seconds - b.site.seconds;
-        const live = age > -0.3 && age < 1.2;
+        const live = age > -0.3 && age < 0.6;
         b.group.visible = live;
         if (!live) return;
-        const e = envelope(timingOf(b.site.id), age);
-        // The first stroke burns the whole figure; each stroke after it takes its own way down and burns the main channel alone. A stroke is
-        // seen whole on its frame and as a violet thread on the next: the channel holds a little current and is never a broken line.
-        const stroke = strokeAt(timingOf(b.site.id), age);
+        const timing = timingOf(b.site.id);
+        const e = envelope(timing, age);
+        // A strike is one stroke down one channel. Where a judged frame falls inside it the channel burns on to that frame, by the way
+        // that frame was judged with (the second figure); elsewhere it is seen whole on its own frame and as a violet thread on the next.
+        const held = timing.hold > 0;
         const level = Math.min(1.2, e.channel);
-        b.first.set(stroke === 0 ? level : 0, stroke === 0 ? e.branch : 0, 0, 0);
-        b.again.set(stroke > 0 ? level : 0, stroke > 0 ? 0.85 * level : 0, 0, 0);
-        b.firstGroup.visible = stroke === 0 && level > 0.0005;
-        b.againGroup.visible = stroke > 0 && level > 0.0005;
+        b.first.set(held ? 0 : level, held ? 0 : e.branch, 0, 0);
+        b.again.set(held ? level : 0, held ? e.branch : 0, 0, 0);
+        b.firstGroup.visible = !held && level > 0.0005;
+        b.againGroup.visible = held && level > 0.0005;
         b.age.value = age;
         // Light inside the cloud before the stroke, then the stroke itself.
         const before = breakdown(age);
-        // Between the strokes the channel, the tip and the land are dark: only the cloud keeps a dull glow.
-        const tail = e.after;
-        const power = e.main;
-        // The stroke alone throws light: the dim current that goes on in the channel after it is seen and lights nothing.
-        const hard = Math.max(0, power - 0.09);
         const of = index % FLASH_OF.length;
-        b.spotGlow.set(1, 0.93, 1).multiplyScalar(Math.min(hard, 1) * 130);
-        // The fume leaves the tip down the gale, a little up, and is lit while the stroke and what the land keeps of it last.
+        // What burns at the tip goes with the channel: the hot spot, the light on the rock close under it, the fume.
+        const burn = Math.max(e.light, BURN_OF_CHANNEL * e.channel);
+        b.spotGlow.set(1, 0.93, 1).multiplyScalar(Math.min(burn, 1) * 130);
+        // The fume leaves the tip down the gale, a little up, and is lit while the channel burns.
         b.fumeAt.copy(b.tip).addScaledVector(wind, (0.42 + 0.9 * Math.max(age, 0)) * FUME_WIDE / (wind.length() || 1));
         b.fumeAt.y += 0.2 * FUME_WIDE;
-        b.fumeGlow.set(0.8, 0.76, 1).multiplyScalar(FUME_GLOW * Math.max(hard, 0.6 * e.held));
-        b.fumeDie.set(0, stroke);
+        b.fumeGlow.set(0.8, 0.76, 1).multiplyScalar(FUME_GLOW * burn);
+        b.fumeDie.set(0, held ? 1 : 0);
         const within = e.cloud;
-        // Between the strokes the light does not go out: the land keeps a share of the last stroke's light for a few frames and the
-        // cloud keeps more of it for longer.
-        const land = Math.max(hard, HOLD_LAND * e.held, age < 0 ? 0.6 * PRE_CLOUD * Math.max(0, 1 + age / PRE_OVER) ** 2 : 0);
-        const sky = Math.max(hard, HOLD_CLOUD * e.glow);
-        // The even lift of the air goes with the cloud's glow and not with the stroke alone: lit for one frame and dark the next, the whole
-        // picture flipped twice a strike, which no encoder holds.
-        // And the cloud comes up over the four frames before the first stroke, evenly and without the breakdown's flicker: from dark to
-        // the stroke in one frame, three fifths of the picture's light changed at once.
-        const rising = age < 0 ? Math.max(0, 1 + age / PRE_OVER) : 0;
-        const lit = Math.max(sky, PRE_CLOUD * rising * rising);
-        const round = lit * (ROUND_OF[of] as number);
-        // The cloud about the root: full on a stroke and gone some four frames after it, so that it never stands as one fixed shape while
-        // the sky's own glow dies round it. Before the first stroke it flickers.
-        b.rootGlow.copy(TINT).multiplyScalar(ROOT_GLOW * (ROOT_OF[of] as number) * Math.max(hard, 0.7 * e.held, 0.15 * before, 0.6 * PRE_CLOUD * rising * rising));
-        b.rootDie.set(before > 0 && sky <= 0 ? 0.6 : Math.min(1, Math.max(0, 1 - sky)), stroke);
+        // The key and the fill of a strike: full on the stroke's frame, sinking after it, with one short rise in the cloud before it.
+        const land = Math.max(e.light, (timing.swell ? SWELL_LAND : LAND_RISE) * e.rise);
+        const sky = Math.max(e.light, PRE_CLOUD * e.rise);
+        // The glow in the cloud about the channel, which the round lights and the picture at the root draw: gone within a few frames.
+        const glow = Math.max(e.glow, PRE_CLOUD * e.rise);
+        const round = glow * (ROUND_OF[of] as number);
+        b.rootGlow.copy(TINT).multiplyScalar(ROOT_GLOW * (ROOT_OF[of] as number) * Math.max(e.glow, 0.15 * before, 0.6 * PRE_CLOUD * e.rise));
+        b.rootDie.set(before > 0 && e.glow <= 0 ? 0.6 : Math.min(1, Math.max(0, 1 - e.glow)), held ? 1 : 0);
         if (index === 4 && seconds < FIFTH_FROM) {
           b.firstGroup.visible = false;
           b.againGroup.visible = false;
@@ -487,7 +479,7 @@ export function create(ctx: Context): Piece {
           b.spotGlow.set(0, 0, 0);
           b.fumeGlow.set(0, 0, 0);
         }
-        if (within > 0 && hard <= 0 && INNER_CLOUD * within > (CLOUD_OF[of] as number) * sky) {
+        if (within > 0 && e.light <= 0 && INNER_CLOUD * within > (CLOUD_OF[of] as number) * sky) {
           // A cloud lit from inside: its own glow and what of it comes in by the canal's mouth. No light with a shadow.
           flashTip.set(INNER_AT.x - 0.4 * INNER_SPAN.x, INNER_AT.y - 0.4 * INNER_SPAN.y, INNER_AT.z - 0.4 * INNER_SPAN.z, FLASH * INNER_PULSE * within);
           flashTop.set(INNER_AT.x + 0.6 * INNER_SPAN.x, INNER_AT.y + 0.6 * INNER_SPAN.y, INNER_AT.z + 0.6 * INNER_SPAN.z, FLASH * INNER_CLOUD * within);
@@ -495,10 +487,8 @@ export function create(ctx: Context): Piece {
           flashAt.set(b.cast.x, b.cast.y, b.cast.z, FLASH * (FLASH_OF[of] as number) * land);
           flashTip.set(b.tip.x, b.tip.y, b.tip.z, FLASH * (PULSE_OF[of] as number) * land);
           flashTop.set(b.top.x, b.top.y, b.top.z, FLASH * (CLOUD_OF[of] as number) * sky);
-        } else if (lit > 0) {
-          flashTop.set(b.top.x, b.top.y, b.top.z, FLASH * (CLOUD_OF[of] as number) * lit);
         }
-        if (power + before + tail + within > 1e-4) {
+        if (e.light + e.channel + before + e.rise + within > 1e-4) {
           channelLight.position.copy(b.mid);
           channelLight.radiance.copy(TINT).multiplyScalar(CAST * round);
           alongLights.forEach((l, n) => {
@@ -507,12 +497,12 @@ export function create(ctx: Context): Piece {
           });
           tipLight.position.copy(b.tip);
           tipLight.position.y += 2;
-          tipLight.radiance.copy(TINT).multiplyScalar(TIP_CAST * hard);
+          tipLight.radiance.copy(TINT).multiplyScalar(TIP_CAST * burn);
           // A strike seen from inside the canal has its cloud where the far mouth shows it; the others have it where the channel enters.
-          cloudLight.position.copy(timingOf(b.site.id).fore !== null ? INNER_AT : b.top);
-          // The cloud's own bloom about a light closes on a ceiling at a hundredth of a stroke: the glow it keeps and the glow before a stroke
-          // are small shares, so that they are dull beside the stroke and die with it.
-          cloudLight.radiance.copy(TINT).multiplyScalar(CAST * 0.35 * (round + within * INNER_GLOW + tail * 0.1 + before * (BEFORE_OF[of] as number)));
+          cloudLight.position.copy(timing.fore !== null ? INNER_AT : b.top);
+          // The cloud's own bloom about a light closes on a ceiling at a hundredth of a stroke: the glow before a stroke is a small
+          // share, so that it is dull beside the stroke.
+          cloudLight.radiance.copy(TINT).multiplyScalar(CAST * 0.35 * (round + within * INNER_GLOW + before * (BEFORE_OF[of] as number)));
         }
       });
       burns(flashAt.w > 0 || flashTop.w > 0);

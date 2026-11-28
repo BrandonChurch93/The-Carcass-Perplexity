@@ -1,5 +1,5 @@
 // The shape and the timing of a strike, both from its seed and the seconds since its frame: nothing is stepped.
-import { stream, type Rng } from '../../../core/rng';
+import type { Rng } from '../../../core/rng';
 import type { Vec3 } from '../../../core/cameras';
 import { cut, secondsInPlace } from '../../../film/cut';
 import { UNIT } from '../shared/anchors';
@@ -135,43 +135,28 @@ function streamers(rng: Rng, site: StrikeSite): Line[] {
 }
 
 export interface Strokes {
-  /** Seconds after the strike's frame of each return stroke, and its share. */
-  at: number[];
-  share: number[];
-  /** Seconds (under zero) at which one cloud of the storm is brightest with its own inner light before the first stroke comes to
+  /** Seconds after the strike's frame for which its channel goes on burning: to a judged frame that falls inside the strike, so that
+   * the frame has its bolt. 0 where no judged frame does: then the channel is seen on its own frame and as a thread on the next. */
+  hold: number;
+  /** Seconds (under zero) at which one cloud of the storm is brightest with its own inner light before the stroke comes to
    * ground, or null: it lights that cloud and what the cloud lights, and no channel is seen. */
   fore: number | null;
-}
-
-/** The frames after a strike's own on which it strikes again, by which strike it is. One each, three to five frames on: more
- * of them strobed, and between the two the land and the cloud keep a sinking share of the light (kept), so no frame is dark. */
-const RESTRIKES: readonly (readonly number[])[] = [[4], [3], [5], [3], [4], [3]];
-
-export function strokes(rng: Rng, which = 0): Strokes {
-  // The first stroke is the flash; each restrike is weaker than the one before it, by an uneven share.
-  const frames = RESTRIKES[which % RESTRIKES.length] as readonly number[];
-  const at = [0];
-  const share = [1];
-  let last = rng.range(0.5, 0.62);
-  for (const f of frames) {
-    at.push(f / 60);
-    share.push(last);
-    last *= rng.range(0.5, 0.72);
-  }
-  return { at, share, fore: null };
+  /** Seconds over which the cloud comes up before the stroke, where that is not the usual. */
+  swell?: number;
 }
 
 const ramp = (a: number, b: number, v: number): number => {
   const t = Math.min(1, Math.max(0, (v - a) / (b - a)));
   return t * t * (3 - 2 * t);
 };
-/** One return stroke as a camera at 60 frames a second takes it: full for the whole of the open shutter of its frame (the half frame from
+/** The stroke as a camera at 60 frames a second takes it: full for the whole of the open shutter of its frame (the half frame from
  * its instant), gone before the next frame opens. Smooth, and exactly nothing 14 ms after it. */
 const pulse = (age: number): number => ramp(-0.0016, -0.0002, age) * (1 - ramp(0.0092, 0.014, age));
-/** The current that goes on in the channel after the first stroke: a dim frame and a dimmer one, then nothing. */
-const current = (age: number): number => (age < 0.012 || age > 0.06 ? 0 : 0.085 * ramp(0.012, 0.016, age) * Math.exp(-(age - 0.016) / 0.013) * (1 - ramp(0.04, 0.06, age)));
+/** What a strike's light leaves once the stroke's own frame is over: this share of it on the next frame, sinking by `over` seconds,
+ * and exactly nothing `end` seconds after the stroke. One fall and no second rise: a strike is one flash. */
+const fall = (age: number, share: number, over: number, end: number): number => (age < 0.012 ? 0 : share * ramp(0.012, 0.0165, age) * Math.exp(-(age - 0.0165) / over) * (1 - ramp(0.6 * end, end, age)));
 
-/** The light inside the cloud in the tenth of a second before the first stroke: the breakdown that sends the leader down. It flickers and grows. */
+/** The light inside the cloud in the tenth of a second before the stroke: the breakdown that sends the leader down. It flickers and grows. */
 export const breakdown = (age: number): number => {
   if (age >= 0 || age < -0.3) return 0;
   const k = Math.min(1, Math.max(0, (age + 0.11) / 0.09));
@@ -179,46 +164,49 @@ export const breakdown = (age: number): number => {
   return (early + 0.3 * k * k * (0.7 + 0.3 * Math.sin(age * 190))) * (1 - ramp(-0.004, -0.0016, age));
 };
 
-/** A cloud lit from inside, at seconds from its brightest: it comes up over a tenth of a second, wavers, and sinks under the first
- * strokes. No frame of it is a flash. */
+/** A cloud lit from inside, at seconds from its brightest: it comes up over a tenth of a second, wavers, and sinks under the
+ * stroke. No frame of it is a flash. */
 const inner = (t: number): number => ramp(-0.1, 0, t) * (1 - ramp(0.012, 0.085, t)) * (0.88 + 0.12 * Math.sin(t * 95));
 
-/** What the strokes leave behind them, as a share of the first: each stroke's light sinks by `tau` seconds and the brightest of them
- * counts, so that a frame between two strokes is darker than both and lit. Smooth, and exactly nothing 0.45 s after the last stroke. */
-const kept = (s: Strokes, age: number, tau: number): number => {
-  let most = 0;
-  for (let i = 0; i < s.at.length; i++) {
-    const t = age - (s.at[i] as number);
-    if (t > 0) most = Math.max(most, (s.share[i] as number) * (1 - Math.exp(-t / 0.003)) * Math.exp(-t / tau));
-  }
-  return most * (1 - ramp(0.25, 0.45, age - (s.at[s.at.length - 1] as number)));
-};
+/** The light a strike throws, by the frame, as shares of the stroke's own: 1, then 0.4 and sinking by a quarter each frame, nothing
+ * after a quarter of a second. */
+const LIGHT_KEEPS = 0.4;
+const LIGHT_OVER = 0.062;
+const LIGHT_END = 0.25;
+/** The glow of the cloud about the channel goes sooner: nothing of it six frames after the channel is dark. */
+const GLOW_KEEPS = 0.42;
+const GLOW_OVER = 0.026;
+const GLOW_END = 0.1;
+/** A channel that goes on burning (hold) keeps this share of the stroke on the next frame, and sinks by `HELD_OVER` seconds until the
+ * hold is over; then it is a thread for three frames. */
+const HELD_KEEPS = 0.9;
+const HELD_OVER = 0.22;
+/** And its light on the land: this share on the next frame, sinking by `HELD_LIGHT_OVER` seconds, nothing after `HELD_LIGHT_END`. */
+const HELD_LIGHT = 0.72;
+const HELD_LIGHT_OVER = 0.1;
+const HELD_LIGHT_END = 0.3;
 
-/** How bright the main channel is, the branches are, and the glow the cloud keeps, at seconds since the strike's frame. `leader` is 1: a
- * camera does not see the leader, and nothing is drawn of the channel before its first stroke. */
-export function envelope(s: Strokes, age: number): { main: number; branch: number; after: number; leader: number; cloud: number; held: number; glow: number; channel: number } {
-  let main = current(age);
-  for (let i = 0; i < s.at.length; i++) main += (s.share[i] as number) * pulse(age - (s.at[i] as number));
-  // What the cloud holds after each stroke: a dull glow that sinks in an eighth of a second. Nothing of it is in the channel.
-  let after = 0;
-  for (let i = 0; i < s.at.length; i++) {
-    const t = age - (s.at[i] as number);
-    if (t > 0) after += 0.05 * (s.share[i] as number) * (1 - Math.exp(-t / 0.004)) * Math.exp(-t / 0.12);
-  }
-  // What is seen of the channel: each stroke whole for its frame, then the current it leaves, a fifth of it and sinking fast.
-  let channel = 0;
-  for (let i = 0; i < s.at.length; i++) {
-    const t = age - (s.at[i] as number);
-    channel = Math.max(channel, (i === 0 ? 1 : Math.max(0.7, s.share[i] as number)) * (pulse(t) + (t > 0.01 ? 0.2 * ramp(0.01, 0.016, t) * Math.exp(-(t - 0.016) / 0.012) * (1 - ramp(0.03, 0.045, t)) : 0)));
-  }
-  return { main, branch: pulse(age) + (age > 0.01 ? 0.2 * ramp(0.01, 0.016, age) * Math.exp(-(age - 0.016) / 0.012) * (1 - ramp(0.03, 0.045, age)) : 0), after, leader: 1, cloud: s.fore === null ? 0 : inner(age - s.fore), held: kept(s, age, 0.07), glow: kept(s, age, 0.14), channel };
-}
+/** The cloud comes up over this many seconds before a stroke. */
+const RISE_OVER = 0.07;
+/** A stroke on the last frame of a shot is seen for that one frame and then from another lens: alone it is a single brighter frame
+ * before a cut. Its cloud comes up over this many seconds instead, and the land with it (index.ts), so the light swells into the cut. */
+const SWELL_OVER = 0.15;
 
-/** Which return stroke the channel last carried at these seconds since the strike's frame: each takes a way of its own. */
-export function strokeAt(s: Strokes, age: number): number {
-  let n = 0;
-  for (let i = 1; i < s.at.length; i++) if (age >= (s.at[i] as number) - 0.002) n = i;
-  return n;
+/** One strike at seconds since its frame. `light`: what it throws on the land, the sea and the storm, one rise and one fall.
+ * `channel` and `branch`: how bright the channel and its branches are drawn. `glow`: the cloud about the channel, lit from inside.
+ * `rise`: the cloud coming up before the stroke, 0 to 1. `cloud`: one cloud lit from inside before the stroke (fore), or 0. */
+export function envelope(s: Strokes, age: number): { light: number; channel: number; branch: number; glow: number; rise: number; cloud: number } {
+  const on = pulse(age);
+  // While the channel burns on, its light goes on with it and sinks slower: no second rise.
+  const light = on + (s.hold > 0 ? fall(age, HELD_LIGHT, HELD_LIGHT_OVER, HELD_LIGHT_END) : fall(age, LIGHT_KEEPS, LIGHT_OVER, LIGHT_END));
+  let channel: number;
+  if (s.hold > 0) {
+    const past = age - s.hold - 0.0092;
+    channel = on + (past <= 0 ? fall(age, HELD_KEEPS, HELD_OVER, 9) : HELD_KEEPS * Math.exp(-s.hold / HELD_OVER) * Math.exp(-past / 0.016) * (1 - ramp(0.04, 0.07, past)));
+  } else channel = on + fall(age, 0.3, 0.014, 0.05);
+  const glow = Math.max(on + fall(age, GLOW_KEEPS, GLOW_OVER, GLOW_END), s.hold > 0 ? 0.6 * channel : 0);
+  const rise = age < 0 ? Math.max(0, 1 + age / (s.swell ?? RISE_OVER)) ** 2 * (1 - on) : 0;
+  return { light, channel, branch: s.hold > 0 ? 0.85 * channel : channel, glow, rise, cloud: s.fore === null ? 0 : inner(age - s.fore) };
 }
 
 export interface Flash {
@@ -233,26 +221,20 @@ export interface Flash {
 }
 
 const TIMING = new Map<string, Strokes>();
-/** The return strokes of a strike, from its name alone. */
+/** How long a strike's channel burns, from its name alone. */
 export function timingOf(id: string): Strokes {
   let t = TIMING.get(id);
   if (!t) {
-    t = strokes(stream(`spine/strokes/${id}`), Math.max(0, STRIKES.findIndex((s) => s.id === id)));
-    // A frame the film is judged on that falls inside the flicker of a strike has a stroke of its own: the stroke nearest to it burns on that frame.
+    t = { hold: 0, fore: null };
     const site = STRIKES.find((s) => s.id === id);
     for (const frame of Object.values(cut.keyFrames)) {
       const age = site ? secondsInPlace(UNIT, frame) - site.seconds : -1;
       // A judged frame just before the strike's own has a cloud lit from inside: the channel is not there yet.
       if (age < -0.002 && age > -0.06) t.fore = age;
-      if (age < 0.025 || age > 0.3) continue;
-      let near = 1;
-      for (let i = 1; i < t.at.length; i++) if (Math.abs((t.at[i] as number) - age) < Math.abs((t.at[near] as number) - age)) near = i;
-      t.at[near] = age;
-      // It is a restrike: bright enough to be the picture of a strike, and under the flash of the first.
-      t.share[near] = Math.max(t.share[near] as number, 0.62);
-      for (let i = near + 1; i < t.at.length; i++) t.at[i] = Math.max(t.at[i] as number, (t.at[i - 1] as number) + 2 / 60);
-      for (let i = near - 1; i >= 1; i--) t.at[i] = Math.min(t.at[i] as number, (t.at[i + 1] as number) - 2 / 60);
+      // A judged frame that falls inside the strike has the bolt in it: the channel burns on until that frame.
+      if (age >= 0.012 && age <= 0.3) t.hold = Math.max(t.hold, age);
     }
+    if (site && cut.shots.some((shot) => Math.abs(secondsInPlace(UNIT, shot.last) - site.seconds) < 0.004)) t.swell = SWELL_OVER;
     TIMING.set(id, t);
   }
   return t;
@@ -264,7 +246,7 @@ export function flashAt(seconds: number): Flash | null {
     const age = seconds - site.seconds;
     if (age < -0.12 || age > 1.2) continue;
     const e = envelope(timingOf(site.id), age);
-    return { at: site.to, power: e.main + e.after + 0.6 * breakdown(age), spire: site.spire, age };
+    return { at: site.to, power: e.light + 0.2 * e.rise, spire: site.spire, age };
   }
   return null;
 }
