@@ -67,7 +67,12 @@ void main() {
   // And it runs up the hide in strands where the animal has shaken and rolled: narrow tongues, each to its own height, none level with the next.
   float strandA = smoothstep(0.5, 0.92, vnoise(vec2(vRest.x * 17.0 + vRest.z * 6.0 + 0.6 * y, uSeed * 2.0 + 3.0)));
   float strandB = smoothstep(0.45, 0.95, vnoise(vec2(vRest.x * 41.0 - vRest.z * 13.0 + 1.1 * y, uSeed * 4.0 + 7.0)));
-  float tide = mix(uCoat.x + 0.3 * leg - 0.42 * snout + 0.75 * (patchy - 0.5) + 0.3 * (mid - 0.5) + 0.07 * (fine - 0.5) + 0.3 * lane + 0.22 * (1.0 - smoothstep(0.1, 0.7, fold)) + uStrand * (0.2 * strandA * (0.4 + 0.9 * patchy) + 0.09 * strandB), 9.0, uCoat.z);
+  // (And it is no band with a level top. Where the legs threw it up it ran back down the hide: narrow runs, each to its own height and thinning to a point,
+  // between them the hide clean almost to the belly. The measure runs round the animal, so a run goes straight down its side.)
+  float along = vRest.x + vRest.z * abs(nr.x);
+  float runA = smoothstep(0.5, 0.78, vnoise(vec2(along * 43.0, uSeed * 6.0 + 1.0))) * (0.06 + 0.55 * vnoise(vec2(along * 11.0, uSeed * 8.0 + 2.0)));
+  float runB = smoothstep(0.45, 0.8, vnoise(vec2(along * 15.0, uSeed * 3.0 + 5.0))) * (0.04 + 0.32 * vnoise(vec2(along * 4.0 + 3.0, uSeed * 9.0)));
+  float tide = mix(uCoat.x + 0.3 * leg - 0.42 * snout + 0.3 * (patchy - 0.5) + 0.12 * (mid - 0.5) + 0.05 * (fine - 0.5) + 0.12 * lane + 0.22 * (1.0 - smoothstep(0.1, 0.7, fold)) + uStrand * (0.2 * strandA * (0.4 + 0.9 * patchy) + 0.09 * strandB) + (runA + runB) * (1.0 - 0.6 * leg), 9.0, uCoat.z);
   float wet = 1.0 - smoothstep(-0.03, 0.03, y - tide);
   // Thrown up the flank as it wades: clots, thick by the line and thinning to nothing a stride above it.
   float above = clamp((y - tide) / 0.75, 0.0, 1.0);
@@ -88,7 +93,9 @@ void main() {
   albedo *= 1.0 - 0.35 * smoothstep(1.0, 1.7, vRest.x) * (1.0 - leg);
   albedo *= mix(0.42, 1.06, smoothstep(0.05, 0.8, fold));
   // (The damp above the line is the red of the brine drawn up the hide.)
-  albedo = mix(albedo, albedo * mix(vec3(0.6, 0.55, 0.53), vec3(0.62, 0.27, 0.19), 1.0 - smoothstep(0.0, 0.5 + 0.35 * patchy, y - tide)), damp);
+  // (A hand of it wicks up from the line and from every run, in the creases and not on the tops of the folds.)
+  float stain = (1.0 - smoothstep(0.0, 0.07 + 0.16 * patchy * mid, y - tide)) * mix(1.0, 0.45, smoothstep(0.4, 0.75, skinH));
+  albedo = mix(albedo, albedo * mix(vec3(0.6, 0.55, 0.53), vec3(0.5, 0.17, 0.11), stain), damp);
   // The cake: pale and matt, each plate dark at the edge where it has lifted, and the salt has come out of it white on the spine.
   vec3 plate = vec3(0.098, 0.086, 0.071) * mix(vec3(dot(cake, LUMA) / dot(CAKE_MEAN, LUMA)), cake / CAKE_MEAN, 0.7);
   plate *= 0.62 + 0.38 * smoothstep(0.525, 0.6, lie);
@@ -98,7 +105,7 @@ void main() {
   albedo = mix(albedo, plate, dry);
   // The mud: blood red where it is thick and fresh, rust where it thins out toward the line.
   float thick = 1.0 - smoothstep(-0.5, 0.0, y - tide);
-  vec3 red = mix(vec3(0.05, 0.0125, 0.0075), vec3(0.036, 0.0095, 0.006), thick) * (0.55 + 0.9 * skinH);
+  vec3 red = mix(vec3(0.036, 0.0105, 0.0065), vec3(0.027, 0.0075, 0.0048), thick) * (0.55 + 0.9 * skinH);
   vec3 grey = mix(vec3(0.17, 0.125, 0.105), vec3(0.085, 0.06, 0.05), thick) * (0.55 + 0.9 * skinH);
   // One coated to the top of its back is wet hide under a wash of the brine: brown, the red only where it lies in it.
   red = mix(red, mix(vec3(0.03, 0.008, 0.005), vec3(0.025, 0.014, 0.009), smoothstep(0.0, 0.3, vWorld.y - vRaise)) * (0.45 + 1.1 * skinH), uCoat.z);
@@ -130,7 +137,7 @@ void main() {
   rough = mix(rough, mix(0.88, 0.76, smoothstep(0.5, 0.85, skinH)), mud);
   rough = mix(rough, mix(0.6, 0.8, crease), deep);
   rough = mix(rough, 1.0, 0.7 * graze);
-  float occ = mix(vOpen * sqrt(vOpen), max(vOpen, 0.55), 0.6 * leg) * (0.5 + 0.5 * smoothstep(0.0, 0.85, fold)) * mix(0.7 + 0.3 * smoothstep(0.15, 0.6, skinH), 0.7 + 0.3 * smoothstep(0.2, 0.6, cakeH), dry);
+  float occ = mix(vOpen * sqrt(vOpen), max(vOpen, 0.62), 0.85 * leg) * (0.5 + 0.5 * smoothstep(0.0, 0.85, fold)) * mix(0.7 + 0.3 * smoothstep(0.15, 0.6, skinH), 0.7 + 0.3 * smoothstep(0.2, 0.6, cakeH), dry);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // What looks down is lit by the wet red ground under it.
   vec3 skyUp = skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
