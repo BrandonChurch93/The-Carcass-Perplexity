@@ -1,17 +1,24 @@
-// What lies beyond the planet's edge: the stars. They are points at infinity, so they are placed by the direction the camera sees
-// them in and not on the ground: as the camera rises the planet's edge draws back over them, and they turn only with the camera.
-// A star's place is given in the sky's own measure: x to the right and y down the master picture, in half heights of the view.
+// What lies beyond the planet's edge: the stars, the band of the galaxy behind them, a small moon, and the edge of the air itself.
+// The stars are points at infinity, so they are placed by the direction the camera sees them in and not on the ground: as the camera
+// rises the planet's edge draws back over them, and they turn only with the camera. The band and the moon stand with them.
+// A place in the sky is given in the sky's own measure: x to the right and y down the master picture, in half heights of the view.
 import * as THREE from 'three';
 import { FILM_ASPECT, HALF_TAN, KM, LIMB, LIMB_FOLLOW, RISE_LAST, X, Z, driftAt, poseAt } from '../shared/anchors';
 import type { Context } from '../shared/context';
 import { RIG_GLSL, RIG_UNIFORMS_GLSL } from '../shared/glsl';
+import { BAND_CELLS } from './space-band';
 
 /** How rich the field is: 1 is the film's. The count of stars goes with it, and their brightness a little. */
 const RICH: number = 1;
 /** Stars to a square half height of sky away from the band, at RICH 1. */
 const FIELD = 9000;
 /** The band of the galaxy: a point on its middle line, the way it runs, and how many more stars stand in its core than in the field. */
-export const BAND = { x: -1.55, y: -0.8, alongX: 0.96, alongY: 0.28, more: 5 };
+const BAND = { x: -1.55, y: -0.8, alongX: 0.96, alongY: 0.28, more: 5 };
+/** Its picture (sky/space-band.jpg, 1520 x 480): where the picture begins along the band, how long and how wide it lies, half heights. */
+const BAND_LIES = { from: -0.44, long: 1.9, wide: 0.6, texels: 800 };
+/** The moon: where it stands in the sky, and how wide it is in pixels of a picture 3840 wide. */
+const MOON = { x: -1.38, y: -0.93 };
+const MOON_WIDE: number = 96;
 /** Two loose clusters: where, how wide (half heights), how many stars. */
 const CLUSTERS: [number, number, number, number][] = [
   [-1.63, -0.925, 0.022, 70],
@@ -31,27 +38,20 @@ function hash(i: number, channel: number): number {
   h = Math.imul(h ^ (h >>> 16), 0x27d4eb2f);
   return ((h ^ (h >>> 15)) >>> 0) / 4294967296;
 }
-function noise(x: number, y: number): number {
-  const ix = Math.floor(x);
-  const iy = Math.floor(y);
-  const fx = x - ix;
-  const fy = y - iy;
-  const ux = fx * fx * (3 - 2 * fx);
-  const uy = fy * fy * (3 - 2 * fy);
-  const at = (a: number, b: number): number => hash(a * 7919 + b * 104729, 11);
-  return (at(ix, iy) * (1 - ux) + at(ix + 1, iy) * ux) * (1 - uy) + (at(ix, iy + 1) * (1 - ux) + at(ix + 1, iy + 1) * ux) * uy;
-}
-const fbm = (x: number, y: number): number => 0.5 * noise(x, y) + 0.3 * noise(2.1 * x + 5.2, 2.1 * y + 1.7) + 0.2 * noise(4.3 * x + 9.1, 4.3 * y + 3.3);
-
-/** How thick the stars of the galaxy stand at a place of the sky, 0 to about 1: a bright core, a wide faint halo, clumps, and a dark lane of dust that wanders along the middle. */
-export function bandAt(x: number, y: number): number {
+/** How thick the far crowd of the galaxy stands at a place of the sky, 0 to 1: read from the table of its picture, so the grain of stars follows the picture's glow and thins in its dust lanes. */
+function bandAt(x: number, y: number): number {
   const along = (x - BAND.x) * BAND.alongX + (y - BAND.y) * BAND.alongY;
   const across = -(x - BAND.x) * BAND.alongY + (y - BAND.y) * BAND.alongX;
-  const core = Math.exp(-((across / 0.13) * (across / 0.13)));
-  const halo = 0.3 * Math.exp(-((across / 0.34) * (across / 0.34)));
-  const lane = across - 0.015 - 0.07 * (noise(along * 2.6 + 3, 0.5) - 0.5) - 0.03 * (noise(along * 9 + 1, 4.5) - 0.5);
-  const dust = Math.exp(-((lane / 0.03) * (lane / 0.03))) * (0.35 + 0.65 * noise(along * 4.2 + 8, 2.5));
-  return (core + halo) * (0.45 + 1.1 * fbm(along * 7, across * 7 + 20)) * (1 - 0.9 * dust);
+  const rows = BAND_CELLS.length;
+  const columns = (BAND_CELLS[0] as string).length;
+  const u = ((along - BAND_LIES.from) / BAND_LIES.long) * columns - 0.5;
+  const v = (across / BAND_LIES.wide + 0.5) * rows - 0.5;
+  const cell = (i: number, j: number): number => (i < 0 || j < 0 || i >= columns || j >= rows ? 0 : ((BAND_CELLS[j] as string).charCodeAt(i) - 97) / 25);
+  const i = Math.floor(u);
+  const j = Math.floor(v);
+  const fu = u - i;
+  const fv = v - j;
+  return (cell(i, j) * (1 - fu) + cell(i + 1, j) * fu) * (1 - fv) + (cell(i, j + 1) * (1 - fu) + cell(i + 1, j + 1) * fu) * fv;
 }
 
 interface View {
@@ -127,8 +127,8 @@ function tintOf(heat: number, keep: number): [number, number, number] {
   return [0, 1, 2].map((c) => 1 + ((a[c] as number) * (1 - t) + (b[c] as number) * t - 1) * keep) as [number, number, number];
 }
 
-/** The stars, as points under the mesh of space (they are of its part). Give the returned pair to the folder's list of things to dispose. */
-export function createStars(ctx: Context, space: THREE.Mesh): { geometry: THREE.BufferGeometry; material: THREE.ShaderMaterial } {
+/** The stars and the moon, under the mesh of space (they are of its part), and the band in its own material. Give what is returned to the folder's list of things to dispose. */
+export function createSpace(ctx: Context, space: THREE.Mesh): { geometry: THREE.BufferGeometry; material: THREE.ShaderMaterial }[] {
   const seen = views();
   const radius = LIMB.r * KM;
   const everSeen = (x: number, y: number): boolean => {
@@ -153,7 +153,7 @@ export function createStars(ctx: Context, space: THREE.Mesh): { geometry: THREE.
   // Many faint and few bright: the count of stars brighter than a given brightness falls as one over that brightness.
   const add = (x: number, y: number, i: number, dim: number): void => put(x, y, i, Math.min(FAINTEST / (1 - hash(i, 3)), 1.2) * dim);
   const SIDE = 4.3;
-  const most = 1 + BAND.more * 1.6;
+  const most = 1 + BAND.more;
   const tries = Math.round(FIELD * RICH * SIDE * SIDE * most);
   for (let i = 0; i < tries; i++) {
     const x = (hash(i, 0) - 0.5) * SIDE;
@@ -194,15 +194,95 @@ export function createStars(ctx: Context, space: THREE.Mesh): { geometry: THREE.
   const points = new THREE.Points(geometry, material);
   points.frustumCulled = false;
   points.renderOrder = space.renderOrder + 0.5;
-  // The camera of this very sample and the size of the picture it is drawn into: the stars take both here, so they sit where the lens puts them.
-  points.onBeforeRender = (renderer, _scene, camera) => {
+  space.add(points);
+
+  // The band lies in the black itself: the material of space reads its picture.
+  const levels = new THREE.Vector2(0, 0);
+  const black = (space.material as THREE.ShaderMaterial).uniforms;
+  black.uSky = { value: sky };
+  black.uLevels = { value: levels };
+  black.uBandMap = { value: ctx.assets.texture('sky/space-band.jpg', { repeat: false }) };
+  black.uBandAt = { value: new THREE.Vector4(BAND.x, BAND.y, BAND.alongX, BAND.alongY) };
+  black.uBandLies = { value: new THREE.Vector3(BAND_LIES.from, 1 / BAND_LIES.long, 1 / BAND_LIES.wide) };
+
+  // The moon: a small disc in front of the stars, lit by the scene's own sun.
+  const moonRadius = MOON_WIDE / 2160;
+  const moonGeometry = new THREE.PlaneGeometry(2, 2);
+  const moonMaterial = new THREE.ShaderMaterial({
+    uniforms: { ...ctx.rig.uniforms, uSky: { value: sky }, uLevels: { value: levels }, uMoon: { value: new THREE.Vector3(MOON.x, MOON.y, moonRadius) }, uMoonMap: { value: ctx.assets.texture('sky/space-moon.png', { kind: 'data', repeat: false }) } },
+    vertexShader: MOON_VERTEX,
+    fragmentShader: MOON_FRAGMENT,
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    blending: THREE.CustomBlending,
+    blendEquation: THREE.AddEquation,
+    blendSrc: THREE.OneFactor,
+    blendDst: THREE.OneMinusSrcAlphaFactor,
+    blendSrcAlpha: THREE.ZeroFactor,
+    blendDstAlpha: THREE.OneFactor,
+  });
+  const moon = new THREE.Mesh(moonGeometry, moonMaterial);
+  moon.frustumCulled = false;
+  moon.renderOrder = space.renderOrder + 0.6;
+  space.add(moon);
+
+  // The camera of this very sample and the size of the picture it is drawn into: space takes both here, before it and the things
+  // under it are drawn, so the stars, the band and the moon sit where the lens puts them. (And how coarse a level of each picture
+  // a pixel of this picture needs: read without a footprint, so nothing swims.)
+  space.onBeforeRender = (renderer, _scene, camera) => {
     const target = renderer.getRenderTarget();
     const height = target ? target.height : renderer.getDrawingBufferSize(new THREE.Vector2()).y;
     sky.set(camera.position.x, camera.position.z, camera.position.y * HALF_TAN, height / 2);
+    levels.set(Math.max(0, Math.log2(BAND_LIES.texels / (height / 2))), Math.max(0, Math.log2(504 / (moonRadius * height))));
   };
-  space.add(points);
-  return { geometry, material };
+  return [
+    { geometry, material },
+    { geometry: moonGeometry, material: moonMaterial },
+  ];
 }
+
+// The moon. Its face is a picture of how light the ground is and how it slopes (assets-src/reveal/space/make_space_moon.py); the
+// light on it is the sun of the scene, so by day it is most of a disc lit from the side the planet's day is on, and as the sun goes
+// under it thins to a crescent. Its dark side is black: it only hides the stars behind it.
+const MOON_VERTEX = /* glsl */ `
+uniform vec4 uSky;
+uniform vec3 uMoon;
+varying vec2 vDisc;
+void main() {
+  vDisc = position.xy * 1.06;
+  vec2 xz = uSky.xy + (uMoon.xy + vDisc * uMoon.z) * uSky.z;
+  gl_Position = projectionMatrix * viewMatrix * vec4(xz.x, 12.0, xz.y, 1.0);
+}`;
+
+const MOON_FRAGMENT = /* glsl */ `
+${RIG_UNIFORMS_GLSL}
+uniform vec4 uSky;
+uniform vec2 uLevels;
+uniform vec3 uMoon;
+uniform sampler2D uMoonMap;
+varying vec2 vDisc;
+void main() {
+  float r = length(vDisc);
+  // (The rim of the disc is softened over a pixel of this picture.)
+  float pixel = 1.0 / (uMoon.z * uSky.w);
+  float a = 1.0 - smoothstep(1.0 - pixel, 1.0 + pixel, r);
+  vec3 face = textureLod(uMoonMap, vDisc * (252.0 / 512.0) + 0.5, uLevels.y).rgb;
+  // In the sky's measure: x right, y down the master, z toward the eye. The sun of the rig is x, up, z.
+  float pz = sqrt(max(1.0 - r * r, 0.0));
+  vec3 ball = vec3(vDisc, pz);
+  vec3 sun = normalize(vec3(uSunDir.x, uSunDir.z, uSunDir.y));
+  vec2 slope = (face.gb - 0.5) * 4.4;
+  vec3 ground = normalize(ball - vec3(slope, 0.0) * pz * 1.5);
+  float lit = max(dot(ground, sun), 0.0);
+  // (Dust throws the light back much the same from every slant: the disc does not darken to its rim as a smooth ball would.)
+  float shade = mix(lit, 2.0 * lit / (lit + max(pz, 0.08)), 0.6) * smoothstep(-0.03, 0.1, dot(ball, sun));
+  // (The camera opens as the light goes, and the lit part of the moon brightens with it, held short of white. It goes out with the picture.)
+  float open = uDusk > 0.0 ? pow(uGain, 0.3) * uEmber.w : 1.0;
+  vec3 colour = vec3(1.0, 0.97, 0.92) * face.r * shade * 0.42 * open;
+  gl_FragColor = vec4(colour * a * (1.0 - uSolo), a * (1.0 - uSolo));
+}`;
 
 // The edge of the planet. Inside it the air thickens to a blue band; outside it thins into the black within a few tens of kilometres,
 // and behind the black stand the stars (points under the mesh of space, above).
@@ -227,11 +307,20 @@ const vec3 LINE = vec3(0.035, 0.27, 1.0);
 /** The black beyond the edge, and the last of the air against it. */
 export const EDGE_SPACE_FRAGMENT = /* glsl */ `
 ${EDGE_GLSL}
+uniform vec4 uSky;
+uniform vec2 uLevels;
+uniform sampler2D uBandMap;
+uniform vec4 uBandAt;
+uniform vec3 uBandLies;
 void main() {
   float km = (limbShare(vWorld.xz) - 1.0) * uLimb.z;
   float w = max(1.5 * fwidth(km), 0.001);
   float cover = max(3.0, 0.75 * w);
   float a = smoothstep(-cover, cover, km);
+  // The band of the galaxy, behind everything: its place is the sky's, like the stars'.
+  vec2 from = (vWorld.xz - uSky.xy) / uSky.z - uBandAt.xy;
+  vec2 lies = vec2((dot(from, uBandAt.zw) - uBandLies.x) * uBandLies.y, dot(from, vec2(-uBandAt.w, uBandAt.z)) * uBandLies.z + 0.5);
+  vec3 band = textureLod(uBandMap, clamp(lies, 0.0, 1.0), uLevels.x).rgb;
   // (The air stands in layers, each thinner than the one under it: the dense air is one crisp bright blue line a few kilometres
   // deep against the planet, the clear air above it a narrow deeper blue, and the last thin air is all but black.)
   vec3 glow = LINE * 0.78 * layerOver(km, 7.0, w) + vec3(0.03, 0.16, 0.8) * 0.2 * layerOver(km, 20.0, w) + vec3(0.02, 0.06, 0.3) * 0.05 * layerOver(km, 64.0, w);
@@ -247,6 +336,12 @@ void main() {
     float airglow = exp(-pow((km - 16.0) / 20.0, 2.0));
     colour = exposed(arc * uEmber.w * pow(uGain, -0.88) + vec3(0.2, 0.36, 0.8) * 0.0011 * airglow * uDusk * a);
   }
+  // (By day the camera is closed down and the band is all but lost; as it opens the band comes up, and it goes out with the picture.
+  // The air at the edge hides it as it hides the stars.)
+  float open = uDusk > 0.0 ? pow(uGain, 0.8) * mix(0.15, 1.0, uEmber.w) : 1.0;
+  // (Its colour is held back: the far crowd is pale, warm only at its core.)
+  band = mix(vec3(dot(band, vec3(0.3, 0.5, 0.2))) * vec3(0.92, 0.97, 1.1), band, 0.55);
+  colour += band * 0.028 * open * smoothstep(16.0, 90.0, km);
   gl_FragColor = vec4(colour * (1.0 - uSolo), a * (1.0 - uSolo));
 }`;
 

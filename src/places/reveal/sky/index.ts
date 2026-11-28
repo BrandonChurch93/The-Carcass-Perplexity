@@ -403,7 +403,7 @@ void main() {
 }`;
 
 // The edge of the planet: the air inside it, the black beyond it and the stars behind the black. All of it is written in space.ts.
-import { EDGE_AIR_FRAGMENT, EDGE_SPACE_FRAGMENT, createStars } from './space';
+import { EDGE_AIR_FRAGMENT, EDGE_SPACE_FRAGMENT, createSpace } from './space';
 
 export function create(ctx: Context): Piece {
   const data = (file: string, repeat: boolean): THREE.Texture => ctx.assets.texture(file, { kind: 'data', repeat });
@@ -463,7 +463,7 @@ export function create(ctx: Context): Piece {
   const ring = (inner: number, outer: number): THREE.BufferGeometry =>
     new THREE.RingGeometry(inner * LIMB.r * KM, outer * LIMB.r * KM, 720, 1).rotateX(-Math.PI / 2).translate(X(centre.x), 12, Z(centre.y));
   const edges = [sheet('space', ring(0.995, 4), EDGE_SPACE_FRAGMENT), sheet('atmosphere', ring(0.9, 1.03), EDGE_AIR_FRAGMENT, {}, true)];
-  made.push(createStars(ctx, edges[0] as THREE.Mesh));
+  made.push(...createSpace(ctx, edges[0] as THREE.Mesh));
 
   return {
     // (As the camera drifts at the end the edge of the planet goes most of the way with it: shared/anchors.ts.)
