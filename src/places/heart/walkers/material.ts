@@ -338,7 +338,9 @@ void main() {
     albedo = mix(albedo, vec3(0.125, 0.115, 0.105) * (0.55 + 0.6 * high), 0.6 * cake * mix(0.7, 0.8, limb));
     // Ash lies pale on every ridge of the trunk that looks up, and the hollows between are black.
     float crest = body * (1.0 - pole) * smoothstep(0.52, 0.72, fold + 0.25 * (high - 0.5)) * smoothstep(-0.35, 0.45, n.y) * fine;
-    albedo = mix(albedo, vec3(0.3, 0.245, 0.2) * (0.6 + 0.5 * high), 0.5 * crest);
+    // The one the long lens looks at carries the most of it; on the others it is thin and grey.
+    float ashy = 1.0 - smoothstep(0.05, 0.3, abs(seed - 1.988));
+    albedo = mix(albedo, mix(vec3(0.2, 0.185, 0.17), vec3(0.3, 0.245, 0.2), ashy) * (0.6 + 0.5 * high), mix(0.3, 0.5, ashy) * crest);
     albedo *= 1.0 - 0.45 * body * (1.0 - pole) * fine * smoothstep(0.42, 0.22, fold);
     albedo = mix(albedo, skinC * tone * 0.36 * mix(0.55, 1.1, smoothstep(0.2, 0.6, nh.b)), 0.85 * bald);
     // Scab like the crust's own skin, in patches on the back and the rump.
@@ -460,6 +462,8 @@ void main() {
     // Brown along the neck, and pale only at the knot, where the cords part into roots.
     c *= mix(1.0, mix(0.5, 0.9, smoothstep(0.8, 0.98, vLook.y)), crownPale * (1.0 - tendril));
   }
+  // A crumb in the air is seen against the lit haze behind it: a dark speck, as the picture has them under the lifted pad.
+  c *= mix(1.0, 0.16, crumb);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
