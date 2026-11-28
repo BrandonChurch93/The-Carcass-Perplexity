@@ -164,6 +164,11 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   a1 *= 1.0 + 1.3 * middle;
   a04 *= 1.0 + 0.6 * middle;
   a008 *= 1.0 - 0.45 * middle;
+  // Inside a gust the water is not one grain either: a few metres of longer ripple, then a few of fine, and the places drift with the air.
+  float size = uHigh * (vnoise(xz * 0.27 - 0.4 * gone + 11.0) - 0.5);
+  a04 *= 1.0 + 1.6 * size;
+  a016 *= 1.0 - 0.7 * size;
+  a008 *= 1.0 - 1.6 * size;
   a04 *= 1.0 + 0.9 * shoal;
   a016 *= 1.0 + 1.4 * shoal;
   a008 *= 1.0 + 1.4 * shoal;
