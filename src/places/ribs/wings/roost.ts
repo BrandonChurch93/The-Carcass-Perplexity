@@ -33,6 +33,20 @@ const HEADS: { rest: [number, number, number]; look: [number, number, number]; p
   { rest: [0.55, 1.15, -1.5], look: [0.45, 1.75, -0.7], preen: [0.4, 0.25, -2.1] },
 ];
 
+/**
+ * How an animal carries its neck when it does nothing, by its own number: where the head is from the shoulder (ahead and up, metres at
+ * size 1), the way the neck ends, how far the neck stands up off the back, and how far the head is held to one side. Hooked over with the
+ * tuft hung before the breast; tall, the head level and the tuft in the wind; laid back over its own shoulders; let down ahead of it
+ * along the ledge; and held out straight, up and ahead.
+ */
+const CARRIAGE: { head: [number, number, number]; rise: number; aside: number }[] = [
+  { head: [0, 0, 0], rise: 0, aside: 0 },
+  { head: [0.3, 1.62, -0.3], rise: 0.35, aside: 0 },
+  { head: [-0.5, 0.5, -2.75], rise: 0.5, aside: 0.12 },
+  { head: [1.55, -0.3, -1.15], rise: -0.55, aside: 0 },
+  { head: [1.22, 1.12, 0.05], rise: 0.3, aside: 0 },
+];
+
 const frac = (x: number): number => x - Math.floor(x);
 const smooth = (a: number, b: number, x: number): number => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -52,10 +66,24 @@ export function roostPose(p: Pose, s: Roosting, t: number, cyc: Cycles, wind: [n
   const seat = SEAT[s.stance] as (typeof SEAT)[number];
   const heads = HEADS[s.stance] as (typeof HEADS)[number];
   const size = s.size;
+  // No two of one make. Its build: lean or deep in the trunk, long or short in the neck; the small ones are the young of the year,
+  // deep, short necked, pale and short in the tuft.
+  const k4 = frac(s.seed * 57.3);
+  const k5 = frac(s.seed * 91.7);
+  const k6 = frac(s.seed * 113.9);
+  const k7 = frac(s.seed * 131.3);
+  const young = 1 - smooth(0.38, 0.56, size);
+  // Its carriage: which way it holds its neck at rest. One that lies lets it down along the ledge more often than one that stands.
+  const pick = s.stance === 1 ? [0.2, 0.3, 0.55, 0.92] : s.stance === 2 ? [0.25, 0.45, 0.52, 0.72] : [0.3, 0.4, 0.55, 0.85];
+  const carriage = CARRIAGE[k4 < (pick[0] as number) ? 0 : k4 < (pick[1] as number) ? 1 : k4 < (pick[2] as number) ? 2 : k4 < (pick[3] as number) ? 3 : 4] as (typeof CARRIAGE)[number];
+  const own = carriage.rise !== 0;
+  // Its sails: folded, or both held out from the flanks to dry, or one let out, by its own number; only one on its feet holds them out.
+  const dries = s.stance !== 1 && young < 0.5 && k5 > 0.8;
+  const stretches = s.stance !== 1 && young < 0.5 && k5 > 0.62 && k5 <= 0.8;
   // What it is doing: mostly nothing. Now and then its head comes up and it looks about; now and then it works at its breast.
-  // One in four carries its head high most of the time, and one in six is mostly at its breast: no two neighbours hold one pose.
+  // One in eight carries its head high most of the time, and one in six is mostly at its breast: no two neighbours hold one pose.
   const habit = frac(s.seed * 29.7);
-  const look = Math.max(smooth(0.52, 0.8, cyc.held(t, 2.6 + 3 * k1, s.seed + 0.11, 0.35)), habit < 0.25 ? 0.55 + 0.45 * smooth(0.3, 0.6, cyc.held(t, 3.1 + 2 * k3, s.seed + 0.23, 0.4)) : 0);
+  const look = Math.max(smooth(0.72, 0.9, cyc.held(t, 2.6 + 3 * k1, s.seed + 0.11, 0.35)), habit < 0.12 ? 0.55 + 0.45 * smooth(0.3, 0.6, cyc.held(t, 3.1 + 2 * k3, s.seed + 0.23, 0.4)) : 0);
   const preen = Math.max(smooth(0.8, 0.93, cyc.held(t, 4.3 + 2.5 * k2, s.seed + 0.37, 0.3)), habit > 0.83 ? 0.5 + 0.5 * smooth(0.3, 0.6, cyc.held(t, 2.2 + 2 * k1, s.seed + 0.61, 0.4)) : 0) * (1 - look);
   const side = (cyc.held(t, 1.5 + 1.9 * k3, s.seed + 0.53, 0.3) - 0.5) * (0.5 + 1.3 * look);
   // One that stands beats its sails at a neighbour for a moment and settles.
@@ -73,11 +101,15 @@ export function roostPose(p: Pose, s: Roosting, t: number, cyc: Cycles, wind: [n
   p.z = s.z + sy * lean;
   p.y = Math.max(s.feet[0][1], s.feet[1][1]) + seat.hips * size - sink + 0.008 * size * breath;
   p.yaw = s.yaw + 0.03 * rock;
-  p.pitch = -(seat.up + seat.more * k1) - 0.012 * breath - 0.05 * look - 0.1 * row;
+  // Some hold the back nearly level and some sit bolt upright.
+  p.pitch = -(seat.up + seat.more * k1) - 0.012 * breath - 0.05 * look - 0.1 * row + (s.stance === 1 ? 0 : 0.34 * (k6 - 0.45));
   p.roll = (s.stance === 2 ? -0.05 : -0.025) * shift + 0.06 * (k2 - 0.5);
   p.size = size;
   // Weathered, each to its own grey-brown: none is clean.
-  p.tone = 0.5 + 0.3 * k3;
+  p.tone = 0.42 + 0.5 * k3 + 0.12 * young;
+  p.girth = 0.86 + 0.34 * k5 + 0.16 * young;
+  p.neck = 0.84 + 0.34 * k6 - 0.2 * young;
+  p.warm = 0.75 * k7 * k7 * (1 - young);
   p.shade = 1;
   for (let leg = 0; leg < 2; leg++) {
     const foot = p.feet[leg] as Pose['feet'][number];
@@ -92,16 +124,18 @@ export function roostPose(p: Pose, s: Roosting, t: number, cyc: Cycles, wind: [n
   // The head, from the shoulder, in the place's own level and upright; then turned into the body's frame, which is nose up.
   const cp = Math.cos(p.pitch);
   const sp = Math.sin(p.pitch);
-  const mix = (i: 0 | 1 | 2): number => heads.rest[i] + (heads.look[i] - heads.rest[i]) * look + (heads.preen[i] - heads.rest[i]) * preen;
+  const rest = (i: 0 | 1 | 2): number => (own ? carriage.head[i] * (i === 2 ? 1 : p.neck) : heads.rest[i]);
+  const mix = (i: 0 | 1 | 2): number => rest(i) + (heads.look[i] - rest(i)) * look + (heads.preen[i] - rest(i)) * preen;
   const nod = 0.03 * cyc.wave(t, 1.1 + 0.9 * k3, s.seed * 50);
-  const a = SHOULDER[0] * cp + SHOULDER[1] * sp + mix(0) + 0.1 * (k2 - 0.5);
-  const b = -SHOULDER[0] * sp + SHOULDER[1] * cp + mix(1) + 0.16 * (k3 - 0.5) + nod + 0.12 * row;
+  const a = SHOULDER[0] * cp + SHOULDER[1] * sp + mix(0) + 0.2 * (k2 - 0.5);
+  const b = -SHOULDER[0] * sp + SHOULDER[1] * cp + mix(1) + 0.22 * (k3 - 0.5) + nod + 0.12 * row;
   const down = mix(2) + 0.12 * (k1 - 0.5) + 0.5 * row;
   p.head[0] = a * cp - b * sp;
   p.head[1] = a * sp + b * cp;
-  p.head[2] = 0.55 * side * (1 - 0.5 * preen) + 0.3 * preen * (k1 < 0.5 ? 1 : -1);
+  const idle = (1 - look) * (1 - preen);
+  p.head[2] = 0.55 * side * (1 - 0.5 * preen) * (1 - 0.7 * idle * (own ? 1 : 0)) + 0.3 * preen * (k1 < 0.5 ? 1 : -1) + carriage.aside * idle * (k2 < 0.5 ? 1 : -1);
   p.headPitch = down + p.pitch;
-  p.headYaw = 0.8 * side;
+  p.headYaw = 0.8 * side + 2.4 * carriage.aside * idle * (k2 < 0.5 ? 1 : -1);
   p.floor = s.y + 0.02;
   // The strands hang in the wind, which comes in gusts that cross the rock, and are thrown as the head turns.
   const gust = 0.5 + 0.5 * cyc.wave(t, 0.9, (s.x * wind[0] + s.z * wind[1]) * -0.06, s.y * 0.05);
@@ -111,10 +145,17 @@ export function roostPose(p: Pose, s: Roosting, t: number, cyc: Cycles, wind: [n
   p.shake = 0.04 * gust + 0.3 * row;
   p.clock = t;
   p.beat = 0;
-  p.sail = (s.stance === 2 ? 0.25 + 0.6 * k2 : -seat.droop * (0.6 + 0.8 * k3)) + 0.02 * breath + 0.03 * gust + row * (0.3 + 0.28 * cyc.wave(t, 9, s.seed * 9, 0.5));
+  p.sail = (s.stance === 2 && !dries ? 0.25 + 0.6 * k2 : -seat.droop * (0.6 + 0.8 * k3)) + 0.02 * breath + 0.03 * gust + row * (0.3 + 0.28 * cyc.wave(t, 9, s.seed * 9, 0.5));
+  // Held out to dry they are fanned slowly, each in its own time, and the wind lifts them; one let out is drawn in again and let out.
+  const fan = cyc.wave(t, 0.5 + 0.5 * k1, s.seed * 61);
+  const let0 = smooth(0.25, 0.6, cyc.held(t, 3.4 + 2.2 * k3, s.seed + 0.83, 0.35));
+  const spread = dries ? 0.85 + 0.4 * k2 + 0.1 * fan + 0.08 * gust : 0;
+  const one = stretches ? (0.5 + 0.55 * k2) * let0 + 0.05 * fan : 0;
+  p.open[0] = spread + (k1 < 0.5 ? one : 0) + 0.2 * row;
+  p.open[1] = spread * (0.8 + 0.3 * k3) + (k1 < 0.5 ? 0 : one) + 0.2 * row;
   // Out of the water the strands are short and hang close.
-  p.tuft = 0.5 + 0.2 * k2;
+  p.tuft = (0.38 + 0.42 * k2) * (1 - 0.45 * young);
   // Its neck stands up off its back and arches over.
-  p.rise = seat.rise + 0.3 * (k2 - 0.5) + 0.25 * look - 0.5 * preen;
+  p.rise = seat.rise + 0.3 * (k2 - 0.5) + 0.25 * look - 0.5 * preen + carriage.rise * idle;
   p.seed = s.seed;
 }
