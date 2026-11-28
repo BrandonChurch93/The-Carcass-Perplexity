@@ -746,6 +746,7 @@ uniform sampler2D tBoulderN;
 uniform sampler2D tWeed;
 uniform sampler2D tWeedN;
 uniform float uWeedy;
+uniform float uWarm;
 uniform vec2 uGate;
 uniform float uPool;
 void main() {
@@ -773,6 +774,8 @@ void main() {
   side = mix(vec3(dot(side, vec3(0.333))), side, 0.45);
   // Cast weed on a rock: olive and gold brown where its straps turn up, wet. Under it barnacles in pale crusts on the bare stone.
   vec3 gold = mix(vec3(0.62, 0.7, 0.72), vec3(1.0), weedPatch) * mix(wc * 0.5, vec3(0.105, 0.07, 0.022) * (0.4 + 2.2 * wc.g / 0.04 * 0.5), smoothstep(0.03, 0.09, wc.g) * 0.2);
+  // Under a low sun the weed on a rock is gold where a strap turns up and umber between.
+  gold = mix(gold, vec3(0.2, 0.115, 0.028) * (0.25 + 1.5 * smoothstep(0.015, 0.11, wc.g)), uWarm);
   float crust = smoothstep(0.55, 0.7, vnoise(flat2 * 3.1 + 2.0) * 0.5 + vnoise(flat2 * 23.0) * 0.5 + 0.3 * (nh.z - 0.5)) * (1.0 - cover) * uWeedy;
   vec3 albedo = mix(side * mix(0.55 + 0.85 * tone, 0.6, uWeedy), gold, 0.85 * cover);
   albedo = mix(albedo, vec3(0.3, 0.29, 0.26), 0.6 * crust);

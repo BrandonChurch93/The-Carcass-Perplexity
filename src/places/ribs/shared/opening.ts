@@ -87,16 +87,16 @@ export const STRIKE = {
  * What the sea draws of the approach, in order: the slam and then the breaker. Each is one sea of the set: `blade` the stone it meets,
  * `foot` where it meets it at the waterline, `out` the way from the stone to the open water there (a unit vector, x and z), `half` its
  * half length along the foot, `time` the seconds its water first leaves the sea and `height` the metres the tallest of it climbs.
- * The slam is the one event of the film's first two seconds: a sea breaks on the prow of the outer right blade (OR), the stone nearest
- * the lens (310 m off as the film opens, 200 m at 1.3 s), where the dark wet foot of that wall stands against the sky of the gap. Its
- * water is leaving the sea as the film opens, stands a third of the frame high at 1 s and half of it at 1.5 s, and goes out through the
- * right edge with the wall at 1.7 s, still climbing, its fall and its mist to the lens's right as it passes. The foot is at 0.61 of the
- * frame's width in the first frame, 0.74 at 0.67 s, 0.89 at 1.33 s.
+ * The slam is the one event of the film's first two seconds: a sea breaks on the south west face of the outer right blade (OR), the
+ * stone nearest the lens (280 m off as the film opens, 200 m at 1 s), and its water stands before the dark wet foot of that wall. It
+ * left the sea 0.8 s before the film opens, so the first frame has it rising at the wall's foot, a fifth of the frame high; it stands
+ * half the frame high at 0.5 s and over the top of it at 1 s, and its fall and its mist cross the right of the view as the lens passes
+ * at 1.5 to 2 s. The foot is at 0.60 of the frame's width in the first frame, 0.74 at 0.67 s, 0.91 at 1.33 s, and out of it at 1.7 s.
  * The breaker is STRIKE's second pulse, to the number. The lesser pulse that stood on L1's foot in the first second is not drawn: it was
  * white on a pale blade 800 m off, and the eye is given one event at a time. STRIKE's own numbers stay, for the air's hole in the fog.
  */
 export const STRIKES: readonly { blade: string; foot: [number, number, number]; out: [number, number]; half: number; time: number; height: number }[] = [
-  { blade: 'OR', foot: [454, 0, 609], out: [-0.3, 0.954], half: 32, time: -0.35, height: 130 },
+  { blade: 'OR', foot: [466, 0, 626], out: [-0.3, 0.954], half: 30, time: -0.8, height: 130 },
   { blade: STRIKE.blade, foot: STRIKE.foot, out: [0, 1], half: STRIKE.half, time: STRIKE.times[1], height: STRIKE.height * STRIKE.lesser },
 ];
 
