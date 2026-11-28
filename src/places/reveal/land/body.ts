@@ -64,7 +64,7 @@ export const BODY_GROUND = /* glsl */ `
   ground = mix(ground, body, joined);
   // (By night the bones are broad pale ranges under the moon, each in its whole body, as the high ground stands: not their crest lines alone.)
   float boneBody = joined * land * smoothstep(0.25, 0.45, height) * smoothstep(0.09, 0.24, dot(coarseGround, vec3(0.3, 0.55, 0.15)));
-  ground = mix(ground, vec3(0.62, 0.59, 0.52), 0.5 * uEmber.x * boneBody);
+  ground = mix(ground, vec3(0.62, 0.59, 0.52), 0.75 * uEmber.x * boneBody);
 #endif
 `;
 
@@ -77,9 +77,9 @@ export const BODY_LIGHT = /* glsl */ `
   bodySlope /= mix(1.0, 0.55, lowness * wide);
 #endif
   slope *= mix(1.0, bodySlope, joined);
-  // (By night the moon lights the ranges by their whole form, broad, as it does the high ground of any land seen from orbit:
-  // the fine relief is a grain on it, not a wire drawing.)
-  slope = mix(slope, uBodyRelief2.w * boneBody * (coarse.rg * 2.0 - 1.0) + 0.7 * slope, uEmber.x * joined);
+  // (By night the moon lights the ranges in their whole body, broad, as it does the high ground of any land seen from orbit: the
+  // body of a bone stands toward it, and the fine relief is a grain on that, not a wire drawing.)
+  slope = mix(slope, 0.7 * slope, uEmber.x * joined) - uBodyRelief2.w * boneBody * uEmber.x * normalize(uMoonDir.xz);
 #endif
 `;
 
