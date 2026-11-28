@@ -29,6 +29,8 @@ export interface Strike {
    * it is seen to fall; its foot is a dense white body; near the lens its drops are fewer, larger and soft.
    */
   slam?: boolean;
+  /** Only the white water at the foot and down the stone is drawn: a sea that has broken before the film opens. */
+  wash?: boolean;
 }
 
 const VERTEX = /* glsl */ `
@@ -59,7 +61,7 @@ void main() {
   float near = slam * (1.0 - smoothstep(110.0, 420.0, -centre.z));
   // Water in flight is seen drawn out along its way for as long as the shutter stands open, and a sheet of it is long that way to begin with.
   vec2 along = fast > 0.05 ? way.xy / fast : vec2(0.0, 1.0);
-  float drawn = kind < 0.5 ? 1.5 + 0.05 * fast : (kind < 1.5 ? 1.0 + 0.03 * fast : 1.0);
+  float drawn = kind < 0.5 ? mix(1.5 + 0.05 * fast, 1.2 + 0.02 * fast, slam) : (kind < 1.5 ? 1.0 + 0.03 * fast : 1.0);
   // A bead is drawn out further than the handful it flies in.
   vBead = (1.0 + 0.11 * fast) / drawn;
   if (kind > 1.5) {
@@ -89,7 +91,7 @@ void main() {
   float toSun = kind < 1.5 ? 0.12 + 0.95 * aLook.w : 0.5;
   vLight = (skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.5 + 0.7 * open) + sunCool * toSun * sun) / 3.14159;
   // White water in a stone's shade is still white: the sky's blue goes out of it where it is a body, and it takes the light of all the open sea before it.
-  vLight = mix(vLight, vec3(dot(vLight, vec3(0.3333))) * vec3(0.97, 1.0, 1.03) * 1.45, 0.85 * dense);
+  vLight = mix(vLight, vec3(dot(vLight, vec3(0.3333))) * vec3(0.97, 1.0, 1.03) * (1.3 + 0.35 * dense), slam * (0.6 + 0.3 * dense));
   // Between the lens and the light it burns: the sun, or the break in the cloud, comes forward through it.
   vec3 ray = normalize(aAt.xyz - cameraPosition);
   float throughSun = pow(max(dot(ray, uSunDir), 0.0), 3.0);
@@ -318,27 +320,30 @@ export class Burst {
       };
 
       // Sheets: each finger is a run of cards that leave one after another, so the column stands from the sea to its head while it is fed.
-      for (let i = 0; i < SHEETS; i++) {
+      // A slam close to the lens: half the sheets, each larger.
+      for (let i = 0; i < SHEETS && !s.wash; i += slam ? 2 : 1) {
         const id = s.id * 100000 + i;
         const j = jet(i % JETS);
         const order = Math.floor(i / JETS) / (SHEETS / JETS);
         const a = t - j.late - 0.55 * order - 0.08 * rand(id, 6);
         if (a < 0) continue;
-        const v0 = launch(j, 1 - 0.3 * order - 0.1 * rand(id, 7), 0.35, id, SHEET_DRAG);
+        // Some of it climbs the stone and some stands in the air before it.
+        const v0 = launch(j, 1 - 0.3 * order - 0.1 * rand(id, 7), 0.35, id, SHEET_DRAG, slam ? 0.35 + 0.65 * rand(id, 26) : 1);
         const [dx, dy, dz, vx, vy, vz] = fly(a, SHEET_DRAG, v0, 0.5);
         const y = 0.6 + dy;
         if (y < -2) continue;
         const [bx, bz] = base(j, id);
         // It tears as it goes: whole as it leaves the sea, holes by its top, strings on the way down.
-        const gone = Math.min(1, 0.12 + 0.3 * a + 0.2 * rand(id, 8));
+        const gone = Math.min(1, 0.12 + (slam ? 0.14 : 0.3) * a + 0.2 * rand(id, 8));
         const fade = Math.min(1, a / 0.1) * Math.min(1, Math.max(0, (y + 2) / 5)) * (1 - 0.6 * Math.max(0, gone - 0.6) / 0.4);
         // The low third of a slam is its body: dense and white, thinning upward into the torn water.
         const low = slam ? Math.min(1, Math.max(0, 1 - y / (0.22 * s.height))) : 0;
-        this.put(bx + dx, y, bz + dz, big * (1.5 + 1.5 * Math.min(a, 2.5)) * (0.6 + 0.8 * rand(id, 9)) * (0.6 + 0.5 * j.power) * (1 + 0.5 * low), vx, vy, vz, flag + 0.4 * low, 0.92 * fade * still, rand(id, 10), gone * (1 - 0.6 * low), sunward(j.along, id));
+        this.put(bx + dx, y, bz + dz, big * (1.5 + 1.5 * Math.min(a, 2.5)) * (0.6 + 0.8 * rand(id, 9)) * (0.6 + 0.5 * j.power) * (slam ? 1.7 + 0.5 * low : 1), vx, vy, vz, flag + 0.4 * low, 0.92 * fade * still, rand(id, 10), gone * (1 - 0.6 * low), sunward(j.along, id));
       }
 
       // Droplets: thrown wide of the fingers, faster than the sheets at first and slowed sooner, each card a handful of beads.
-      for (let i = 0; i < DROPS; i++) {
+      // A slam near the lens is drawn with fewer handfuls, each larger.
+      for (let i = 0; i < DROPS && !s.wash; i += slam ? 2 : 1) {
         const id = s.id * 100000 + 20000 + i;
         const j = jet(Math.floor(rand(id, 1) * JETS));
         const a = t - j.late - 0.7 * rand(id, 6) * rand(id, 11);
@@ -347,18 +352,18 @@ export class Burst {
         // A slam's drops are of every size: the fine ones stop and hang, the heavy ones go on up and come down hard.
         const k = slam ? 0.45 + 1.5 * small * small : 0.1 + 0.4 * small * small;
         // One in three is of the crown: thrown low and wide of the foot as the sea strikes, and down again inside two seconds.
-        const crown = i % 3 === 0;
+        const crown = (slam ? i / 2 : i) % 3 === 0;
         const v0 = crown ? launch(j, 0.1 + 0.22 * rand(id, 7), 3.4, id, k, 0.2) : launch(j, 0.55 + 0.75 * rand(id, 7), 1.6, id, k, 0.2 + 0.5 * rand(id, 25));
         const [dx, dy, dz, vx, vy, vz] = fly(a, k, v0, 0.45);
         const y = 0.6 + dy;
         if (y < -0.5) continue;
         const [bx, bz] = base(j, id);
         const fade = Math.min(1, a / 0.08) * Math.min(1, Math.max(0, (y + 0.5) / 1.5)) * Math.max(0, Math.min(1, 2 * (1 - a / ((slam ? 4.6 : 2.8) + 2.4 * rand(id, 13) * big))));
-        this.put(bx + dx, y, bz + dz, big * (0.9 + 0.5 * Math.min(a, 3)) * (0.6 + 1.1 * rand(id, 9)) * (slam ? 1.5 - 0.9 * small : 1), vx, vy, vz, 1 + flag, (0.75 + 0.25 * small) * fade * still, rand(id, 10), 0, sunward(j.along, id));
+        this.put(bx + dx, y, bz + dz, big * (0.9 + 0.5 * Math.min(a, 3)) * (0.6 + 1.1 * rand(id, 9)) * (slam ? 1.9 - 1.1 * small : 1), vx, vy, vz, 1 + flag, (0.75 + 0.25 * small) * fade * still, rand(id, 10), 0, sunward(j.along, id));
       }
 
       // Mist: the finest water stops in the air near the top of its finger and goes off down the wind, thinning.
-      for (let i = 0; i < MIST; i++) {
+      for (let i = 0; i < MIST && !s.wash; i++) {
         const id = s.id * 100000 + 40000 + i;
         const j = jet(Math.floor(rand(id, 1) * JETS));
         const a = t - j.late - 1.1 - 1.6 * rand(id, 6);
@@ -398,7 +403,7 @@ export class Burst {
         } else {
           // The boil: heads of white water low on the sea, pushed out from the stone and sinking into foam.
           const a = t - late - 0.5 * rand(id, 6) + 0.15;
-          const life = 3 + 4 * rand(id, 7);
+          const life = slam ? 2.4 + 2.6 * rand(id, 7) : 3 + 4 * rand(id, 7);
           if (a < 0 || a > life) continue;
           const o = 1 + (4 + 9 * rand(id, 8)) * (1 - Math.exp(-a / 1.6));
           const lump = rand(id, 13) * rand(id, 14);
@@ -406,7 +411,12 @@ export class Burst {
           const x = s.x + tx * along * s.width * 1.1 + s.out[0] * o;
           const z = s.z + tz * along * s.width * 1.1 + s.out[1] * o;
           const fade = Math.min(1, a / 0.15) * Math.pow(1 - a / life, 1.2);
-          this.put(x, y, z, big * (0.5 + 4.5 * lump) * (0.6 + 0.4 * Math.min(a, 2)) * (slam ? 1.5 : 1), 0, 0, 0, 3 + (slam ? 0.45 : 0), (slam ? 0.6 + 0.4 * rand(id, 9) : 0.25 + 0.7 * rand(id, 9)) * fade * still, rand(id, 10), 0, 0.7 + 0.6 * rand(id, 15));
+          // Seen from close the heads of a slam's boil do not stand as a wall along the foot: they heap where the sea struck square, and
+          // each goes down flat into the foam as it ages.
+          const flat = slam ? Math.max(0.22, Math.min(1, 1 - (a - 1.4) / 2.2)) : 1;
+          const heap = slam ? 0.25 + 0.75 * peak * (0.5 + rand(id, 16)) : 1;
+          // While the sea is still coming in, the heap at the foot is the burst's white body: a few big heads, one over another.
+          this.put(x, y * (slam ? flat * (1 + 1.6 * heap) : 1), z, big * (0.5 + 4.5 * lump) * (0.6 + 0.4 * Math.min(a, 2)) * (slam ? 0.8 + 1.5 * heap : 1), 0, 0, 0, 3 + (slam ? 0.05 + 0.4 * heap * flat : 0), (0.25 + 0.7 * rand(id, 9)) * (slam ? 0.45 + 0.55 * heap : 1) * fade * still, rand(id, 10), 0, (0.7 + 0.6 * rand(id, 15)) * flat);
         }
       }
     }

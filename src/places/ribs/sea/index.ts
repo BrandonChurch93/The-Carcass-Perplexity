@@ -6,7 +6,7 @@ import { partAtHeight, radii, skirtPad, surface, type Rib } from '../layout';
 import { BORE, FLOOR, LEVELS, RIBS, STATIONS, WIND, shotSpan } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { LAND } from '../shared/rig';
-import { STRIKES, cloudShut, inOpening, openingLight, openingWeight } from '../shared/opening';
+import { STRIKE, STRIKES, cloudShut, inOpening, openingLight, openingWeight } from '../shared/opening';
 import { loopPhase, stagedSeconds } from '../shared/stage';
 import { chopTexture, feetTexture, foamTexture } from './chop';
 import { createBore, type BoreSite } from './bore';
@@ -133,7 +133,7 @@ export function create(ctx: Context): Piece {
   const openSea = new THREE.Vector4(1, 0, 0, 1);
   const openGlint = { value: 0 };
   // The white water a strike leaves on the sea round the foot: x, z of its middle, its reach in metres, how white.
-  const wash = [new THREE.Vector4(0, 0, 1, 0), new THREE.Vector4(0, 0, 1, 0)];
+  const wash = [new THREE.Vector4(0, 0, 1, 0), new THREE.Vector4(0, 0, 1, 0), new THREE.Vector4(0, 0, 1, 0)];
   const seaOpening = new THREE.ShaderMaterial({
     vertexShader: SEA_OPENING_VERTEX,
     fragmentShader: SEA_OPENING_FRAGMENT,
@@ -175,7 +175,7 @@ export function create(ctx: Context): Piece {
   poolLoop.fragmentShader = POOL_LOOP_FRAGMENT(MAX_RINGS);
   pools.renderOrder = 1;
   // The rings round what stands in the pools, over the animals' mirror image (wings/, renderOrder 3). Not in the card loop: its seam is closed.
-  const answers = contactRings({ ...rig.uniforms, uPoolLevel: poolMaterial.uniforms.uPoolLevel as THREE.IUniform });
+  const answers = contactRings({ ...rig.uniforms, ...shared, uPoolLevel: poolMaterial.uniforms.uPoolLevel as THREE.IUniform });
   answers.mesh.renderOrder = 4;
   pools.add(answers.mesh);
   // After the animals' images (3), before the rings (4).
@@ -224,7 +224,7 @@ export function create(ctx: Context): Piece {
   const PUFFS = 7;
   const surf = new Spray(surfAt.length * PUFFS, { ...rig.uniforms, ...shared });
   // The breaker of the approach (below) is thrown water of the same part.
-  const breaker = new Burst(STRIKE_CARDS * 2, { ...rig.uniforms, ...shared });
+  const breaker = new Burst(STRIKE_CARDS * 2 + 200, { ...rig.uniforms, ...shared });
   breaker.mesh.visible = false;
   // And the spindrift off the crests of the approach's gale.
   const spindrift = new Spindrift(3600, { ...rig.uniforms, ...shared, uOpenSea: { value: openSea } });
@@ -326,6 +326,8 @@ export function create(ctx: Context): Piece {
   };
   // The opening's strikes: the place, the times and the height are the opening's own (shared/opening.ts), read here and not copied.
   const strikes: Strike[] = STRIKES.map((s, n) => strikeOn(RIBS.find((r) => r.name === s.blade) as Rib, s.time, s.height, s.half * 2, n + 1, [s.foot[0], s.foot[2]], s.out, n === 0));
+  // The sea that broke on the breaker's blade before the film opens: its white water still lies at that foot and runs off the stone.
+  strikes.push({ ...strikeOn(RIBS.find((r) => r.name === STRIKE.blade) as Rib, STRIKE.times[0], STRIKE.height, STRIKE.half * 2, 3, [STRIKE.foot[0], STRIKE.foot[2]], [0, 1]), wash: true });
   const windTo: [number, number] = [WIND.to[0] * WIND.speed, WIND.to[1] * WIND.speed];
 
   return {
