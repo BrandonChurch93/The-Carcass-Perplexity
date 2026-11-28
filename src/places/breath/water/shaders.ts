@@ -86,10 +86,13 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   float flecks = 0.0;
   float broken = 0.0;
   float lanes = 0.5;
+  // How much water lies round the place, 0 to 1 (flow.ts). Outside the stream's map it is the depth under the pixel.
+  float around = smoothstep(0.02, 0.3, depth);
   if (inStream > 0.0) {
     vec4 ln = texture2D(tLines, fu);
     vec4 ca = texture2D(tCarried, fu);
     float speed = ca.r * ${FASTEST.toFixed(2)};
+    around = mix(around, ca.a, inStream);
     float moving = smoothstep(0.015, 0.06, speed) * inStream;
     broken = ca.b * inStream;
     // What floats goes down with the stream: the pattern is read where the fleck was a moment ago. Two readings half a turn apart, each
@@ -247,10 +250,12 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   // What is in the water. It is clear: a hand deep the bed shows whole, knee deep the water's own colour has taken its place, and that
   // colour is teal, a little milky with silt, darker where the channel has depth.
   float path = depth / max(nv, 0.25);
-  // It is milky: the silt hides the bed a hand deep. With clearer water the wide view showed the gravel of the bed through the whole
-  // channel as a speckle, where the picture has one soft opaque green.
-  float clear = exp(-path * 14.0);
-  vec3 tone = mix(vec3(0.215, 0.3, 0.275), mix(vec3(0.13, 0.265, 0.25), vec3(0.068, 0.2, 0.212), smoothstep(0.2, 0.7, depth)), smoothstep(0.03, 0.2, depth));
+  // It is milky: in the body of the channel the silt hides the bed a hand deep. With clearer water there the wide view showed the gravel of
+  // the bed through the whole channel as a speckle. Toward a bank, a bar or a shelf the water thins and clears, and the rock shows through it.
+  float clear = exp(-path * mix(5.0, 14.0, smoothstep(0.06, 0.45, around)));
+  // Its colour goes with how much of it there is: a pale green wash at the margins, the milky teal over the flats, a dark one in the deep lane.
+  vec3 tone = mix(vec3(0.215, 0.3, 0.275), mix(vec3(0.12, 0.255, 0.24), vec3(0.05, 0.165, 0.175), smoothstep(0.42, 0.95, around)), smoothstep(0.06, 0.45, around));
+  tone *= 1.0 - 0.2 * smoothstep(0.15, 0.6, depth);
   // Seen from low down and against the light the body of shallow water is not green: what comes back out of it is the low sun in its silt,
   // a dull warm olive, as under the feeding waders in the picture. From above it is the teal of the wide view.
   // Only where the eye is low and the look is flat: looked down on by more than a quarter of a right angle the teal comes through again,
@@ -260,7 +265,7 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   tone = mix(tone, vec3(0.15, 0.13, 0.095), 0.92 * flat2 * (1.0 - smoothstep(2.6, 5.0, eyeUp)));
   // The low sun goes into the water as well and lights the silt in it.
   // The silt goes down in the same lanes: the water's colour is streaked along the stream, milkier and clearer by turns.
-  tone *= 1.0 + 0.05 * inStream * (lanes - 0.5);
+  tone *= 1.0 + (0.05 + 0.09 * uHigh) * inStream * (lanes - 0.5);
   vec3 body = tone * (skyUp * open + uSunColour * (0.06 * sunHere));
 
   vec3 colour = fresnel * mirror + (1.0 - fresnel) * (1.0 - clear) * body;

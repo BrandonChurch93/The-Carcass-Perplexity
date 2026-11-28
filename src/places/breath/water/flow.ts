@@ -13,7 +13,7 @@ import * as THREE from 'three';
 export interface Flow {
   /** Half floats. r: psi in metres across a channel 24 m wide, g and b: the velocity along x and z, m a second, a: the mean pace of the stream round the place. */
   lines: THREE.DataTexture;
-  /** Bytes. r: the speed over FASTEST, g: what the stream carries (froth shed by stones, bars and banks upstream), b: how broken the water is (fast over a shallow bed). */
+  /** Bytes. r: the speed over FASTEST, g: what the stream carries (froth shed by stones, bars and banks upstream), b: how broken the water is (fast over a shallow bed), a: how much water lies round the place (its depth averaged over some metres, over FULL). */
   carried: THREE.DataTexture;
   /** minX, minZ, 1 / width, 1 / depth of the ground the two pictures cover. */
   rect: THREE.Vector4;
@@ -23,6 +23,8 @@ export const FASTEST = 0.8;
 const CELL = 0.5;
 const AREA = { minX: -150, maxX: 0, minZ: -180, maxZ: 112 };
 const ACROSS = 24;
+/** Metres of water round a place at which the channel has its deepest tone. */
+const FULL = 0.3;
 
 export function flowMap(height: (x: number, z: number) => number, sea: number, middle: (z: number) => number): Flow {
   const w = Math.round((AREA.maxX - AREA.minX) / CELL);
@@ -231,6 +233,30 @@ export function flowMap(height: (x: number, z: number) => number, sea: number, m
     }
   }
 
+  // How much water lies round a place: the depth averaged over some metres, dry ground counted as none. The water takes its colour and
+  // its silt from this and not from the depth under one pixel, so the body of the channel is one deep tone that pales toward every bank,
+  // bar and shelf, and a stone a pace wide does not print a pale dot.
+  const round2 = Float32Array.from(depth);
+  const tmp = new Float32Array(n);
+  const REACH = 4;
+  for (let turn = 0; turn < 2; turn++) {
+    for (let j = 0; j < h; j++) {
+      let sum = 0;
+      for (let i = -REACH; i <= REACH; i++) sum += round2[j * w + Math.min(w - 1, Math.max(0, i))] as number;
+      for (let i = 0; i < w; i++) {
+        tmp[j * w + i] = sum / (2 * REACH + 1);
+        sum += (round2[j * w + Math.min(w - 1, i + REACH + 1)] as number) - (round2[j * w + Math.max(0, i - REACH)] as number);
+      }
+    }
+    for (let i = 0; i < w; i++) {
+      let sum = 0;
+      for (let j = -REACH; j <= REACH; j++) sum += tmp[Math.min(h - 1, Math.max(0, j)) * w + i] as number;
+      for (let j = 0; j < h; j++) {
+        round2[j * w + i] = sum / (2 * REACH + 1);
+        sum += (tmp[Math.min(h - 1, j + REACH + 1) * w + i] as number) - (tmp[Math.max(0, j - REACH) * w + i] as number);
+      }
+    }
+  }
   const lines = new Uint16Array(n * 4);
   const carried = new Uint8Array(n * 4);
   const half = THREE.DataUtils.toHalfFloat;
@@ -242,7 +268,7 @@ export function flowMap(height: (x: number, z: number) => number, sea: number, m
     carried[o * 4] = Math.round(255 * Math.min(1, (speed[o] as number) / FASTEST));
     carried[o * 4 + 1] = Math.round(255 * Math.min(1, (froth[o] as number) / 2));
     carried[o * 4 + 2] = Math.round(255 * (broken[o] as number));
-    carried[o * 4 + 3] = 255;
+    carried[o * 4 + 3] = Math.round(255 * Math.min(1, (round2[o] as number) / FULL));
   }
   const set = (t: THREE.DataTexture): THREE.DataTexture => {
     t.colorSpace = THREE.NoColorSpace;

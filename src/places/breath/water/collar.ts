@@ -103,7 +103,7 @@ void main() {
   }
   float r0 = c.z;
   float leg = 1.0 - smoothstep(0.07, 0.12, r0);
-  float reach = mix(2.4, 2.0, leg);
+  float reach = mix(2.0, 1.5, leg);
   // The disc begins inside the leg, where the leg hides it; under a mop it is whole.
   float inner = 0.5 * r0 * leg;
   float d = inner + (reach - inner) * pow(position.x, 1.6);
