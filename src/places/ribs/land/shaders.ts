@@ -753,6 +753,10 @@ uniform float uWeedy;
 uniform float uWarm;
 uniform vec2 uGate;
 uniform float uPool;
+// A stone's own tone, as what is added to one, and how far it stands drained: 0 soaked to its crown, 1 dark only at its wet foot.
+uniform vec3 uTint;
+uniform float uDry;
+uniform vec3 uFeed;
 void main() {
   vec3 n0 = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
@@ -775,22 +779,26 @@ void main() {
   cover *= uWeedy;
   // A stone on the floor has its own tone: some slate, some nearly black, a few pale.
   float tone = vnoise(vWorld.xz * 2.3 + 0.5);
-  side = mix(vec3(dot(side, vec3(0.333))), side, 0.45);
+  side = mix(vec3(dot(side, vec3(0.333))), side, 0.45) * (1.0 + uTint);
   // Cast weed on a rock: olive and gold brown where its straps turn up, wet. Under it barnacles in pale crusts on the bare stone.
   vec3 gold = mix(vec3(0.62, 0.7, 0.72), vec3(1.0), weedPatch) * mix(wc * 0.5, vec3(0.105, 0.07, 0.022) * (0.4 + 2.2 * wc.g / 0.04 * 0.5), smoothstep(0.03, 0.09, wc.g) * 0.2);
   // Under a low sun the weed on a rock is gold where a strap turns up and umber between.
-  gold = mix(gold, vec3(0.2, 0.115, 0.028) * (0.25 + 1.5 * smoothstep(0.015, 0.11, wc.g)), uWarm);
+  // And the weed lies on it in tufts, ochre where it is thick, the wet rock near black between: no strap runs the height of a rock.
+  float tuft = smoothstep(0.45, 0.6, 0.45 * vnoise(vWorld.xz * 2.1 + 4.0) + 0.3 * vnoise(vWorld.xz * 6.3 + vWorld.y * 3.0) + 0.25 * vnoise(vWorld.xz * 19.0 + vWorld.y * 11.0) + 0.3 * (n0.y - 0.6)) * (0.25 + 0.75 * smoothstep(0.02, 0.075, wc.g));
+  // Where the feeders' lens stands every rock wears it so.
+  float warm = max(uWarm, uFeed.z * smoothstep(45.0, 20.0, length(vWorld.xz - uFeed.xy)));
+  gold = mix(gold, mix(vec3(0.022, 0.018, 0.012), vec3(0.23, 0.125, 0.02), tuft) * (0.75 + 0.5 * smoothstep(0.015, 0.11, wc.g)), warm);
   float crust = smoothstep(0.55, 0.7, vnoise(flat2 * 3.1 + 2.0) * 0.5 + vnoise(flat2 * 23.0) * 0.5 + 0.3 * (nh.z - 0.5)) * (1.0 - cover) * uWeedy;
   vec3 albedo = mix(side * mix(0.55 + 0.85 * tone, 0.6, uWeedy), gold, 0.85 * cover);
   albedo = mix(albedo, vec3(0.3, 0.29, 0.26), 0.6 * crust);
   // Weed is no mirror: wet straps, matt in the mass, bright only in small glints.
-  float rough = mix(mix(0.3, 0.45, uWeedy), 0.66 - 0.5 * smoothstep(0.62, 0.8, wn.z), cover);
+  float rough = mix(mix(mix(0.3, 0.66, uDry), 0.45, uWeedy), 0.66 - 0.5 * smoothstep(0.62, 0.8, wn.z), cover);
   // What stands in the pool or just out of it is soaked: near black and bright where it turns to the sky.
-  float soak = smoothstep(uPool + 0.75, uPool + 0.15, vWorld.y + 0.3 * (vnoise(vWorld.xz * 1.7) - 0.5));
-  albedo *= mix(1.0, mix(0.58, 0.7, uWeedy), soak);
+  float soak = smoothstep(uPool + mix(0.75, 0.035, uDry), uPool + mix(0.15, 0.004, uDry), vWorld.y + mix(0.3, 0.02, uDry) * (vnoise(vWorld.xz * mix(1.7, 11.0, uDry)) - 0.5));
+  albedo *= mix(1.0, mix(0.58, 0.7, uWeedy) * mix(1.0, 0.55, uDry), soak);
   rough = mix(rough, 0.2, soak * (1.0 - cover));
   float occ = 0.5 + 0.5 * smoothstep(0.2, 0.6, nh.z);
-  n = normalize(mix(n, bump(n0, vWorld, ut, (wn.xy - 0.5) * 1.3), cover));
+  n = normalize(mix(n, bump(n0, vWorld, ut, (wn.xy - 0.5) * mix(1.3, 0.5, warm)), cover));
   occ = mix(occ, 0.3 + 0.7 * smoothstep(0.15, 0.6, wn.z), cover);
   gl_FragColor = vec4(rigOut(rigShade(vWorld, n, v, albedo, rough, occ)), 1.0);
 }`;
@@ -824,3 +832,43 @@ export const MIRROR_LOOP_FRAGMENT = loopText(MIRROR_FRAGMENT, [
   ['void main() {', 'uniform vec2 uLoop;\nvoid main() {'],
   ['+ uTime * 0.5);', '+ uLoop.x * 0.5 + 0.64 * vec2(sin(6.283185 * uLoop.y), 1.0 - cos(6.283185 * uLoop.y)));'],
 ]);
+
+// A bar of sand that stands a finger out of the film: ripple marks a hand apart lying along it, water in their troughs, shingle strewn
+// on it. Warm wet sand, pale where a crest has drained.
+export const SANDBAR_FRAGMENT = /* glsl */ `
+${HEAD}
+uniform sampler2D tSand;
+uniform sampler2D tShingle;
+uniform sampler2D tShingleN;
+uniform float uPool;
+void main() {
+  vec3 n0 = normalize(vNormal);
+  vec3 v = normalize(cameraPosition - vWorld);
+  vec2 xz = vWorld.xz;
+  float near = smoothstep(110.0, 35.0, length(cameraPosition - vWorld));
+  // The marks wander and fork: two sets of unlike spacing, each bent by the lie of the bar, one or the other by the stride.
+  float bend = 2.4 * vnoise(xz / 2.3 + 3.0) + 0.8 * vnoise(xz / 0.53 + 9.0);
+  float pa = 6.2832 * ((xz.y + 0.22 * xz.x) / 0.14 + bend);
+  float pb = 6.2832 * ((xz.y - 0.3 * xz.x) / 0.19 + 1.3 * bend + 0.37);
+  float which = smoothstep(0.4, 0.6, vnoise(xz / 1.1 + 21.0));
+  float wave = mix(sin(pa), sin(pb), which);
+  float lean = mix(cos(pa) / 0.14, cos(pb) / 0.19, which);
+  float crest = smoothstep(-0.3, 0.8, wave);
+  vec2 us = vec2(xz.y, -xz.x) / 4.0 + 0.37;
+  vec2 ud = xz / 2.0;
+  vec3 sand = texture2D(tSand, us).rgb / 0.128;
+  vec3 det = texture2D(tShingle, ud).rgb / 0.122;
+  vec3 nh = texture2D(tShingleN, ud).rgb;
+  // Shingle lies in drifts on the bar, thick toward its crown.
+  float strewn = smoothstep(0.6, 0.7, 0.6 * vnoise(xz / 0.9 + 5.0) + 0.4 * vnoise(xz / 0.21 + 1.0));
+  vec3 n = normalize(n0 + vec3(0.22, 0.0, 1.0) * (-0.02 * lean * near * (1.0 - strewn)));
+  n = normalize(mix(n, bump(n0, vWorld, ud, (nh.xy - 0.5) * 1.4), strewn * near));
+  vec3 albedo = vec3(0.135, 0.103, 0.07) * mix(vec3(1.0), sand, 0.6) * (0.62 + 0.7 * crest * near);
+  albedo = mix(albedo, vec3(0.062, 0.06, 0.058) * det * (0.5 + 1.1 * vnoise(xz * 2.3 + 0.5)), strewn);
+  // What lies at the film is soaked and dark; a trough holds water.
+  float wet = smoothstep(uPool + 0.022, uPool + 0.004, vWorld.y + 0.012 * (vnoise(xz / 0.6) - 0.5) + 0.006 * wave * near);
+  albedo *= mix(1.0, 0.55, wet);
+  float rough = mix(mix(mix(0.2, 0.62, crest), 0.55, strewn), 0.07, wet);
+  float occ = mix(0.7 + 0.3 * crest, 0.5 + 0.5 * smoothstep(0.2, 0.6, nh.z), strewn);
+  gl_FragColor = vec4(rigOut(rigShade(vWorld, n, v, albedo, rough, occ)), 1.0);
+}`;
