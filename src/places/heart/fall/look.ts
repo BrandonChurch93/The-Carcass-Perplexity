@@ -723,6 +723,17 @@ void main() {
   lava.x *= 1.0 - smoothstep(0.0, 0.8, vOver) * surged;
   // Nor on a face that stands beside the bed: one cell of the ground spans it, and the melt drawn on it stood as a striped wall.
   lava.x *= 1.0 - surged * smoothstep(0.55, 0.3, abs(flat_.y)) * smoothstep(0.7, 0.95, abs(vFlow.y) / max(vFlow.z, 0.1));
+  // The bare melt behind the front is not one pale sheet: rafts of the skin it broke ride on it at the lava's pace, thick
+  // along its margins where they are thrown, and between them the melt runs in bands of unlike heat.
+  float bare = surged * smoothstep(uSurge.x - 19.0, uSurge.x - 7.0, vFlow.w) * lava.x;
+  if (bare > 0.0) {
+    float went = vFlow.x - uTime;
+    float edge = abs(vFlow.y) / max(gHalf, 0.1);
+    float band = vnoise(vec2(vFlow.y * 1.1 + 1.6 * vnoise(vec2(went * 0.5, vFlow.y * 0.6)), went * 0.32));
+    float raft = smoothstep(0.52, 0.7, band + 0.4 * smoothstep(0.4, 1.0, edge) + 0.3 * (vnoise(vec2(vFlow.y * 2.6, went * 0.9) + 5.0) - 0.5) - 0.06);
+    float cool = 950.0 + 190.0 * vnoise(vec2(vFlow.y * 3.1 + 2.0, went * 1.3));
+    lava.y = mix(lava.y, mix(lava.y - 150.0 * smoothstep(0.25, 0.5, band), cool, raft), bare);
+  }
   // Where the toe of the fan goes under the lake its skin is broken by the lake's heave, and the edge glows.
   // There the melt pools behind its own crust in a ragged band, near white where it breaks out, and small flames stand along it.
   float toeFan = smoothstep(${f(FAN_FROM + 8)}, ${f(FAN_FROM + 16)}, vFlow.w) * lava.x;
