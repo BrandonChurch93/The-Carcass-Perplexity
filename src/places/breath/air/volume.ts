@@ -425,7 +425,7 @@ void main() {
         // The rim's shadow in the vapour is three metres deep: light gets about in it.
         float sun = smoothstep(-2.6, 1.2, p.y - land.b) * sunCloud(p.xz);
         // Down the shaft the sky closes to a disc overhead, and what lies deep under the top is in the shade of what lies over it.
-        float sunk = max(exp(min(p.y + 0.5, 0.0) / 5.0), 0.08);
+        float sunk = max(exp(min(p.y + 0.5, 0.0) / 3.6), 0.05);
         // The top is smooth, but the vapour under it thickens and darkens within a stride: a step that took it at one depth drew
         // a ring wherever a step crossed the top. Each step is cut in four along the ray, the depth under the top carried across
         // it on the slope: no picture is read for the cuts.
