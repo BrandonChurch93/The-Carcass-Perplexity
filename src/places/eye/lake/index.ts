@@ -487,7 +487,7 @@ void main() {
     vec3 through = exp(-uAbsorb * d * (1.0 + 1.0 / fall));
     vec3 shelf = lit * through + uDeep * skyDown * open * 0.7 * (1.0 - through);
     under = shelf * crusted;
-#if EYE_NEAR > 1
+#if EYE_NEAR > 1 && !EYE_SHINGLE
     // Air comes up through the mats in threads: beads a few millimetres across that leave a vent one after another, wander as they
     // rise and are gone at the surface. A thread stands in the water, so it is seen along the bent look, drawn toward the eye. Told
     // only where a bead is as wide as a pixel.
