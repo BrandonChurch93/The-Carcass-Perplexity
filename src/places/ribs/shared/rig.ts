@@ -16,10 +16,10 @@ export const CLOUD = { height: 1500, repeat: 5200, shade: 0.12, size: 512 };
 /**
  * The deck: the sun comes down only through the cloud's own gaps. Where the staged break stands the deck is thin, and the gaps of the
  * mask's third field open in it: `shut` is what the break is given where the field is closed, `open` what it is given over that where a
- * gap stands whole, `under` the share of the sky's own light a surface keeps under the shut deck, `from` and `to` the field's values a gap's edge runs between, `whole` how far the break is cut by the gaps (0 is the
+ * gap stands whole, `under` the share of the sky's own light a surface keeps under the shut deck, `dome` how much further the dome's white is shut than a mirror's, `from` and `to` the field's values a gap's edge runs between, `whole` how far the break is cut by the gaps (0 is the
  * smooth pool of the first two waves). The gaps go with the cloud, so the lit patches cross blades, flats and water at the wind's pace.
  */
-export const DECK = { shut: 0.3, open: 1.05, from: 0.36, to: 0.6, whole: 1, under: 0.4 };
+export const DECK = { shut: 0.3, open: 1.05, from: 0.36, to: 0.6, whole: 1, under: 0.4, dome: 0.2 };
 export const MAX_EMITTERS = 8;
 /** The fine relief of the floor, laid over the bed twice from one tiling picture: metres of a repeat and metres of relief, wide and small. */
 export const FINE = { size: 256, wide: 37, wideAmp: 0.2, small: 9.7, smallAmp: 0.07 };
@@ -438,7 +438,7 @@ export function createRig(): Rig {
   const sun = new THREE.Vector3(...SUN.toward).normalize();
   const cloudShade = new THREE.Vector4(0, 0, 1 / CLOUD.repeat, CLOUD.shade);
   const deck = new THREE.Vector4(DECK.shut, DECK.open, DECK.whole, DECK.under);
-  const deckEdge = new THREE.Vector2(DECK.from, DECK.to);
+  const deckEdge = new THREE.Vector3(DECK.from, DECK.to, DECK.dome);
   const skyBreak = new THREE.Vector3();
   const skyTurn = new THREE.Vector4(0, 0, 0, 0);
   const dome = new THREE.Vector4(DOME.gain, DOME.veil, DOME.lift, DOME.shut);

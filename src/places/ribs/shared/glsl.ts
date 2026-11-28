@@ -34,7 +34,7 @@ uniform vec4 uCloudShade;
 uniform vec4 uCloudBreak;
 uniform vec4 uCloudBreak2;
 uniform vec4 uDeck;
-uniform vec2 uDeckEdge;
+uniform vec3 uDeckEdge;
 uniform vec4 uHeads;
 uniform vec3 uSkyZenith;
 uniform vec3 uSkyHorizon;
@@ -168,7 +168,10 @@ vec3 domeTone(vec3 c, vec3 d, float el, float mirror) {
   // Water is ruffled: what mirrors the sky sees the break wider and its white less shut (mirror toward 1) than the dome shows them (0).
   near *= mix(near, 1.0, mirror);
   // One break: the picture's white heads stand where the rig's break is, and away from it they are shut down to the storm's grey.
-  c *= mix(1.0 - uDome.w * (1.0 - 0.2 * mirror) * smoothstep(0.2, 0.7, grey), 1.0 + uDome.z, near);
+  // The dome itself is the deck seen from under: its white is shut further than a mirror's (uDeckEdge.z more, where the lens looks at
+  // the sky and not at water), so the heads away from the break stand as slate with their shapes kept.
+  float shut = min(uDome.w * (1.0 - 0.2 * mirror) + uDeckEdge.z * max(1.0 - mirror / 0.6, 0.0), 0.92);
+  c *= mix(1.0 - shut * smoothstep(0.2, 0.7, grey), 1.0 + uDome.z, near);
   float veil = 1.0 - exp(-uDome.y / max(d.y, 0.008));
   return uDome.x * mix(c, uHaze * (0.85 + 0.5 * s2 * s2), veil);
 }
