@@ -201,10 +201,10 @@ void main() {
   // The dead one's face is under the tendrils and wet with what ran out of it: no hoar holds there.
   if (uWhole > 0.5 && vKind > 6.5) rime *= 0.15;
   // The dead one is seen close: what shows between its locks is the under-coat, pale and matted, with the rime in it in patches.
-  if (uWhole > 0.5 && vKind < 4.5) {
+  if (uWhole > 0.5 && vKind < 5.5) {
     // Its own grain is drawn here, hair fine: the picture of a coat is soft at three metres and would lie blurred between the hairs.
     float hairs = vnoise3(vRest * vec3(310.0, 520.0, 310.0)) + 0.6 * vnoise3(vRest * 760.0);
-    albedo = uTone.rgb * mix(shag, vec3(dot(shag, vec3(0.333))), 0.5) * mix(0.6, 1.05, smoothstep(0.2, 0.7, lie.b)) * (0.5 + 0.55 * hairs);
+    albedo = uTone.rgb * mix(shag, vec3(dot(shag, vec3(0.333))), 0.5) * mix(0.6, 1.05, smoothstep(0.2, 0.7, lie.b)) * (0.5 + 0.55 * hairs) * (vKind > 4.5 ? 0.8 : 1.0);
     rime *= 0.75 * smoothstep(0.35, 0.7, vnoise3(vRest * 17.0) + 0.3 * (fine - 0.5));
   }
   albedo = mix(albedo, vec3(0.86, 0.88, 0.92), rime);
@@ -328,7 +328,7 @@ void main() {
   float low = position.z;
   // Where the coat looks up the rime has it: the hair there is short under its load and frozen into white points, lock by lock.
   float crusted = uHair.z * smoothstep(0.75, 1.15, nb.y + uCoat.w + 0.7 * (min(aCard.z, 1.0) - 0.5)) * aCard.w * step(0.3, fract(seed * 6.1));
-  float reach = mix(0.5, 1.0, hairLong) * (1.0 + 0.12 * stray) * uHair.x * mix(1.0, 0.42, low) * (1.0 - 0.35 * crusted);
+  float reach = mix(0.5, 1.0, hairLong) * uHair.x * mix(1.0, 0.42, low) * (1.0 - 0.35 * crusted);
   float t = position.y * reach;
   vec3 p = mix(mix(r, c, t), mix(c, e, t), t);
   vec3 way = normalize(mix(c - r, e - c, t) + vec3(0.0, 1e-5, 0.0));
@@ -348,7 +348,11 @@ void main() {
   // And crimped, as a matted coat is: short waves down its length, its own.
   float crimp = 0.22 * w * smoothstep(0.05, 0.4, t) * sin(t * (23.0 + 14.0 * fract(hair * 8.3 + seed)) + hair * 90.0 + seed * 31.0);
   p += side * (cos(ang) * rad * together + 0.55 * w * lockKink * t + wander * (bendA + 0.4 * bendB) + crimp)
-     + off * (sin(ang) * rad * together * 0.6 + wander * 0.6 * (bendB - 0.3 * bendA) + 0.5 * w * stray * t);
+     + off * (sin(ang) * rad * together * 0.6 + wander * 0.6 * (bendB - 0.3 * bendA) + 0.35 * w * stray * t * (2.0 - t));
+  // And none stands straight, however narrow its lock: each curls over toward its end by a share of its own length, its own way.
+  float curlAng = 6.2832 * fract(hair * 6.1 + seed * 1.7);
+  float curl = span * t * t * (0.05 + 0.09 * fract(hair * 4.7 + seed * 2.9)) * (1.0 + stray) * (1.0 - 0.6 * low);
+  p += (side * cos(curlAng) + off * sin(curlAng)) * curl - vec3(0.0, 0.6 * curl * stray, 0.0);
   // How broad it is: it thins to its end, and is never finer than a pixel of the film.
   float far = length(cameraPosition - p);
   float pixel = 2.0 * far / (projectionMatrix[1][1] * 1080.0);
@@ -360,6 +364,8 @@ void main() {
   float rimed = smoothstep(0.7, 1.2, up + uCoat.w + 0.7 * (min(aCard.z, 1.0) - 0.5)) * aCard.w;
   float clot = rimed * step(0.45, fract(hair * 5.1 + seed * 2.3)) * smoothstep(0.2, 0.5, t) * (0.6 + 0.4 * sin(t * (17.0 + 9.0 * fract(hair * 2.9)) + hair * 50.0));
   float own = uStrand.x * w * (0.7 + 0.6 * fract(hair * 7.7)) * (0.25 + 0.75 * taper) * (1.0 + uHair.y * max(clot, 0.0) + 1.2 * crusted * (1.0 - low));
+  // Under the lens the coat is seen hair by hair: there each is a little the broader, so that the coat closes and nothing shows between.
+  own *= 1.0 + 0.6 * uWhole * (1.0 - smoothstep(1.2, 3.2, far));
   float drawn = max(own, 0.75 * pixel);
   p += side * (position.x * drawn);
   // Hair takes light from all round: it is lit as something between its lock's way out of the body and the open sky, and each hair

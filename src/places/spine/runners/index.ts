@@ -102,7 +102,7 @@ const smooth = (a: number, b: number, v: number): number => {
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('runners');
   // The dead one's coat is seen from three metres: every lock of it is drawn as its hairs.
-  const hairs = strandGeometry(9, 6, 3);
+  const hairs = strandGeometry(12, 6, 4);
   // The herd's is seen from metres off, and hangs straight: fewer hairs to a lock and fewer bends to a hair, and more locks.
   const hairsFar = strandGeometry(6, 6);
   const tendril = tendrilGeometry();
@@ -246,7 +246,7 @@ export function create(ctx: Context): Piece {
   ];
 
 
-  const huddle = HUDDLE.map((h, i) => make({ act: h.act, pose: h.pose, size: h.size, cell: 0.018, clumps: 700, long: h.act === 'stand' ? 0.95 : 1, tone: dim(cream(), h.act === 'stand' ? 1.75 : 1.05, h.act === 'stand' ? 0 : 0.5), phase: i * 1.9 + 0.4, inside: true, burn: NONE, tendrils: 34 }));
+  const huddle = HUDDLE.map((h, i) => make({ act: h.act, pose: h.pose, size: h.size, cell: 0.018, clumps: 700, long: h.act === 'stand' ? 0.95 : 1, tone: dim(cream(), h.act === 'stand' ? 1.75 : 1.1, h.act === 'stand' ? 0.6 : 1.4), phase: i * 1.9 + 0.4, inside: true, burn: NONE, tendrils: 34 }));
   // The walkers on the ridge trail are off: far in the wide lens one of them stood for a person, and the approved wide has the trail alone.
   const WALKERS = false;
   const CROSSING = WALKERS ? 4 : 0;
