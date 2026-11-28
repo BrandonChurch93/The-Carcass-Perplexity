@@ -104,7 +104,7 @@ function planOf(a: Anchor, up: [number, number][], rng: Rng, slack = 0, reach = 
 const TRIO: [number, number][] = [
   [-1.35, -0.36],
   [-0.36, 1.35],
-  [-1.13, 3.76],
+  [-0.7, 2.9],
 ];
 
 /** Staged: the herd is not one age: beyond the three in the channel there are young ones and old ones. The size of each, as a part of its own. */

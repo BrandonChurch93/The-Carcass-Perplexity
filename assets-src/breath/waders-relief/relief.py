@@ -105,8 +105,10 @@ def press(f, u, nf, nu, leg, neck, rib, cage, k, seed, which, broad=False, leg_l
     h = h + 0.0007 * k * foot * np.sin(leg * leg_len / (0.006 * k) * 2 * np.pi)
     # 7b. The neck: ringed all its length, more underneath, with two cords along the throat.
     onneck = smooth(0.03, 0.12, neck)
-    rings = np.sin(neck * neck_len / (0.021 * k) * 2 * np.pi + 2.2 * vnoise(nu * 2.0, neck * 30.0, seed + 13))
-    h = h + 0.0011 * k * onneck * rings * (0.45 + 0.55 * smooth(0.2, -0.6, nu))
+    # No two rings are one width, each gives out part of the way round, and in places there are none.
+    rings = np.sin(neck * neck_len / (0.03 * k) * 2 * np.pi + 7.0 * vnoise(nu * 1.6, neck * 11.0, seed + 13) + 5.0 * vnoise(neck * 5.0, 0.5, seed + 14))
+    some = smooth(0.3, 0.6, vnoise(neck * 9.0, nu * 1.3, seed + 15))
+    h = h + 0.0011 * k * onneck * rings * some * (0.3 + 0.7 * smooth(0.2, -0.6, nu))
     h = h + 0.0014 * k * onneck * (bell(nu + 0.55, 0.14) - 0.8 * bell(nu + 0.25, 0.1)) * (1 - smooth(0.7, 0.95, neck))
     # 8. The skin everywhere: a net of fine wrinkles, finer on the legs.
     cell = np.where(leg > 0.3, 0.016, 0.028) * k

@@ -14,8 +14,11 @@ const OWN = [
   { chest: 0.94, belly: 1.05, sway: 0.3, gaunt: 0.55 },
 ];
 fs.mkdirSync(out, { recursive: true });
-for (let i = 0; i < 3; i++) {
-  const b = makeBuild(SIZE[i] * 1.06, 11 + i * 7.31, false, 0.0125, OWN[i]);
+// The fourth is the stocky one that stands at the rim (waders/herd.ts): size from RIM_WADER in shared/anchors.ts.
+const RIM_SIZE = 1.1;
+for (let i = 0; i < 4; i++) {
+  let b = i < 3 ? makeBuild(SIZE[i] * 1.06, 11 + i * 7.31, false, 0.0125, OWN[i]) : makeBuild(RIM_SIZE * 1.06, 97.3, false, 0.014, { chest: 1.14, belly: 0.9, sway: 0.7, gaunt: 0.7 });
+  if (i === 3) b = { ...b, standH: b.standH * 0.8, legLen: b.legLen * 0.806, legR: b.legR * 1.35, neckR: b.neckR * 1.18, bodyLen: b.bodyLen * 1.08 };
   const body = buildBody(b, b.cell * b.k);
   const meta = { k: b.k, seed: b.seed, count: body.count, tris: body.index.length / 3, bodyLen: b.bodyLen, legLen: b.legLen, neckLen: b.neckLen };
   fs.writeFileSync(path.join(out, `rest-${i}.json`), JSON.stringify(meta));

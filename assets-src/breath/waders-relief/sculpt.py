@@ -2,10 +2,9 @@
 # Run from the repo: /home/user/bpyenv/bin/python assets-src/breath/waders-relief/sculpt.py out/work/bake <which 0..3>
 # In: the rest shape written by export-rest.cjs. The shape is pressed in and out along its own surface (ribs and the hollows between them,
 # the folds where a leg leaves the trunk, the knots of the joints, the cords down the shank, the rings of the neck, lumps and old scars, each
-# animal its own), and then looked at square on from its right side. Out: four float pictures of that view, one pixel for one pixel:
+# animal its own), and then looked at square on from its right side. Out: three float pictures of that view, one pixel for one pixel:
 #   <i>-a.exr  how far along a leg, how far along the neck, how much rib cage, and where there is animal at all
 #   <i>-b.exr  the phase of the ribs, the surface's lean fore and aft, its lean up and down
-#   <i>-c.exr  how far the sculpt moved the surface, metres
 #   <i>-o.exr  how hidden each point of the sculpted surface is from the open air
 import bpy, sys, json, os
 import numpy as np
@@ -21,7 +20,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from relief import press
 
 # The broad part of the sculpt moves the surface itself, so that the hollows between the ribs and the folds are truly hidden from the air.
-moved = press(pos[:, 0], pos[:, 1], nor[:, 0], nor[:, 1], leg, neck, rib, cage, k, seed, which, broad=True)
+moved = press(pos[:, 0], pos[:, 1], nor[:, 0], nor[:, 1], leg, neck, rib, cage, k, seed, which, broad=True, leg_len=meta['legLen'], neck_len=meta['neckLen']).astype(np.float32)
 sculpted = pos + nor * moved[:, None]
 
 def mesh_of(name, p):
@@ -47,8 +46,8 @@ def attribute(name, r, g, b):
     a.data.foreach_set('color', c.ravel())
 
 attribute('a', leg, neck, cage)
-attribute('b', rib, nor[:, 0], nor[:, 1])
-attribute('c', moved, moved * 0, moved * 0)
+# Kept between 0 and 1 for the picture: the phase of the ribs from -50 to 50, the leans from -1 to 1.
+attribute('b', (rib + 50) / 100, 0.5 + 0.5 * nor[:, 0], 0.5 + 0.5 * nor[:, 1])
 
 def material(name, attr):
     m = bpy.data.materials.new(name)
@@ -101,7 +100,7 @@ scene.render.threads = 4
 world = bpy.data.worlds.new('none')
 scene.world = world
 
-for name, attr, samples in [('a', 'a', 1), ('b', 'b', 1), ('c', 'c', 1), ('o', None, int(os.environ.get('RELIEF_AO', '24')))]:
+for name, attr, samples in [('a', 'a', 1), ('b', 'b', 1), ('o', None, int(os.environ.get('RELIEF_AO', '24')))]:
     me.materials.clear()
     me.materials.append(material(name, attr))
     scene.cycles.samples = samples
@@ -109,5 +108,5 @@ for name, attr, samples in [('a', 'a', 1), ('b', 'b', 1), ('c', 'c', 1), ('o', N
     scene.render.filepath = os.path.join(out, f'{which}-{name}.exr')
     bpy.ops.render.render(write_still=True)
 
-json.dump({'k': k, 'seed': seed, 'x0': cx - side / 2, 'y0': cy - side / 2, 'side': side, 'size': SIZE}, open(os.path.join(out, f'{which}-view.json'), 'w'))
+json.dump({'k': k, 'seed': seed, 'legLen': meta['legLen'], 'neckLen': meta['neckLen'], 'x0': cx - side / 2, 'y0': cy - side / 2, 'side': side, 'size': SIZE}, open(os.path.join(out, f'{which}-view.json'), 'w'))
 print('sculpt: done', which)
