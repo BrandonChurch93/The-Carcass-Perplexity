@@ -67,3 +67,19 @@ Opening (`shared/opening.ts`):
 - The far wader at 2081 looks see-through because the lens blur thins its legs. It was so on main.
 - The sky lightens the sky behind the far flyer only after the life builder's before and after. Brandon's choices stand: the far flyer of the first frame is not brought closer, the flyer of frames 76 to 84 keeps its distance, kite-wings at the colony stay 40 to 60 m off, nothing living has eyes or ears, and the jump at 2403 to 2405 is not changed.
 - `take.sh`, `proofs.sh`, `disc.cjs`, `stat.cjs` and `m3parts.mjs` under `out/work/` are the lead's own and are not committed.
+
+## 6. The fine detail of the frame at 0:34 (`agent/p11-ribs-detail`)
+
+Found, by measuring `ribs-1` on one machine at steps of the wave (ratio, energy; the approved picture's energy is 370.6849):
+- Before the wave (967bb1c) 1.2215, 452.7761. After it (731f088) 0.7470, 276.8860.
+- Step 7 (3b21145) 1.2312, 456.3888; step 8 (bf691b5, the ground's 53d6234) 0.8710, 322.8833: this one step took 133.5. It made the fronds matt and more (`land/curtain.ts`: roughness from 0.17 and up to 0.74 and up, the normal pushed toward the lens; `land/index.ts`: 7000 to 9000 of them, the wall under them darker by `hangs(0.6, 0, 0.5)`) and the wall's close weed matt (`land/shaders.ts`, `WEED_FRAGMENT`: roughness from 0.66 to 0.4 to 0.86 to 0.7).
+- Step 18 (20f6a5c) 0.8607, 319.0452; step 20 (7c89613) 0.7470, 276.8860: step 19 (the ground's 896d6c4) took 42.2. It made the fronds 5000 broad blades and thinned the beads (the wall's from a strength of 0.6 to 0.25 with a higher threshold, the fronds' from 0.35 to 0.14) and halved the wall's glint.
+- Steps 9 to 18 together moved it by 3.8; steps 21 to 23 by nothing.
+- The loss lies in the weed round the hung body (columns 2 to 5 of 8), nowhere else. What went was the wet: the sheen of the old wall and its beads. Both were taken out on purpose, so neither was put back.
+
+Changed, in `land/curtain.ts` and `land/shaders.ts` only:
+- Drops of water (`drops`): one to a cell at most, round, each at its own place and of its own size, in the wall's mass (fine ones and fewer fat ones, in the drifts where it is soaked) and on the broad blades (none on a thread of weed, none on the rib). A drop takes the sky's light by `max`, not by adding, so it is as bright on a pale blade as on a dark one and never brighter than `DROP_SKY` allows: at 2081 the brightest drop reads 139 (luma) against the limit of 156.
+- The blades' skin (`puckers`, attribute `aOff`): blisters laid in metres across and along the blade, deep toward the margins, with a dark rib down a broad blade and a paler frill. They tilt the normal, thin the tone on the crowns and shade the feet.
+- The old noise beads of both shaders are gone (the drops stand in their place), which pays for the new work.
+- Read at bcb71a7, where each drop still kept to the middle of its cell: `ribs-1` M3 0.9134, energy 338.5698, M1 and M2 green. The commit after it lets a drop lie anywhere in its cell, because drops in the middles of their cells stood in rows; its five keys, its three draws and its cost are in the builder's last message.
+- Left: the drops are rounder and more even than the picture's broken glints; the fronds are matt brown where the picture has glossy amber; the weed nearest the lens on the left is out of focus (focus 18 m) and no detail put there will show.

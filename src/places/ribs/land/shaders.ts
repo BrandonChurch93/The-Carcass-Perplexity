@@ -416,12 +416,13 @@ void main() {
 // with the strap picture under it for what the lens sees from a stride away.
 export const WEED_FRAGMENT = /* glsl */ `
 ${HEAD}
-// Drops of water, one to a cell at most (share: how many cells of ten hold one), each round, at its own place and of its own size.
+// Drops of water, one to a cell at most (share: how many cells of ten hold one), each round and of its own size, and anywhere in its
+// cell that it fits: drops that keep to the middles of their cells stand in rows.
 float drops(vec2 p, float share) {
   vec2 i = floor(p);
   vec2 h = hash22(i);
   float big = 0.14 + 0.2 * h.y;
-  return (h.x < share ? 1.0 : 0.0) * smoothstep(big, 0.4 * big, length(p - i - 0.34 - 0.32 * fract(h * vec2(41.0, 67.0))));
+  return (h.x < share ? 1.0 : 0.0) * smoothstep(big, 0.4 * big, length(p - i - big - (1.0 - 2.0 * big) * fract(h * vec2(41.0, 67.0))));
 }
 #define DROP_SKY 0.32
 varying vec2 vUv;

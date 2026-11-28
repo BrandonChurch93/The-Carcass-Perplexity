@@ -203,12 +203,13 @@ vec3 puckers(vec2 p) {
   float d = hash12(i + vec2(1.0, 1.0)) - a - b - c;
   return vec3(a + b * u.x + c * u.y + d * u.x * u.y, 6.0 * f * (1.0 - f) * vec2(b + d * u.y, c + d * u.x));
 }
-// Drops of water, one to a cell at most (share: how many cells of ten hold one), each round, at its own place and of its own size.
+// Drops of water, one to a cell at most (share: how many cells of ten hold one), each round and of its own size, and anywhere in its
+// cell that it fits: drops that keep to the middles of their cells stand in rows.
 float drops(vec2 p, float share) {
   vec2 i = floor(p);
   vec2 h = hash22(i);
   float big = 0.14 + 0.2 * h.y;
-  return (h.x < share ? 1.0 : 0.0) * smoothstep(big, 0.4 * big, length(p - i - 0.34 - 0.32 * fract(h * vec2(41.0, 67.0))));
+  return (h.x < share ? 1.0 : 0.0) * smoothstep(big, 0.4 * big, length(p - i - big - (1.0 - 2.0 * big) * fract(h * vec2(41.0, 67.0))));
 }
 #define PUCK_ACROSS 30.0
 #define PUCK_ALONG 20.0
@@ -246,7 +247,7 @@ void main() {
     puck = close * (0.4 + 0.6 * smoothstep(0.15, 0.7, edge)) * (1.0 - rib);
     // The wet stands on a broad blade in drops, here on it and not there: points in no row. A thread of weed holds none: drops down a thread are a string of beads.
     float wetHere = smoothstep(0.35, 0.65, wr2) * smoothstep(0.05, 0.1, abs(vOff) / max(edge, 0.03));
-    if (wetHere > 0.0) bead = close * wetHere * (1.0 - rib) * drops(vec2(vOff * 24.0 + vTone.x * 23.0, vUv.y * vTone.w * 17.0 + vTone.x * 71.0), 0.4);
+    if (wetHere > 0.0) bead = close * wetHere * (1.0 - rib) * drops(vec2(vOff * 24.0 + vTone.x * 23.0, vUv.y * vTone.w * 17.0 + vTone.x * 71.0) + 1.7 * vec2(wr, wr2), 0.4);
   }
   // A frond is no flat strap: it is ruffled at its edges and troughed along its midrib, so the wet light on it is a line and not a face.
   vec3 du = dFdx(vWorld) * dFdy(vUv.y) - dFdy(vWorld) * dFdx(vUv.y);
