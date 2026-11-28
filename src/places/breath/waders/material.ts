@@ -394,7 +394,7 @@ void main() {
   float across = smoothstep(55.0, 140.0, far) * (1.0 - uVeiled.z);
   float fogLight = 0.5 * max(0.05, mix(0.54, 0.4, smoothstep(22.0, 110.0, far)) + 0.34 * dot(n, flat_) + 0.08 * n.y) * (1.0 + 3.0 * across);
   vec3 fogColour = skyIrradiance(normalize(flat_ + vec3(0.0, 0.4, 0.0))) * vec3(1.14, 1.0, 0.86) / 3.14159;
-  colour += albedo * (uSunColour * ((0.2 + 0.26 * whole) * wrap * wrap + 3.0 * (1.0 - 0.3 * tendril) * halo * halo * halo) + fogColour * (4.9 * (1.0 - 0.45 * tendril) * fogLight * (1.0 + 1.2 * (1.0 - lit)))) * (occ * (0.7 + 0.3 * lit) * (1.0 - 0.6 * uDead));
+  colour += albedo * (uSunColour * ((0.2 + 0.44 * whole) * wrap * wrap + 3.0 * (1.0 - 0.3 * tendril) * halo * halo * halo) + fogColour * (4.9 * (1.0 - 0.45 * tendril) * fogLight * (1.0 + 1.2 * (1.0 - lit)))) * (occ * (0.7 + 0.3 * lit) * (1.0 - 0.6 * uDead));
   // Thin bare skin against a low sun: the light comes a little way through at the edge of every limb, warm, and the edge reads bright.
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
@@ -403,7 +403,7 @@ void main() {
   vec3 through = mix(vec3(1.0, 0.52, 0.36), vec3(1.0, 0.6, 0.58), tendril);
   // A strand is thin all through, not only at its edge.
   edge = mix(edge, 0.24, tendril);
-  colour += albedo * through * uSunColour * ((1.0 - 0.8 * uMirror) * thin * 2.3 * (0.3 + 0.7 * against * against) * edge * max(lit, 0.6) * (0.5 + 0.5 * occ) * mix(smoothstep(-0.2, 0.5, dot(n, uSunDir)), 0.3, tendril));
+  colour += albedo * through * uSunColour * ((1.0 - 0.8 * uMirror) * thin * (2.3 + 0.8 * whole) * (0.3 + 0.7 * against * against) * edge * max(lit, 0.6) * (0.5 + 0.5 * occ) * mix(smoothstep(-0.2, 0.5, dot(n, uSunDir)), 0.3, tendril));
   // Staged: the sun breaks through on the one far off in the vapour, so it is paler than the vapour it stands in, and it keeps its body:
   // the back that faces the sun is brightest and the belly and the side in its own shade the least.
   float veil = uVeiled.z * smoothstep(8.0, 5.0, length(vWorld.xz - uVeiled.xy));
