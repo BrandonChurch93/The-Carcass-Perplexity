@@ -34,7 +34,7 @@ function finish(pos: number[], index: number[], top: number[], sl: number[], ext
 
 const FAR = 1e4;
 // The mesh of the spires next to the first: [rings, around]. [170, 440] is the finer picture in the strike's long lens; its cost is in HANDOVER.md.
-const SPIRE_MID: [number, number] = [104, 240];
+const SPIRE_MID: [number, number] = [156, 360];
 
 /** The crest: a strip along the ridge, 520 m to each side. */
 export function crestStrip(): THREE.BufferGeometry {
@@ -435,6 +435,40 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
   );
   // The bites of the windward edge: whole blocks gone from it, some 40 and 12 m high, each with a level top and foot (not a wave: a wave of
   // 5 m on an edge 140 m out stood on it as a row of teeth).
+  // A block is not a step of whole quads: every riser was one quad pulled long with a picture drawn out along it, every tread a pale
+  // rectangle, and the light took each triangle for a face. The blocks are the same ones, read through a window of three by three
+  // vertices, so a joint is a slope two quads wide and a face turns into the next without a seam.
+  const ringY = (r: number): number => {
+    const k = Math.min(r, DOWN + UP);
+    const g = (k - DOWN) / UP;
+    const h = level > 1.5 ? ringAt(g) : g;
+    return fin(sp, k < DOWN ? tLow + (t0 - tLow) * Math.pow(k / DOWN, 0.7) : t0 + (1 - t0) * h).y - (r === DOWN + UP + 1 ? 1 : 0);
+  };
+  const rows = DOWN + UP + 2;
+  const cuts = new Float32Array(rows * AROUND);
+  const deep = new Float32Array(rows * AROUND);
+  for (let r = 0; r < rows; r++) {
+    const y = ringY(r);
+    for (let a = 0; a < AROUND; a++) {
+      const [c, j] = joints(a, y);
+      cuts[r * AROUND + a] = c;
+      deep[r * AROUND + a] = j;
+    }
+  }
+  const soft = (a: number, r: number): [number, number] => {
+    let c = 0;
+    let j = 0;
+    for (let dr = -1; dr <= 1; dr++) {
+      const rr = Math.min(rows - 1, Math.max(0, r + dr));
+      for (let da = -1; da <= 1; da++) {
+        const w = (dr ? 1 : 2) * (da ? 1 : 2);
+        const at = rr * AROUND + ((a + da + AROUND) % AROUND);
+        c += w * (cuts[at] as number);
+        j += w * (deep[at] as number);
+      }
+    }
+    return [c / 16, j / 16];
+  };
   const bite = (u: number, n: number): number => 2 * (mixHash(piece(u, n > 1.5 ? 22 : n ? 12 : 40, seed + 61 + n).i, seed + 67 + n) - 0.5);
   for (let r = 0; r <= DOWN + UP + 1; r++) {
     const cap = r === DOWN + UP + 1;
@@ -471,7 +505,7 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
       const y = p.y - (cap ? 1 : 0);
       // Its faces stand in and out as the sheet's relief has them, and the rock on top of that is jointed into blocks (see `jointing`).
       const [su, sv] = sheetAt(sp, l, y);
-      const [cut, joint] = joints(a, y);
+      const [cut, joint] = soft(a, r);
       const scale = Math.min(1, Math.max(0.22, p.thick / 42));
       // The lee edge keeps its line (the kites hold to it); the windward edge is let stand in and out block by block, so it is broken against the sky.
       const keep = 1 - (ln > 0 ? 0.92 : 0.45) * edge;
