@@ -36,12 +36,14 @@ export function create(ctx: Context): Piece {
   const LOOKS = [10.4, 13.1, 11.3];
   const add = (x: number, z: number, when: number, dir: [number, number], size: number, sink: number, speed: number, root: number): void => {
     const young = size < 0.7 ? 1 - (size - 0.34) / 0.5 : 0;
-    const b: Build = { k: size, young: Math.max(0, Math.min(1, young)), seed: rng.range(1, 60), bulk: rng.range(0.94, 1.08), salt: rng.range(0.5, 1) * (sink > 0.5 ? 0.3 : 1) };
+    const b: Build = { k: size, young: Math.max(0, Math.min(1, young)), seed: rng.range(1, 60), bulk: rng.range(0.94, 1.08), salt: rng.range(0.5, 1) * (sink > 0.5 ? 0.3 : herd.length < 3 ? 1 : 0.45) };
     // The slower it goes the longer its cycle: a walk of about one length of the trunk in three cycles, and never two alike.
     const cycle = rng.range(3.4, 4.6) * (0.75 + 0.25 * size) * (speed > 0.24 ? 0.72 : 1);
     // One that wades stands on the bed it has trodden down; one on a bank stands on the bank.
     const land = ctx.rig.land.height(x, z);
-    const ground = sink > 0.15 ? Math.min(land, 0) - sink * b.k : Math.min(Math.max(land, -0.25), ctx.rig.land.shore(x, z) < 0.3 ? -0.14 : 1) - 0.02;
+    // One that lies in the brine lies on its bed. One that wades and walks stands in it no deeper than its shins, whatever the bed is, and on the bank where there is one:
+    // the brine is not seen through, and from far off an animal is its legs and its head, a hump with neither is a stone.
+    const ground = sink > 0.75 ? Math.min(land, 0) - sink * b.k : sink > 0.15 ? Math.max(land - 0.04 * b.k, -sink * b.k) : Math.min(Math.max(land, -0.25), ctx.rig.land.shore(x, z) < 0.3 ? -0.14 : 1) - 0.02;
     // A young one keeps to the shallows: its legs are too short for the bed.
     // One on a bank has sunk into it to the ankle and further: the mud is soft.
     const sunkIn = (size < 0.5 ? Math.max(ground, -0.07) : ground) - (sink > 0.15 ? 0 : (size < 0.5 ? 0.1 : 0.12) * b.k);
@@ -57,7 +59,7 @@ export function create(ctx: Context): Piece {
     const wet = sink > 0.5 ? (herd.length === 2 ? rng.range(1.0, 1.4) : 0.4 * rng.range(1.0, 1.4) - 0.05) * b.k : Math.max(0.5 * b.k, stand + 0.85 * b.k) * rng.range(0.9, 1.1);
     herd.push({
       // The one that lies in the brine before the lens of the wallowers is wet all over its back: skin, with the mud of the brine low on it.
-      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: hero ? 1.6 : near ? 1.3 : 1, ...(hero ? { droop: 2.1 } : herd.length === 1 ? { droop: 1.8, strand: 0.5 } : {}), ...(near ? { coat: (herd.length === 2 ? [1.45, 9, 1, 0] : [0.84, 1.95, 0, 0]) as [number, number, number, number], tendrils: 10, hang: 0, ...(herd.length === 2 ? { tint: 0.4, skip: 2 } : {}), thick: hero ? 7.0 : herd.length === 2 ? 4.4 : 6.4, long: hero ? 0.72 : herd.length === 1 ? 0.7 : 0.8 } : {}) }),
+      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: hero ? 1.6 : near ? 1.3 : 1, ...(hero ? { droop: 2.1 } : herd.length === 1 ? { droop: 1.8, strand: 0.5 } : {}), ...(near ? { coat: (herd.length === 2 ? [1.45, 9, 1, 0] : [0.7, 1.95, 0, 0]) as [number, number, number, number], tendrils: 10, hang: 0, ...(herd.length === 2 ? { tint: 0.4, skip: 2 } : {}), thick: hero ? 7.0 : herd.length === 2 ? 4.4 : 6.4, long: hero ? 0.72 : herd.length === 1 ? 0.7 : 0.8 } : {}) }),
       plan: { at: [x, z], when, dir, speed, ground: stand, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang, look: LOOKS[herd.length] ?? 1.7 + herd.length * 2.9 },
       onBank: sink <= 0.15,
       sunk: sink > 0.75,
@@ -87,7 +89,8 @@ export function create(ctx: Context): Piece {
   const bl = Math.hypot(1, 0.12);
   add(bank[0] * 11.5, bank[1] * 11.5, keyTime('marsh-2'), [-1 / bl, -0.12 / bl], 0.74, 0.12, 0.2, 0.05);
   // It wades: the brine is over its knees and its belly is just clear of it.
-  (herd[herd.length - 1] as (typeof herd)[number]).plan.ground = -0.15;
+  const wader = herd[herd.length - 1] as (typeof herd)[number];
+  wader.plan.ground = Math.max(ctx.rig.land.height(wader.plan.at[0], wader.plan.at[1]) - 0.03, -0.15);
   // STAGED for the lens of the seep: the small one far behind its mist, side on.
   // The colony's wader stands in that view too, large and close: it is off the set for that shot with the ones near the seep.
   const bySeep = herd.map((h, i) => i === herd.length - 1 || Math.hypot(h.plan.at[0] - K1_AT[0], h.plan.at[1] - K1_AT[1]) < 17);
@@ -142,7 +145,11 @@ export function create(ctx: Context): Piece {
         if (acted && i === 0) great(h.plan, h.beast.b, seconds, t, cast[0] as number, drive);
         else if (acted && i === 1) young(h.plan, h.beast.b, seconds, t, toGreat, drive);
         else if (acted) lying(h.plan, h.beast.b, seconds, t, cast[2] as number, drive);
+        // STAGED for the wide views: away from the shot of the wallowers the great one stands on the firm mud of its wallow, in to the ankle, and its legs are seen from far off.
+        const raised = i === 0 && !acted ? 0.2 * h.beast.b.k : 0;
+        h.plan.ground += raised;
         const driven = acted ? drive : roam(h.plan, h.beast.b, seconds, h.sunk, drive);
+        h.plan.ground -= raised;
         driven.floor = h.floor;
         // STAGED for the lens of the wallowers: the great one's feelers are turned down and spread into the mud like the fingers of a hand, as the approved picture has them.
         if (i === 0) driven.splay += 0.3;
