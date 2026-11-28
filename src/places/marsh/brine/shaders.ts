@@ -528,11 +528,11 @@ void main() {
   // A bead of dark brine: one small window of the sky on its upper side and no pale limb.
   vec3 rd = reflect(-v, n);
   float td = max(dot(rd, ${DOME_KEY}), 0.0);
-  vec3 bead = vec3(0.11, 0.013, 0.009) * skyIrradiance(n) * (open / 3.14159);
+  vec3 bead = vec3(0.095, 0.011, 0.008) * skyIrradiance(n) * (open / 3.14159);
   float graze = 1.0 - max(dot(n, v), 0.0);
   // (A string of brine is thin: toward its edge the lens looks through less of it, and the white sky behind comes through red.)
-  bead += vec3(0.2, 0.022, 0.014) * skyIrradiance(up) * (open / 3.14159) * graze * graze;
-  bead += skyRadiance(normalize(vec3(rd.x, abs(rd.y) + 0.02, rd.z))) * (0.012 + 0.1 * graze * graze * graze * graze * max(rd.y, 0.0) + 0.45 * smoothstep(0.955, 0.992, td)) * mix(1.0, open, 0.5);
+  bead += vec3(0.13, 0.014, 0.009) * skyIrradiance(up) * (open / 3.14159) * graze * graze;
+  bead += skyRadiance(normalize(vec3(rd.x, abs(rd.y) + 0.02, rd.z))) * (0.008 + 0.1 * graze * graze * graze * graze * max(rd.y, 0.0) + 0.3 * smoothstep(0.955, 0.992, td)) * mix(1.0, open, 0.5);
   gl_FragColor = vec4(bead * (1.0 - uSolo), 1.0);
 #else
   vec3 at = normalize(vLocal);
