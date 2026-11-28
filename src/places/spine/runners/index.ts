@@ -10,8 +10,8 @@ import { stagedSeconds } from '../shared/stage';
 import { FLOOR, MOUTH_S, canalL, first, flare, frameAt, locate, world } from '../ridge';
 import { floorRise } from '../land/meshes';
 import { flashAt } from '../strikes/bolt';
-import { BURN_NARROW, LOCK_FRAGMENT, LOCK_VERTEX, STRAND_FRAGMENT, STRAND_VERTEX, MARK_FRAGMENT, MARK_VERTEX, SKIN_FRAGMENT, SKIN_VERTEX, TENDRIL_FRAGMENT, TENDRIL_VERTEX } from './material';
-import { BONES, carcassJoints, claws, coat, lockGeometry, skin, strandGeometry, tendrilGeometry, type Joints, type LegPose, type Pose, type Skin, type V3 } from './skin';
+import { BURN_NARROW, STRAND_FRAGMENT, STRAND_VERTEX, MARK_FRAGMENT, MARK_VERTEX, SKIN_FRAGMENT, SKIN_VERTEX, TENDRIL_FRAGMENT, TENDRIL_VERTEX } from './material';
+import { BONES, carcassJoints, claws, coat, skin, strandGeometry, tendrilGeometry, type Joints, type LegPose, type Pose, type Skin, type V3 } from './skin';
 
 export const PARTS: readonly string[] = ['ridge-runners'];
 
@@ -101,17 +101,15 @@ const smooth = (a: number, b: number, v: number): number => {
 
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('runners');
-  const strip = lockGeometry(5);
   // The dead one's coat is seen from three metres: every lock of it is drawn as its hairs.
-  const hairs = strandGeometry(6, 8);
+  const hairs = strandGeometry(10, 6, 4);
+  // The herd's is seen from metres off, and hangs straight: fewer hairs to a lock and fewer bends to a hair, and more locks.
+  const hairsFar = strandGeometry(6, 6);
   const tendril = tendrilGeometry();
   // The dead one's are seen close: round, and bent in many places.
-  const tendrilFine = tendrilGeometry(10, 44);
+  const tendrilFine = tendrilGeometry(8, 36);
   const shagColour = ctx.assets.texture('mat/shag.jpg', { kind: 'colour', anisotropy: 4 });
   const shagData = ctx.assets.texture('mat/shag-nh.png', { kind: 'data', anisotropy: 4 });
-  const lockPicture = ctx.assets.texture('mat/lock.jpg', { kind: 'colour', repeat: false, anisotropy: 4 });
-  const lockFine = ctx.assets.texture('mat/lock-b.jpg', { kind: 'colour', repeat: false, anisotropy: 1 });
-  const lockFineCut = ctx.assets.texture('mat/lock-b-a.png', { kind: 'data', repeat: false, anisotropy: 1 });
   const burnPicture = ctx.assets.texture('mat/burn.jpg', { kind: 'colour', repeat: false, anisotropy: 4 });
   const door = new THREE.Vector4(canalFar[0], canalFar[1], canalFar[2], 1);
   const open = new THREE.Vector4(0, 0, 0, 0);
@@ -154,9 +152,6 @@ export function create(ctx: Context): Piece {
       uCoat: { value: coatSet },
       tShag: { value: shagColour },
       tShagData: { value: shagData },
-      tLock: { value: lockPicture },
-      tLockB: { value: lockFine },
-      tLockBA: { value: lockFineCut },
       uLockKind: { value: role.inside ? 1 : 0 },
       uWhole: { value: role.act === 'dead' ? 1 : 0 },
       tBurn: { value: burnPicture },
@@ -168,7 +163,8 @@ export function create(ctx: Context): Piece {
       uFace: { value: new THREE.Vector4(j.face[0], j.face[1], j.face[2], 0) },
       uLead: { value: new THREE.Vector4(j.lead[0], j.lead[1], j.lead[2], 0) },
       uWrithe: { value: writhe },
-      uStrand: { value: new THREE.Vector4(0.1, 1.0, 0.16, 0.4) },
+      uStrand: { value: role.act === 'dead' ? new THREE.Vector4(0.1, 1.0, 0.16, 0.4) : new THREE.Vector4(0.14, 1.15, 0.3, 0.35) },
+      uHair: { value: role.act === 'dead' ? new THREE.Vector4(0.72, 3.0, 1, 0) : new THREE.Vector4(1, 1.2, 0.5, 0) },
     };
     const group = new THREE.Group();
     const hide = new THREE.ShaderMaterial({ vertexShader: SKIN_VERTEX, fragmentShader: SKIN_FRAGMENT, uniforms: shared });
@@ -186,11 +182,11 @@ export function create(ctx: Context): Piece {
     const under = role.act === 'dead' ? (_p: [number, number, number], n: [number, number, number]): boolean => n[0] * (j.right[0] as number) + n[1] * (j.right[1] as number) + n[2] * (j.right[2] as number) > 0.45 || (n[2] > 0.5 && n[1] < 0.45) : undefined;
     const c = coat(body, rng, { clumps: role.clumps, locks: role.act === 'dead' ? 6 : 4, broad: role.act === 'dead' ? 0.55 : role.inside ? 0.62 : 1, long: role.long, lengths: role.act === 'dead' ? [0.21, 0.19, 0.08, 0.15, 0.115, 0.085, 0, 0.035] : undefined, burn: role.burn, hang: role.inside ? (role.act === 'stand' ? 0.55 : 0.65) : 0, droop: role.inside ? (role.act === 'stand' ? 0.55 : 1) : 0, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0], skip: under, burnAxis: across, burnNarrow: role.act === 'dead' ? SPLIT_NARROW : BURN_NARROW, lips: role.act === 'dead' });
     const locks = new THREE.InstancedBufferGeometry();
-    const asHair = role.act === 'dead';
-    const lockShape = asHair ? hairs : strip;
+    const lockShape = role.act === 'dead' ? hairs : hairsFar;
     locks.index = lockShape.index;
     locks.setAttribute('position', lockShape.getAttribute('position'));
-    if (asHair) locks.setAttribute('aStrand', lockShape.getAttribute('aStrand'));
+    // Every coat is hair: the dead one's seen from three metres, the herd's from as near as the lens passes it.
+    locks.setAttribute('aStrand', lockShape.getAttribute('aStrand'));
     locks.setAttribute('aRoot', new THREE.InstancedBufferAttribute(c.root, 3));
     locks.setAttribute('aCtrl', new THREE.InstancedBufferAttribute(c.ctrl, 3));
     locks.setAttribute('aTip', new THREE.InstancedBufferAttribute(c.tip, 3));
@@ -198,7 +194,7 @@ export function create(ctx: Context): Piece {
     locks.setAttribute('aLockBones', new THREE.InstancedBufferAttribute(c.bones, 4));
     locks.instanceCount = c.count;
     locks.boundingSphere = body.geometry.boundingSphere;
-    const lockMesh = new THREE.Mesh(locks, new THREE.ShaderMaterial({ vertexShader: asHair ? STRAND_VERTEX : LOCK_VERTEX, fragmentShader: asHair ? STRAND_FRAGMENT : LOCK_FRAGMENT, uniforms: shared, side: THREE.DoubleSide, transparent: true, depthWrite: true }));
+    const lockMesh = new THREE.Mesh(locks, new THREE.ShaderMaterial({ vertexShader: STRAND_VERTEX, fragmentShader: STRAND_FRAGMENT, uniforms: shared, side: THREE.DoubleSide, transparent: true, depthWrite: true }));
     // Laid over the hide and the ground behind it, so that its edges can be soft; before the air's veils, which lie over it.
     lockMesh.renderOrder = -1;
     group.add(lockMesh);
@@ -250,7 +246,7 @@ export function create(ctx: Context): Piece {
   ];
 
 
-  const huddle = HUDDLE.map((h, i) => make({ act: h.act, pose: h.pose, size: h.size, cell: 0.018, clumps: 420, long: h.act === 'stand' ? 0.95 : 1, tone: dim(cream(), h.act === 'stand' ? 1.75 : 1.05, h.act === 'stand' ? 0 : 0.5), phase: i * 1.9 + 0.4, inside: true, burn: NONE, tendrils: 34 }));
+  const huddle = HUDDLE.map((h, i) => make({ act: h.act, pose: h.pose, size: h.size, cell: 0.018, clumps: 700, long: h.act === 'stand' ? 0.95 : 1, tone: dim(cream(), h.act === 'stand' ? 1.75 : 1.1, h.act === 'stand' ? 0.6 : 1.4), phase: i * 1.9 + 0.4, inside: true, burn: NONE, tendrils: 34 }));
   // The walkers on the ridge trail are off: far in the wide lens one of them stood for a person, and the approved wide has the trail alone.
   const WALKERS = false;
   const CROSSING = WALKERS ? 4 : 0;
@@ -260,7 +256,7 @@ export function create(ctx: Context): Piece {
   const dj = deadSkin.joints;
   const wd = (d: 0 | 1 | 2): number => (dj.chest[d] as number) - 0.22 * (dj.fwd[d] as number) - 0.1 * (dj.up[d] as number) - 0.2 * (dj.right[d] as number);
   const wound: [number, number, number, number] = [wd(0), wd(1), wd(2), 0.5];
-  const dead = make({ act: 'dead', pose: DEAD, size: DEAD_SIZE, cell: 0.022, clumps: 1450, long: 0.85, tone: [1.1, 1.02, 0.88], phase: 0, inside: false, burn: wound, tendrils: 40 });
+  const dead = make({ act: 'dead', pose: DEAD, size: DEAD_SIZE, cell: 0.022, clumps: 1450, long: 0.85, tone: [1.17, 1.0, 0.8], phase: 0, inside: false, burn: wound, tendrils: 40 });
 
   // What the one that walks does to the floor: the dark under each foot that is down, the prints where it stood, and the snow a foot
   // kicks up as it leaves. Flat on the floor, or turned to the lens for the snow.
@@ -329,7 +325,8 @@ export function create(ctx: Context): Piece {
     about(m3, j.head, 0.1 * Math.sin(t * 1.3 + ph * 3), 0.12 * Math.sin(t * 1.1 + ph * 5) + 0.6 * look, 0.1 * Math.sin(t * 0.77 + ph * 4));
     (a.bones[3] as THREE.Matrix4).copy(a.bones[2] as THREE.Matrix4).multiply(m3);
     // The gale reaches the one at the mouth in gusts: its coat is blown and falls back.
-    a.coat.set(1, a.role.inside ? (standing ? 0.5 + 0.35 * Math.sin(t * 1.3 + 1.1 * Math.sin(t * 0.53)) : 0.3 + 0.1 * Math.sin(t * 0.9 + ph)) : 0.5, shiver, a.role.inside ? (standing ? 0.42 : 0.3) : 0.1);
+    // Those that lie are out of it: their coats hang as they hang, the same from one frame to the next.
+    a.coat.set(1, a.role.inside ? (standing ? 0.5 + 0.35 * Math.sin(t * 1.3 + 1.1 * Math.sin(t * 0.53)) : 0) : 0.5, shiver, a.role.inside ? (standing ? 0.42 : 0.3) : 0.1);
     a.writhe.set(a.role.act === 'lie' ? 0.6 : 1, 0, 0, 0);
   };
 
