@@ -25,8 +25,9 @@ import type { Contact } from './contacts';
 import { FEEDER_C, FLIERS, Figures, PERCHED, figureMaterials, placed } from './figure';
 import type { Placed } from './figure';
 import { Flight, flierMaterials, flying } from './flier';
-import { footAt, ramp, wayAt } from './gait';
+import { STANDS, footAt, ramp, wayAt } from './gait';
 import { SEAT, roostPose } from './roost';
+import { Thrown } from './water';
 import { nestMats } from './nest';
 import type { Roosting, Stance } from './roost';
 import type { At, Step, Way } from './gait';
@@ -903,7 +904,7 @@ export function create(ctx: Context): Piece {
     const size = s.size * (LARGE.includes(i) ? 0.7 : 0.42 + 0.3 * ((s.seed * 389) % 1));
     if (!apart(s.x, s.y, s.z, size)) continue;
     // Most stand hunched with the neck arched over; some are down on the ledge with the neck up; a few stand tall with their sails part open.
-    const stance: Stance = LARGE.includes(i) ? (i % 2 === 0 ? 2 : 0) : k < 0.4 ? 0 : k < 0.78 ? 1 : 2;
+    const stance: Stance = LARGE.includes(i) ? (i % 2 === 0 ? 2 : 0) : k < 0.32 ? 0 : k < 0.86 ? 1 : 2;
     roosts.push(seated(s.x, s.y, s.z, size, s.seed, stance));
   }
   // The ledges nearest the colony's lens are packed: beside each sitter others stand, and on the ledges over it and under it, and beside
@@ -916,7 +917,7 @@ export function create(ctx: Context): Piece {
     for (let n = 0; n < 6 && roosts.length < ROOSTING + MATES; n++) {
       const seed = (by.seed * 7.13 + 0.37 * (n + 1)) % 1;
       const size = by.size * (0.55 + 0.6 * ((seed * 53) % 1)) * (by.size > 1.5 ? 0.8 : 1);
-      const stance: Stance = (seed * 977) % 1 < 0.4 ? 0 : (seed * 977) % 1 < 0.78 ? 1 : 2;
+      const stance: Stance = (seed * 977) % 1 < 0.32 ? 0 : (seed * 977) % 1 < 0.86 ? 1 : 2;
       // Along the crag one way or the other, on its own ledge or one a step or two up or down: at the ledge's edge, where the lens under
       // it sees it whole, and only where the ledge is deep enough to stand on and open over it.
       const along = (n % 2 === 0 ? 1 : -1) * (1.3 * (by.size + size) + 0.35 + 1.6 * ((seed * 211) % 1) * by.size);
@@ -1203,10 +1204,68 @@ export function create(ctx: Context): Piece {
   const BEADS: boolean = false;
   const wet = [...new Set([...ringed, ...feeders.map((f, i) => (f.habit === 2 ? i : -1)).filter((i) => i >= 0)])];
   const splash = new Spray(wet.length * SPLASH + FLEEING * KICK_DROPS, { ...rig.uniforms, tFoam: { value: foamTexture(ctx.rng('kite-wings-splash')) } });
+  /** Sheets a tuft at work throws at once, and those of one footfall of a runner. */
+  const SHEETS = 26;
+  const FOOT_SHEETS = 3;
+  const thrown = new Thrown(wet.length * (SHEETS + 2 * 2 * FOOT_SHEETS), rig.uniforms);
+  const lands: At = { x: 0, z: 0, yaw: 0 };
+  /** The water thrown by one feeder: where its tuft goes in and works, sheets off the strands; under a runner, a sheet off every footfall. */
+  const throwsAt = (f: Feeder, i: number, seconds: number): void => {
+    if (f.habit === 0) {
+      const shot = SPANS.find((span) => seconds >= span.from && seconds <= span.to);
+      for (let n = 0; n < SHEETS; n++) {
+        const key = i * 53 + n + 700;
+        // In the loop a whole number are thrown to the loop, and the run of them comes round.
+        const count = Math.max(1, Math.round(LOOP_SECONDS / (0.42 + 0.4 * rand(key, 1))));
+        const every = lp === null ? 0.42 + 0.4 * rand(key, 1) : LOOP_SECONDS / count;
+        const u = lp === null ? seconds / every + rand(key, 2) : lp * count + rand(key, 2);
+        const born = lp === null ? Math.floor(u) : Math.floor(u) % count;
+        const age = (u - Math.floor(u)) * every;
+        const life = Math.min(0.95 * every, 0.42 + 0.3 * rand(key, born + 3));
+        if (age >= life) continue;
+        // It is thrown from where the tuft was when it left the pool, and by how hard the tuft worked then.
+        const keep = lp;
+        if (lp !== null) lp = (((lp - age / LOOP_SECONDS) % 1) + 1) % 1;
+        else if (shot && seconds - age < shot.from) continue;
+        feederAt(f, seconds - age);
+        lp = keep;
+        if (!tuft.here || tuft.wet < 0.6) continue;
+        const hard = (0.9 + 0.6 * Math.min(1, tuft.shake)) * Math.sqrt(f.size) * (0.7 + 0.6 * rand(key, born + 4));
+        // Off to one side of the neck or the other, and ahead of it more often than back.
+        const way = P.yaw + P.headYaw + (rand(key, born + 5) < 0.5 ? 1 : -1) * (0.3 + 2.8 * rand(key, born + 7) * (0.4 + 0.6 * rand(key, born + 8)));
+        thrown.put(tuft.x, LEVELS.pool + 0.01, tuft.z, age, way, 0.6 + 1.1 * rand(key, born + 9), (0.9 + 1.3 * rand(key, born + 11)) * hard, (1.7 + 1.7 * rand(key, born + 13)) * hard, life, rand(key, born + 15), 2.2, (0.12 + 0.18 * rand(key, born + 17)) * f.size);
+      }
+    } else if (f.habit === 2 && lp === null) {
+      const step = RUN_STEP * f.size;
+      const s = RUN_SPEED * (seconds - f.at) + 0.5 * step;
+      for (let leg = 0; leg < 2; leg++) {
+        const last = Math.floor((s - leg * step + STANDS * step) / (2 * step));
+        for (let back = 0; back < 2; back++) {
+          const n = last - back;
+          const age = (s - ((2 * n + leg) * step - STANDS * step)) / RUN_SPEED;
+          wayAt(f.way, (2 * n + leg) * step, lands);
+          const side = (leg === 0 ? 1 : -1) * 0.1 * f.size;
+          const x = lands.x - Math.cos(lands.yaw) * side;
+          const z = lands.z + Math.sin(lands.yaw) * side;
+          const level = ground(x, z) + 0.02;
+          for (let k = 0; k < FOOT_SHEETS; k++) {
+            const key = i * 71 + leg * 13 + k + 900;
+            const hard = Math.sqrt(f.size) * (0.75 + 0.5 * rand(key, n + 4));
+            // One out to each side and ahead as the foot goes in, and one up and back off the foot behind it.
+            const way = lands.yaw + (k === 0 ? 0.75 + 0.5 * rand(key, n + 5) : k === 1 ? -0.75 - 0.5 * rand(key, n + 5) : Math.PI + 0.6 * (rand(key, n + 5) - 0.5));
+            const late = k === 2 ? 0.07 : 0;
+            thrown.put(x, level, z, age - late, way, k === 2 ? 1.5 : 2.3 + 0.6 * rand(key, n + 9), (k === 2 ? 2.2 : 3.8 + 1.2 * rand(key, n + 11)) * hard, (k === 2 ? 3.6 : 2.4 + 0.9 * rand(key, n + 13)) * hard, 0.7 + 0.2 * rand(key, n + 3), rand(key, n + 15), 3, 0.14 * f.size);
+          }
+        }
+      }
+    }
+  };
   const splashAt = (seconds: number): void => {
     splash.begin();
+    thrown.begin();
     for (const i of wet) {
       const f = feeders[i] as Feeder;
+      throwsAt(f, i, seconds);
       feederAt(f, seconds);
       if (!tuft.here) continue;
       const fx = Math.sin(f.yaw);
@@ -1254,7 +1313,8 @@ export function create(ctx: Context): Piece {
           if (y < LEVELS.pool) continue;
           splash.put(tuft.x + fx * along - fz * side, y, tuft.z + fz * along + fx * side, (big ? 0.014 : 0.005 + 0.008 * rand(key, born + 5)) * f.size, 0.9 * tuft.shake * (1 - a), rand(key, 9), 0, -2.2);
         } else {
-          // Each foot of a runner throws a sheet back and up as it comes down.
+          // In the film a runner's feet throw sheets (throwsAt); in the loop it stands and beats the pool up about its feet.
+          if (lp === null) continue;
           const out = (0.3 + 1.6 * rand(key, born + 40) * a) * f.size;
           const up = (0.4 + 1.3 * rand(key, born + 80)) * f.size;
           const back = dir * 0.4 - 0.2;
@@ -1296,6 +1356,7 @@ export function create(ctx: Context): Piece {
       }
     }
     splash.end();
+    thrown.end();
   };
 
 
@@ -1582,7 +1643,7 @@ export function create(ctx: Context): Piece {
   };
   group.add(mats.mesh, roostBodies.mesh, colonyFigures.mesh, standers.mesh, flockFigures.mesh, skeinFigures.mesh, swoopFigures.mesh);
   if (colonyFigures.shade) group.add(colonyFigures.shade);
-  ctx.scene.add(ctx.parts.built('kite-wings', group, splash.mesh), splash.mesh);
+  ctx.scene.add(ctx.parts.built('kite-wings', group, splash.mesh, thrown.mesh), splash.mesh, thrown.mesh);
 
   return {
     setTime: (seconds) => {
@@ -1732,7 +1793,9 @@ export function create(ctx: Context): Piece {
         }
         const bout = smooth(0.25, 0.45, heldAt(seconds, 3.4 + 2 * s.seed, s.seed, 0.3));
         const y = s.y + 1.2 * Math.sin(at * 0.6 + s.seed * 20);
-        const amp = i < SKEIN ? 0.25 + 0.75 * bout : lp === null ? 0.7 : 1;
+        // Once the wall is through nothing glides: they beat away at full stroke.
+        const alarm = lp === null ? smooth(BORE + 0.1, BORE + 0.6, seconds) : 0;
+        const amp = i < SKEIN ? 0.25 + 0.75 * Math.max(bout, alarm) : lp === null ? 0.7 + 0.3 * alarm : 1;
         if (lp === null) {
           straight(s.x + s.vx * (seconds - s.t), y, s.z + s.vz * (seconds - s.t), s.vx, 0.72 * Math.cos(seconds * 0.6 + s.seed * 20), s.vz, s.size, s.seed, seconds, amp);
           escort.put(i, F);
@@ -1862,6 +1925,7 @@ export function create(ctx: Context): Piece {
       roostBodies.dispose();
       mats.dispose();
       splash.dispose();
+      thrown.dispose();
     },
   };
 }
