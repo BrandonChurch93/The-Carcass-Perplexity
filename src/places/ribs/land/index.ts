@@ -14,10 +14,41 @@ import { LAND } from '../shared/rig';
 import { bed } from './height';
 import { fbm3, noise3, smooth } from './noise';
 import { bladeShape, worldSpace, roundSpace } from './blade';
-import { BOULDER_FRAGMENT, COBBLE_FRAGMENT, COLONY_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_LOOP_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
+import { BOULDER_FRAGMENT, COBBLE_FRAGMENT, COLONY_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_LOOP_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, SANDBAR_FRAGMENT, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
 import { FIN_FRAGMENT, FIN_VERTEX, STACK_FRAGMENT, TUSK_FRAGMENT } from './fin';
 import { CURTAIN_FRAGMENT, CURTAIN_VERTEX, curtainShape } from './curtain';
 import { archShape, boulderShape, floorShape, lathe, lines, relief, skirtShape, turns, weedLump, weedTier, weedTop } from './shapes';
+
+// A low bank of sand: a flat crown a little domed, 2.2 long to 1 deep, its rim wandering, its sides going down under the film to the bed.
+// Unit size: its crown stands at 0, its foot 0.3 below.
+function moundShape(): THREE.BufferGeometry {
+  const RINGS = 9;
+  const AROUND = 36;
+  const positions: number[] = [0, 0.012, 0];
+  const index: number[] = [];
+  for (let k = 1; k <= RINGS; k++) {
+    const r = k / RINGS;
+    for (let a = 0; a < AROUND; a++) {
+      const th = (a / AROUND) * 6.2832;
+      const rim = 1 + 0.2 * Math.sin(3 * th + 1) + 0.11 * Math.sin(7 * th + 2.3) + 0.06 * Math.sin(13 * th);
+      const fall = r < 0.55 ? 0 : ((r - 0.55) / 0.45) ** 1.6;
+      positions.push(2.2 * r * rim * Math.cos(th), 0.012 * (1 - r * r) - 0.3 * fall, r * rim * Math.sin(th));
+    }
+  }
+  for (let a = 0; a < AROUND; a++) index.push(0, 1 + ((a + 1) % AROUND), 1 + a);
+  for (let k = 1; k < RINGS; k++) {
+    for (let a = 0; a < AROUND; a++) {
+      const p = 1 + (k - 1) * AROUND + a;
+      const q = 1 + (k - 1) * AROUND + ((a + 1) % AROUND);
+      index.push(p, q, p + AROUND, q, q + AROUND, p + AROUND);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  g.setIndex(index);
+  g.computeVertexNormals();
+  return g;
+}
 
 export const PARTS = ['land', 'ribs', 'weed', 'ledges', 'rocks'] as const;
 
@@ -248,15 +279,28 @@ export function create(ctx: Context): Piece {
   const outLen = Math.hypot(hungOut[0] - hungAt[0], hungOut[2] - hungAt[2]) || 1;
   const wallAlong: [number, number] = [-(hungOut[2] - hungAt[2]) / outLen, (hungOut[0] - hungAt[0]) / outLen];
   const rillAt = new THREE.Vector4(hungAt[0] + wallAlong[0] * RILL_ALONG, hungAt[2] + wallAlong[1] * RILL_ALONG, wallAlong[0], wallAlong[1]);
-  const hangs = (proud: number, bare = 0): THREE.ShaderMaterial =>
-    material(WEED_VERTEX, WEED_FRAGMENT, { tWall: { value: wallC }, tWallN: { value: wallN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, tBare: { value: boulderC }, tBareN: { value: boulderN }, uProud: { value: proud }, uBare: { value: bare }, uRill: { value: rillAt } });
+  const hangs = (proud: number, bare = 0, dark = 0.78): THREE.ShaderMaterial => {
+    const m = material(WEED_VERTEX, WEED_FRAGMENT, { tWall: { value: wallC }, tWallN: { value: wallN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, tBare: { value: boulderC }, tBareN: { value: boulderN }, uProud: { value: proud }, uBare: { value: bare }, uDark: { value: dark }, uRill: { value: rillAt } });
+    // The bare rock between clumps is in the program only of a wall that has any.
+    if (bare > 0) m.defines = { RIBS_BARE: 1 };
+    return m;
+  };
   // The near cliff's weed is cut fine enough to carry the hanks of the sheet; the others' is not.
   const weed = hangs(0.5);
-  const weedNear = hangs(0.6);
+  const weedNear = hangs(0.6, 0, 0.4);
   // The gate's stacks: weed in clumps, bare rock between.
   const weedGate = hangs(0.15, 0);
-  const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 1 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
-  const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 0 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
+  const feedLens = resolve(shots['ribs-04'] as (typeof shots)[string], keyPart(shotById('ribs-04')), 0).position;
+  const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 1 }, uWarm: { value: 0 }, uDry: { value: 0.5 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt }, uFeed: { value: new THREE.Vector3(feedLens[0] as number, feedLens[2] as number, 1) } });
+  // The same rock under the feeders' lens, where the low sun comes through the weed on it: its straps are gold and amber, not black.
+  const kelpRock = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 1 }, uWarm: { value: 1 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
+  const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 0 }, uWarm: { value: 0 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
+  // The stones of the shallows: each of its own tone, drained and matt on its crown, dark and bright at its wet foot.
+  const wetStone = (r: number, g: number, b: number): THREE.ShaderMaterial =>
+    material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 0 }, uWarm: { value: 0 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt }, uTint: { value: new THREE.Vector3(r, g, b) }, uDry: { value: 1 } });
+  // Near black, slate, umber, pale.
+  const wetStones = [wetStone(-0.72, -0.72, -0.7), wetStone(-0.1, -0.05, 0), wetStone(0.5, 0.1, -0.3), wetStone(1.3, 1.2, 1.0)];
+  const sandbar = material(RIG_VERTEX, SANDBAR_FRAGMENT, { tSand: { value: sandC }, tShingle: { value: shingleC }, tShingleN: { value: shingleN }, uPool: { value: LEVELS.pool } });
   // The cobbles heaped on a bar stand clear of the film of water: drained, paler, each of its own tone.
   const cobble = material(RIG_VERTEX, COBBLE_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, uPool: { value: LEVELS.pool } });
 
@@ -305,7 +349,8 @@ export function create(ctx: Context): Piece {
   fronds.side = THREE.DoubleSide;
   {
     const hang = ctx.rng('curtain');
-    add(skirts, curtainShape(ribByName(DROWNED.rib), { count: 7000, from: -0.3, to: 1.3, focus: [DROWNED.phi, DROWNED.height], next: () => hang.next() }), fronds);
+    // Drawn before the sheet they hang on: what a frond hides of it is not shaded.
+    add(skirts, curtainShape(ribByName(DROWNED.rib), { count: 5000, from: -0.3, to: 1.3, focus: [DROWNED.phi, DROWNED.height], next: () => hang.next() }), fronds).renderOrder = -1;
   }
 
   // The two stacks of the gate, and the arch rock.
@@ -546,9 +591,159 @@ export function create(ctx: Context): Piece {
   };
   few(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 1000, 1.6, 22, 0.66);
   few(shots['ribs-06'] as (typeof shots)[string], keyPart(shotById('ribs-06')), 650, 1.6, 18, 0.6);
-  const squat = [0.5, 0.58, 0.38, 0.45];
+  const squat4 = [0.5, 0.58, 0.38, 0.45];
+  const dummy4 = new THREE.Object3D();
+
+  // The shallows the feeders stand in. The bed there lies a hand or two under the film (height.ts), so a stone that lay on the bed
+  // was drowned and the floor a bare mirror. These stand by the water, not by the bed: each lies with its widest round at the film,
+  // so that nothing wider shows under the water, low and flat, thick in bars drawn out across the view with bare water between;
+  // and knots of weed-grown rock.
+  // Seen only in the feeders' shot: from any other lens they are half a kilometre off and under a pixel.
+  const shallows = new THREE.Group();
+  const feedShot = shotSpan('ribs-04');
+  {
+    const wade = ctx.rng('shallows');
+    const path = shots['ribs-04'] as (typeof shots)[string];
+    const pose = resolve(path, keyPart(shotById('ribs-04')), 0);
+    const yaw = yawOf(pose.aim, pose.position);
+    const ahead: [number, number] = [Math.sin(yaw), -Math.cos(yaw)];
+    const right: [number, number] = [Math.cos(yaw), Math.sin(yaw)];
+    const way: [number, number][] = [];
+    for (let k = 0; k <= 48; k++) {
+      const q = resolve(path, k / 48, 0);
+      way.push([q.position[0] as number, q.position[2] as number]);
+    }
+    const onWay = (x: number, z: number, reach: number): boolean => way.some((q) => Math.hypot(x - q[0], z - q[1]) < reach);
+    // Nothing under a foot or a tuft: the animals stand on the bed (wings/).
+    const feeding = STATIONS.feeders.filter((f) => Math.hypot(f[0] - (pose.position[0] as number), f[1] - (pose.position[2] as number)) < 200);
+    const clearOf = (x: number, z: number, reach: number): boolean => feeding.every((f) => Math.hypot(x - f[0], z - f[1]) > reach);
+    // Nor a bar across the water that holds an animal's image: from its feet toward the lens, as long as the animal is seen in it.
+    const lens: [number, number] = [pose.position[0] as number, pose.position[2] as number];
+    const imaged = (x: number, z: number, reach: number): boolean =>
+      feeding.some((f) => {
+        const far = Math.hypot(lens[0] - f[0], lens[1] - f[1]);
+        const along = ((x - f[0]) * (lens[0] - f[0]) + (z - f[1]) * (lens[1] - f[1])) / far;
+        const off = Math.abs((x - f[0]) * (lens[1] - f[1]) - (z - f[1]) * (lens[0] - f[0])) / far;
+        return along > 0 && along < 0.6 * far && off < reach;
+      });
+    interface Wet { x: number; z: number; size: number; yaw: number; tilt: number; kind: number; high: number; out: number; tone: number }
+    const stones: Wet[] = [];
+    const knots: Wet[] = [];
+    const put = (list: Wet[], f: number, r: number, size: number, high: number, shown: number): void => {
+      const x = (pose.position[0] as number) + ahead[0] * f + right[0] * r;
+      const z = (pose.position[2] as number) + ahead[1] * f + right[1] * r;
+      const kind = wade.int(KINDS);
+      const rise = 0.57 * (squat4[kind] as number) * size * high;
+      // Which of the four tones: by where it lies, so that the strewing is the same whatever else is drawn from the rng.
+      const lot = (Math.sin(x * 12.9898 + z * 78.233) * 43758.5453) % 1;
+      const share = Math.abs(lot);
+      const tone = share < 0.3 ? 0 : share < 0.64 ? 1 : share < 0.87 ? 2 : 3;
+      list.push({ x, z, size, yaw: wade.range(0, 6.283), tilt: wade.range(-0.3, 0.3), kind, high, out: rise * shown, tone });
+    };
+    // Stones of a fist to a forearm, thickest where the lens is sharp (from ten metres on), thinning toward the far cage.
+    for (let i = 0; i < 42000; i++) {
+      const band = i % 10 < 7;
+      const f = band ? 7 + 62 * Math.pow(wade.next(), 1.5) : -16 + 170 * Math.pow(wade.next(), 1.4);
+      // The first lens of the shot stands 24 m behind the key's: what it sees is a wedge from there.
+      const r = wade.range(-1, 1) * (3 + 0.37 * (f + 24));
+      const far = 0.75 + Math.max(0, f) / 55;
+      let size = (0.013 + 0.055 * Math.pow(wade.next(), 2) + 0.24 * Math.pow(wade.next(), 5)) * far;
+      const shown = 0.95 + 0.25 * wade.next();
+      const pick = wade.next();
+      const x = (pose.position[0] as number) + ahead[0] * f + right[0] * r;
+      const z = (pose.position[2] as number) + ahead[1] * f + right[1] * r;
+      // The tide leaves them in drifts, a few strides deep and many long across the view, with bare wet sand between: a stray one here and there.
+      const drift = 0.75 * noise3(x / 6 + 21.3, 0.5, z / 2.4 + 9.1) + 0.25 * noise3(x / 1.5, 4.5, z / 1.1);
+      if (drift < (pick < 0.03 ? 0.4 : 0.575 + 0.05 * pick) || onWay(x, z, 1.1 + size) || !clearOf(x, z, 3.2)) continue;
+      // Cobbles in the heart of a drift, shingle at its edge.
+      size *= 0.65 + 0.9 * smooth(0.575, 0.72, drift);
+      // The broad ones are slabs, barely out of the film.
+      put(stones, f, r, size, (0.3 + 0.7 * wade.next()) * (size > 0.1 * far ? 0.6 : 1), shown);
+    }
+    // Knots of weed-grown rock, a stride or two across, out in the pools and along their edges: the dark marks of the middle distance.
+    for (let knot = 0; knot < 30; knot++) {
+      const f = 9 + 120 * Math.pow(wade.next(), 1.5);
+      const r = wade.range(-1, 1) * (2 + 0.33 * (f + 24));
+      const lumps = 3 + wade.int(6);
+      const spread = 0.7 + f / 60;
+      for (let i = 0; i < lumps; i++) {
+        const ff = f + wade.range(-0.6, 0.6) * spread;
+        const rr = r + wade.range(-1.6, 1.6) * spread;
+        const size = (0.16 + 0.36 * Math.pow(wade.next(), 1.7)) * (0.8 + f / 80);
+        const x = (pose.position[0] as number) + ahead[0] * ff + right[0] * rr;
+        const z = (pose.position[2] as number) + ahead[1] * ff + right[1] * rr;
+        const shown = 0.9 + 0.2 * wade.next();
+        if (onWay(x, z, 1.6 + size) || !clearOf(x, z, 3.4 + size)) continue;
+        put(knots, ff, rr, size, 0.8 + 0.4 * wade.next(), shown);
+      }
+    }
+    // Close under the key's lens, at its left: a heap of rock with weed over it, soft before the sharp band, as the picture has it.
+    const heap: [number, number, number][] = [[3.5, -1.4, 0.8], [3.9, -0.45, 0.55], [3.2, -2.1, 0.9], [4.6, -2.7, 1.05], [5.6, -1.75, 0.8], [6.3, -3.4, 1.2], [5.2, -3.9, 0.9], [6.6, -0.7, 0.55], [7.4, -2.2, 0.7], [7.0, 0.5, 0.14], [8.3, -1.2, 0.42], [6.1, 1.6, 0.3], [8.8, -3.6, 0.8], [7.7, 2.6, 0.26]];
+    for (const [f, r, size] of heap) put(knots, f, r, size, 0.62, 0.95);
+    const bars: { x: number; z: number; size: number; yaw: number; lift: number }[] = [];
+    // The crown of a bar where a stone lies on one: the stone lies on the sand, not under it.
+    const crown = (x: number, z: number): number => {
+      let top = 0;
+      for (const b of bars) {
+        const dx = x - b.x;
+        const dz = z - b.z;
+        if (Math.abs(dx) > 2.9 * b.size || Math.abs(dz) > 2.9 * b.size) continue;
+        const c = Math.cos(b.yaw);
+        const s = Math.sin(b.yaw);
+        const r = Math.hypot((dx * c - dz * s) / 2.2, dx * s + dz * c) / b.size;
+        if (r < 0.62) top = Math.max(top, LEVELS.pool + b.lift);
+      }
+      return top;
+    };
+    const set = (list: Wet[], stuff: THREE.Material, detail: number, tone = -1): void => {
+      for (let kind = 0; kind < KINDS; kind++) {
+        const mine = list.filter((p) => p.kind === kind && (tone < 0 || p.tone === tone));
+        if (mine.length === 0) continue;
+        const herd = new THREE.InstancedMesh(boulderShape(kind + 1, detail, squat4[kind] as number), stuff, mine.length);
+        herd.frustumCulled = false;
+        mine.forEach((p, i) => {
+          const rise = 0.57 * (squat4[kind] as number) * p.size * p.high;
+          dummy4.position.set(p.x, Math.max(LEVELS.pool, ground0(p.x, p.z), crown(p.x, p.z)) + p.out - rise, p.z);
+          dummy4.rotation.set(p.tilt, p.yaw, p.tilt * 0.6);
+          dummy4.scale.set(p.size, p.size * p.high, p.size * 0.85);
+          dummy4.updateMatrix();
+          herd.setMatrixAt(i, dummy4.matrix);
+        });
+        herd.instanceMatrix.needsUpdate = true;
+        shallows.add(herd);
+      }
+    };
+    // Bars of rippled sand a finger out of the film, where the stones lie thickest: long across the view, a few strides deep.
+    const mound = moundShape();
+    for (let i = 0; i < 1800; i++) {
+      const f = 5 + 90 * Math.pow(wade.next(), 1.4);
+      const r = wade.range(-1, 1) * (3 + 0.37 * (f + 24));
+      const size = (0.5 + 1.5 * wade.next()) * (0.8 + f / 70);
+      const yaw = wade.range(-0.3, 0.3);
+      const lift = 0.008 + 0.02 * wade.next();
+      const x = (pose.position[0] as number) + ahead[0] * f + right[0] * r;
+      const z = (pose.position[2] as number) + ahead[1] * f + right[1] * r;
+      const bar = 0.6 * noise3(x / 9 + 3.7, 0.5, z / 2.8) + 0.4 * noise3(x / 1.9, 2.5, z / 1.3);
+      if (bar < 0.55 || onWay(x, z, 1.1 + 2.4 * size) || !clearOf(x, z, 3.2 + 2.4 * size) || imaged(x, z, 1.3 + 1.6 * size)) continue;
+      bars.push({ x, z, size, yaw, lift });
+    }
+    const banks = new THREE.InstancedMesh(mound, sandbar, bars.length);
+    banks.frustumCulled = false;
+    bars.forEach((p, i) => {
+      dummy4.position.set(p.x, LEVELS.pool + p.lift, p.z);
+      dummy4.rotation.set(0, p.yaw, 0);
+      dummy4.scale.setScalar(p.size);
+      dummy4.updateMatrix();
+      banks.setMatrixAt(i, dummy4.matrix);
+    });
+    banks.instanceMatrix.needsUpdate = true;
+    shallows.add(banks);
+    wetStones.forEach((stuff, tone) => set(stones, stuff, 1, tone));
+    set(knots, kelpRock, 4);
+  }
+  const squat = squat4;
   const rocks = new THREE.Group();
-  const dummy = new THREE.Object3D();
+  const dummy = dummy4;
   const shades = ctx.rig.contactDiscs(kept.filter((p) => p.size > 0.3).length);
   let shade = 0;
   // Three grades of shape: rock over a metre, stones, and pebbles of a few facets.
@@ -575,6 +770,7 @@ export function create(ctx: Context): Piece {
     herd.instanceMatrix.needsUpdate = true;
     rocks.add(herd);
   }
+  rocks.add(shallows);
   ctx.scene.add(ctx.parts.built('rocks', rocks));
 
   return {
@@ -582,13 +778,16 @@ export function create(ctx: Context): Piece {
       const staged = stagedSeconds();
       const atGate = staged >= gateShot.from && staged <= gateShot.to;
       for (const m of gateStacks) m.visible = atGate;
+      shallows.visible = staged >= feedShot.from && staged <= feedShot.to;
       for (const image of mirrors.children) (image as THREE.Mesh).material = loopPhase() === null ? glass : glassLoop;
     },
     dispose: () => {
       for (const group of [blades, skirts, rocks, mirrors]) group.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
       floor.geometry.dispose();
       ledges.geometry.dispose();
-      for (const m of new Set([ground, roostRock, weed, weedNear, fronds, boulder, pebble, cobble, glass, glassLoop, ...stones.values()])) m.dispose();
+      for (const m of new Set([ground, roostRock, weed, weedNear, fronds, boulder, kelpRock, pebble, cobble, glass, glassLoop, ...stones.values()])) m.dispose();
+      for (const m of wetStones) m.dispose();
+      sandbar.dispose();
     },
   };
 }

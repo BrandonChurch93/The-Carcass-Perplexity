@@ -6,7 +6,7 @@ import { partAtHeight, radii, skirtPad, surface, type Rib } from '../layout';
 import { BORE, FLOOR, LEVELS, RIBS, STATIONS, WIND, shotSpan } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { LAND } from '../shared/rig';
-import { STRIKE, cloudShut, inOpening, openingLight, openingWeight } from '../shared/opening';
+import { STRIKE, STRIKES, cloudShut, inOpening, openingLight, openingWeight } from '../shared/opening';
 import { loopPhase, stagedSeconds } from '../shared/stage';
 import { chopTexture, feetTexture, foamTexture } from './chop';
 import { createBore, type BoreSite } from './bore';
@@ -17,6 +17,7 @@ import { Spindrift } from './spindrift';
 import { Burst, STRIKE_CARDS, type Strike } from './strike';
 import type { Ring } from './tide';
 import { BORE_HEIGHT, BORE_SPEED, MAX_RINGS, RING_SOURCE, SWELL, boreFront } from './tide';
+import { variant } from '../shared/variant';
 
 export const PARTS: readonly string[] = ['sea', 'surf', 'runnels', 'bore'];
 
@@ -133,7 +134,7 @@ export function create(ctx: Context): Piece {
   const openSea = new THREE.Vector4(1, 0, 0, 1);
   const openGlint = { value: 0 };
   // The white water a strike leaves on the sea round the foot: x, z of its middle, its reach in metres, how white.
-  const wash = [new THREE.Vector4(0, 0, 1, 0), new THREE.Vector4(0, 0, 1, 0)];
+  const wash = [new THREE.Vector4(0, 0, 1, 0), new THREE.Vector4(0, 0, 1, 0), new THREE.Vector4(0, 0, 1, 0)];
   const seaOpening = new THREE.ShaderMaterial({
     vertexShader: SEA_OPENING_VERTEX,
     fragmentShader: SEA_OPENING_FRAGMENT,
@@ -173,11 +174,16 @@ export function create(ctx: Context): Piece {
   const poolLoop = poolMaterial.clone();
   poolLoop.uniforms = poolMaterial.uniforms;
   poolLoop.fragmentShader = POOL_LOOP_FRAGMENT(MAX_RINGS);
+  // The rings round the waders' legs are in the film's program only while there are any (shared/variant.ts); the loop's keeps them.
+  poolLoop.defines = { RIBS_RINGS: 1 };
   pools.renderOrder = 1;
   // The rings round what stands in the pools, over the animals' mirror image (wings/, renderOrder 3). Not in the card loop: its seam is closed.
-  const answers = contactRings({ ...rig.uniforms, uPoolLevel: poolMaterial.uniforms.uPoolLevel as THREE.IUniform });
+  const answers = contactRings({ ...rig.uniforms, ...shared, uPoolLevel: poolMaterial.uniforms.uPoolLevel as THREE.IUniform });
   answers.mesh.renderOrder = 4;
   pools.add(answers.mesh);
+  // After the animals' images (3), before the rings (4).
+  answers.veil.renderOrder = 3.5;
+  pools.add(answers.veil);
   pools.onBeforeRender = () => {
     const seen = poolMaterial.uniforms.tSeen?.value as THREE.Texture | null | undefined;
     wetSeen.value = seen ?? null;
@@ -221,7 +227,7 @@ export function create(ctx: Context): Piece {
   const PUFFS = 7;
   const surf = new Spray(surfAt.length * PUFFS, { ...rig.uniforms, ...shared });
   // The breaker of the approach (below) is thrown water of the same part.
-  const breaker = new Burst(STRIKE_CARDS * 2, { ...rig.uniforms, ...shared });
+  const breaker = new Burst(STRIKE_CARDS * 2 + 200, { ...rig.uniforms, ...shared });
   breaker.mesh.visible = false;
   // And the spindrift off the crests of the approach's gale.
   const spindrift = new Spindrift(3600, { ...rig.uniforms, ...shared, uOpenSea: { value: openSea } });
@@ -254,7 +260,7 @@ export function create(ctx: Context): Piece {
   /** The approach: how much more of the sky's light the open water keeps than the ground under the shut cloud. */
   const SEA_OPEN = { lift: 1.5, swell: 0.7 };
   // A sea of the set breaking on a blade: where the open water meets its foot on the side the swell comes from, and the stone's face above it.
-  const strikeOn = (rib: Rib, seconds: number, height: number, width: number, id: number, at: [number, number], out: [number, number]): Strike => {
+  const strikeOn = (rib: Rib, seconds: number, height: number, width: number, id: number, at: [number, number], out: [number, number], slam = false, leans?: [number, number]): Strike => {
     const cs = Math.cos(rib.yaw);
     const sn = Math.sin(rib.yaw);
     const STEP = 3;
@@ -284,8 +290,30 @@ export function create(ctx: Context): Piece {
     const foot = face(0, 0);
     const [x, z] = at;
     // Where a shore lies between the sea and the stone the water goes up into the air, not up the blade.
-    if (Math.hypot(x - foot[0], z - foot[1]) > 14) return { x, z, out, seconds, width, height, lean: [0, 0], id };
+    // A slam is thrown at the stone from where the sea meets its skirt: it goes up the face however far the foot stands out from it.
+    if (!slam && Math.hypot(x - foot[0], z - foot[1]) > 14) return { x, z, out, seconds, width, height, lean: [0, 0], id };
     const up = face(0, height * 0.6);
+    if (slam) {
+      return {
+        x,
+        z,
+        out,
+        seconds,
+        width,
+        height,
+        // `out` sets only the line of the burst; where the opening names the face over the foot (metres east and north a metre up) the
+        // water leans by that, else by the rim along `out`.
+        lean: leans ?? [(up[0] - x) / (height * 0.6), (up[1] - z) / (height * 0.6)],
+        // What runs back down is on the stone itself, and comes out to the foot as it comes down.
+        face: (along, y) => {
+          const on = face(along, y);
+          const back = Math.max(0, 1 - y / (height * 0.3));
+          return [on[0] + (x - foot[0]) * back, on[1] + (z - foot[1]) * back];
+        },
+        id,
+        slam,
+      };
+    }
     return {
       x,
       z,
@@ -302,8 +330,9 @@ export function create(ctx: Context): Piece {
     };
   };
   // The opening's strikes: the place, the times and the height are the opening's own (shared/opening.ts), read here and not copied.
-  const struck = RIBS.find((r) => r.name === STRIKE.blade) as Rib;
-  const strikes: Strike[] = STRIKE.times.map((seconds, n) => strikeOn(struck, seconds, STRIKE.height * (n === 0 ? 1 : STRIKE.lesser), STRIKE.half * 2, n + 1, [STRIKE.foot[0], STRIKE.foot[2]], [0, 1]));
+  const strikes: Strike[] = STRIKES.map((s, n) => strikeOn(RIBS.find((r) => r.name === s.blade) as Rib, s.time, s.height, s.half * 2, n + 1, [s.foot[0], s.foot[2]], s.out, n === 0, s.lean));
+  // The sea that broke on the breaker's blade before the film opens: its white water still lies at that foot and runs off the stone.
+  strikes.push({ ...strikeOn(RIBS.find((r) => r.name === STRIKE.blade) as Rib, STRIKE.times[0], STRIKE.height, STRIKE.half * 2, 3, [STRIKE.foot[0], STRIKE.foot[2]], [0, 1]), wash: true });
   const windTo: [number, number] = [WIND.to[0] * WIND.speed, WIND.to[1] * WIND.speed];
 
   return {
@@ -316,6 +345,7 @@ export function create(ctx: Context): Piece {
       front.value = frontZ;
 
       ringCount.value = staged >= feeding.from && staged <= feeding.to ? MAX_RINGS : 0;
+      variant(poolMaterial, { RIBS_RINGS: ringCount.value > 0 });
       for (const ring of ringList) {
         ring.strength = 0;
         ring.stand = undefined;

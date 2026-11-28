@@ -256,7 +256,8 @@ void main() {
   gl_FragColor = vec4(rigOut(col * 0.62) * keep, keep);
 #else
   vec3 col = rigShade(vWorld, n, v, albedo, mix(0.6, 0.25, wet), occ);
-  float sun = sunAt(vWorld, land);
+  // The cloud over this place is what rigShade has just read (rigGap).
+  float sun = sunBaked(vWorld, land) * rigGap;
   // Its shade side takes the sky and the water's bounce.
   col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.8 + uSunColour * (uSunDir.y * 0.14)) / 3.14159 * (0.75 - 0.25 * n.y) * (1.0 - 0.5 * skin);
   // Far off the air between takes the amber out of the lit skin.

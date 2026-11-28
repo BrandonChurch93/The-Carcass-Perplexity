@@ -316,12 +316,22 @@ void main() {
   float rib = abs(vStrand.x);
   float blister = sin(vStrand.y * 60.0 + vStrand.z * 40.0) * sin(vStrand.x * 5.0 + vStrand.y * 17.0);
   n = normalize(n + 0.3 * vec3(blister, 0.0, blister * 0.5));
-  vec3 dark = mix(vec3(0.016, 0.02, 0.011), vec3(0.075, 0.055, 0.016), fract(vStrand.z * 7.31));
-  vec3 albedo = mix(dark, dark * 2.2 + vec3(0.03, 0.02, 0.0), smoothstep(0.55, 1.0, rib));
+  // Olive brown, as the fronds of the wall it hangs in (land/curtain.ts): amber toward its thin edge.
+  vec3 dark = mix(vec3(0.03, 0.021, 0.006), vec3(0.075, 0.052, 0.014), fract(vStrand.z * 7.31));
+  vec3 albedo = mix(dark, dark * 1.5 + vec3(0.04, 0.02, 0.0), smoothstep(0.55, 1.0, rib));
   albedo *= 0.8 + 0.4 * blister;
   // What lies over the body is the living weed of the tide line: olive and amber, wet.
-  albedo = mix(albedo, mix(vec3(0.1, 0.085, 0.025), vec3(0.2, 0.12, 0.03), fract(vStrand.z * 3.7)) * (0.7 + 0.5 * blister + 0.4 * rib), step(1.0, vStrand.z));
-  vec3 col = rigShade(vWorld, n, v, albedo, 0.24, 0.55 + 0.45 * rib);
+  float over = step(1.0, vStrand.z);
+  albedo = mix(albedo, mix(vec3(0.1, 0.085, 0.025), vec3(0.2, 0.12, 0.03), fract(vStrand.z * 3.7)) * (0.7 + 0.5 * blister + 0.4 * rib), over);
+  // Wet, but no mirror: a strand seen along itself does not give back the break in the cloud. Its wet stands on it in beads.
+  n = normalize(n + v * max(0.0, 0.55 - dot(n, v)));
+  // A bead here and there, in no row: one cell in fifty of the strand holds one.
+  vec2 cell = vec2(vStrand.x * 1.5 + vStrand.z * 9.0, vStrand.y * 70.0 + vStrand.z * 40.0);
+  float lot = fract(sin(dot(floor(cell), vec2(12.9898, 78.233))) * 43758.5453);
+  float bead = step(0.98, lot) * smoothstep(0.4, 0.15, length(fract(cell) - 0.5 - 0.2 * vec2(lot - 0.99, fract(lot * 57.0) - 0.5)));
+  float occ = 0.55 + 0.45 * rib;
+  vec3 col = rigShade(vWorld, n, v, albedo, mix(0.93, 0.7, over) - 0.15 * bead, occ);
+  col += skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.12 * bead * occ * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 6.0));
   gl_FragColor = vec4(rigOut(col), 1.0);
 }`;
 
@@ -560,6 +570,16 @@ void main() {
   vec2 e = vec2(3.0 / 1448.0, 3.0 / 1086.0);
   float hx = texture2D(tRelief, vUv + vec2(e.x, 0.0), 1.5).r - texture2D(tRelief, vUv - vec2(e.x, 0.0), 1.5).r;
   float hy = texture2D(tRelief, vUv + vec2(0.0, e.y), 1.5).r - texture2D(tRelief, vUv - vec2(0.0, e.y), 1.5).r;
+  // The side of the head: the plate has a round red hollow there, which in the frame is a socket. The hide of the neck beside it is
+  // laid over it, colour and relief, with a ragged edge: the head is closed, torn and sodden as the rest.
+  vec2 headPx = vec2(vUv.x * 1448.0, (1.0 - vUv.y) * 1086.0);
+  vec2 fromHollow = (headPx - vec2(965.0, 506.0)) / vec2(29.0, 38.0);
+  float closed = 1.0 - smoothstep(0.7, 1.2, length(fromHollow) + 0.3 * (vnoise(headPx * 0.11) - 0.5));
+  vec2 graft = vUv + vec2(-50.0 / 1448.0, 45.0 / 1086.0);
+  pic = mix(pic, texture2D(tCarcass, graft).rgb, closed);
+  h = mix(h, texture2D(tRelief, graft).r, closed);
+  hx = mix(hx, texture2D(tRelief, graft + vec2(e.x, 0.0), 1.5).r - texture2D(tRelief, graft - vec2(e.x, 0.0), 1.5).r, closed);
+  hy = mix(hy, texture2D(tRelief, graft + vec2(0.0, e.y), 1.5).r - texture2D(tRelief, graft - vec2(0.0, e.y), 1.5).r, closed);
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 across = normalize(uAxis);
   vec3 down = normalize(uDrop);
