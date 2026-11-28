@@ -199,7 +199,7 @@ void main() {
   slope += (carriedFine.ba - 0.5) * (0.07 + 0.25 * speed) * smoothstep(0.02, 0.12, speed) * smoothstep(0.5, 0.1, px);
   // What stands in the current leaves a wake down the flow from it: the skin broken, and scum caught in it.
   // (The wake is longer than the thing is wide: it is asked for a stride up the flow and again two strides up, where it has thinned.)
-  float wake = speed > 0.06 ? max(contactDrawn(p - vec3(flow.x, 0.0, flow.y) / speed * 0.7), 0.6 * contactDrawn(p - vec3(flow.x, 0.0, flow.y) / speed * 1.9) * smoothstep(0.35, 0.6, carriedFine.g)) * smoothstep(0.06, 0.25, speed) : 0.0;
+  float wake = speed > 0.06 ? contactDrawn(p - vec3(flow.x, 0.0, flow.y) / speed * 0.7) * smoothstep(0.06, 0.25, speed) : 0.0;
   slope += (carried.ba - 0.5) * 0.5 * wake;
   // Where the big ones wade the brine is churned: dark with mud and never still.
   brineMud = 1.0 - smoothstep(5.0, 11.0, length(p.xz - uWade));

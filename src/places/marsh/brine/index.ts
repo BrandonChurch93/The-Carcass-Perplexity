@@ -171,7 +171,7 @@ export function create(ctx: Context): Piece {
   ctx.scene.add(ctx.parts.built('domes', domeGroup));
 
   const dropCount = domes.reduce((n, d) => n + d.drops, 0);
-  const bead = new THREE.SphereGeometry(1, 18, 12);
+  const bead = new THREE.SphereGeometry(1, 12, 8);
   const dropLife = new THREE.InstancedBufferAttribute(new Float32Array(dropCount * 4), 4);
   bead.setAttribute('aLife', dropLife);
   const dropMesh = new THREE.InstancedMesh(bead, dropSkin, dropCount);
