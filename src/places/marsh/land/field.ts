@@ -2,7 +2,7 @@
 // ground it is. The land's mesh, the rig's map and the shaders all read the same numbers from here, so a shoreline is in one place for all of them.
 import * as THREE from 'three';
 import {
-  CREEKS, CRUST, F, K1_AT, K1_DIR, POOL_R, R, STUCK, TAU, VEIN, clamp, makePools, rel, rockHeight, smooth, type Node,
+  CREEKS, CRUST, DEAD, F, K1_AT, K1_DIR, POOL_R, R, STUCK, TAU, VEIN, clamp, makePools, rel, rockHeight, smooth, type Node,
 } from '../shared/anchors';
 import { stream } from '../../../core/rng';
 
@@ -217,6 +217,8 @@ export function createField(): Field {
   for (const p of makePools()) for (const g of grids) stamp(g, p.x, p.z, p.r, p.x, p.z, p.r);
   // The shore wanders at every size, and the flats hold pools of their own: puddles a stride across near the brine, ponds further out.
   const crustAt = rel(STUCK[0], STUCK[1]);
+  // (No puddle opens under one of the dead or at its side: the salt it lies in is whole.)
+  const deadAt = DEAD.map((q) => ({ at: rel(q.d, q.l), size: q.size }));
   const ragged = (g: Grid, fine: boolean): void => {
     for (let j = 0; j < g.n; j++) {
       const z = -g.half + (j + 0.5) * g.cell;
@@ -234,7 +236,8 @@ export function createField(): Field {
           if (pond < d) d = pond;
           if (fine && d > 0.5 && r < 230 && Math.hypot(x - crustAt[0], z - crustAt[1]) > 11) {
             // Far from the pool the puddles give out: at a distance they would be a pattern of dashes, and the flats there are whole crust.
-            const th = 0.7 - 0.13 * Math.exp(-d / 5) - 0.12 * (fbm(x / 41 + 2, z / 41, 2) - 0.5) + 0.2 * smooth(70, 130, r);
+            let th = 0.7 - 0.13 * Math.exp(-d / 5) - 0.12 * (fbm(x / 41 + 2, z / 41, 2) - 0.5) + 0.2 * smooth(70, 130, r);
+            for (const q of deadAt) th += 0.5 * smooth(4.2 * q.size, 2.8 * q.size, Math.hypot(x - q.at[0], z - q.at[1]));
             const puddle = (th - fbm(x / 3.7 + 11, z / 3.7 + 5, 3)) * 9;
             if (puddle < d) d = puddle;
           }

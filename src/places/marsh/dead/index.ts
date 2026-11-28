@@ -136,7 +136,10 @@ void main() {
   bn.y *= uVar.w;
   vec2 bw = vec2(bn.x * uTurn.x - bn.y * uTurn.y, bn.x * uTurn.y + bn.y * uTurn.x) * 1.6;
   float salt = m.z;
-  vec2 uk = xz / 1.1 + uLumps.x;
+  // (On a steep side the salt's sheet is laid down the slope, not stretched over it.)
+  vec2 gs = vec2(-hx, -hz) / (2.0 * e);
+  vec2 roll = -gs / sqrt(1.0 + dot(gs, gs)) * (vWorld.y - uGround);
+  vec2 uk = (xz + roll) / 1.1 + uLumps.x;
   vec4 kn = texture2D(tKnobN, uk);
   vec3 kc = texture2D(tKnob, uk).rgb;
   // Near the lens the crystals of the knobs show: the same sheet again, a sixth the size.

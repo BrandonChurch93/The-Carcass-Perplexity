@@ -374,7 +374,7 @@ void main() {
     ax *= min(1.0, lo / max(la, 1e-7));
     ay *= min(1.0, lo / max(lb, 1e-7));
     vec4 nA = textureLod(tPanN, uv, levelOf(tPanN, ax, ay));
-    sheet = textureLod(tPan, uv, levelOf(tPan, ax, ay)).rgb / PAN_MEAN;
+    sheet = textureLod(tPan, uv, levelOf(tPanN, ax, ay)).rgb / PAN_MEAN;
     sh = nA.b;
     vec2 sl = nA.rg - 0.5;
     // Under a lens the sheet's grain is coarser than a pixel: the same sheet lies on it again a fifth the size, as the crystals.
@@ -382,7 +382,7 @@ void main() {
     if (crystal > 0.0) {
       vec2 uc = uv * 5.3 + pr.yx;
       vec4 nC = textureLod(tPanN, uc, levelOf(tPanN, ax * 5.3, ay * 5.3));
-      sheet *= mix(vec3(1.0), 0.45 + 0.55 * textureLod(tPan, uc, levelOf(tPan, ax * 5.3, ay * 5.3)).rgb / PAN_MEAN, crystal);
+      sheet *= mix(vec3(1.0), 0.45 + 0.55 * textureLod(tPan, uc, levelOf(tPanN, ax * 5.3, ay * 5.3)).rgb / PAN_MEAN, crystal);
       sl += (nC.rg - 0.5) * 0.7 * crystal;
       sh += (nC.b - 0.5) * 0.15 * crystal;
     }
@@ -484,7 +484,7 @@ void main() {
   // Thin crust over mud: the same pans, loose. Each is a plate lying on wet mud, drawn back from its neighbours and tipped; the gaps
   // between them are a hand to a stride wide and brine stands in them. A lifted edge shows its broken section and throws its shade.
   if (k > 0.0) {
-    vec3 silt = textureLod(tSilt, p.xz / 3.0, levelOf(tSilt, px / 3.0, py / 3.0)).rgb;
+    vec3 silt = textureLod(tSilt, p.xz / 3.0, levelOf(tSiltN, px / 3.0, py / 3.0)).rgb;
     vec4 nS = textureLod(tSiltN, p.xz / 3.0, levelOf(tSiltN, px / 3.0, py / 3.0));
     // The wallow (painted into the fine patch): its mud is lower, wetter and darker than any other, and the slabs tipped round it are whole.
     float sunk = vPaint.x * k;
@@ -504,7 +504,7 @@ void main() {
       vec2 uMx = knobUv(px, KNOB_B, 0.9);
       vec2 uMy = knobUv(py, KNOB_B, 0.9);
       vec4 nM = textureLod(tSlickN, uM, levelSkim(tSlickN, uMx, uMy, SKIM));
-      vec3 cM = min(textureLod(tSlick, uM, levelSkim(tSlick, uMx, uMy, SKIM)).rgb / SLICK_MEAN, vec3(1.8));
+      vec3 cM = min(textureLod(tSlick, uM, levelSkim(tSlickN, uMx, uMy, SKIM)).rgb / SLICK_MEAN, vec3(1.8));
       mudCol *= mix(vec3(1.0), 0.5 + 0.5 * vec3(dot(cM, vec3(0.3, 0.4, 0.3))), close);
       vec2 sM = nM.rg - 0.5;
       grain -= vec2(KNOB_B.x * sM.x + KNOB_B.y * sM.y, KNOB_B.x * sM.y - KNOB_B.y * sM.x) * 0.9 * close;
@@ -566,7 +566,7 @@ void main() {
     vec4 nT = textureLod(tRockN, uT, levelOf(tRockN, uTx, uTy));
     vec4 nV = textureLod(tRockN, uV, levelOf(tRockN, uVx, uVy));
     float pickT = smoothstep(-0.1, 0.1, (mid.a - 0.5) * 2.5 + nT.b - nV.b);
-    vec3 pat = mix(textureLod(tRock, uV, levelOf(tRock, uVx, uVy)).rgb, textureLod(tRock, uT, levelOf(tRock, uTx, uTy)).rgb, pickT);
+    vec3 pat = mix(textureLod(tRock, uV, levelOf(tRockN, uVx, uVy)).rgb, textureLod(tRock, uT, levelOf(tRockN, uTx, uTy)).rgb, pickT);
     float pitT = mix(nV.b, nT.b, pickT);
     vec2 lT = mix(vec2(0.6 * (nV.r - 0.5) - 0.8 * (nV.g - 0.5), 0.8 * (nV.r - 0.5) + 0.6 * (nV.g - 0.5)), vec2(0.8 * (nT.r - 0.5) + 0.6 * (nT.g - 0.5), 0.8 * (nT.g - 0.5) - 0.6 * (nT.r - 0.5)), pickT) * 2.2;
     if (seen > 0.0) {
@@ -574,7 +574,7 @@ void main() {
       vec2 uUx = vec2(px.x * 0.28 + px.y * 0.96, px.y * 0.28 - px.x * 0.96) / 0.83;
       vec2 uUy = vec2(py.x * 0.28 + py.y * 0.96, py.y * 0.28 - py.x * 0.96) / 0.83;
       vec4 nU = textureLod(tRockN, uU, levelOf(tRockN, uUx, uUy));
-      pat *= mix(vec3(1.0), 0.5 + 0.5 * textureLod(tRock, uU, levelOf(tRock, uUx, uUy)).rgb / vec3(0.379, 0.317, 0.286), seen);
+      pat *= mix(vec3(1.0), 0.5 + 0.5 * textureLod(tRock, uU, levelOf(tRockN, uUx, uUy)).rgb / vec3(0.379, 0.317, 0.286), seen);
       pitT = mix(pitT, pitT * 0.6 + nU.b * 0.4, seen);
       lT += vec2(0.28 * (nU.r - 0.5) - 0.96 * (nU.g - 0.5), 0.96 * (nU.r - 0.5) + 0.28 * (nU.g - 0.5)) * 1.8 * seen;
     }
@@ -592,7 +592,7 @@ void main() {
       vec2 uZy = py3.xy / 1.7;
       vec4 nX = textureLod(tRockSN, uX, levelOf(tRockSN, uXx, uXy));
       vec4 nZ = textureLod(tRockSN, uZ, levelOf(tRockSN, uZx, uZy));
-      patS = mix(textureLod(tRockS, uZ, levelOf(tRockS, uZx, uZy)).rgb, textureLod(tRockS, uX, levelOf(tRockS, uXx, uXy)).rgb, ax);
+      patS = mix(textureLod(tRockS, uZ, levelOf(tRockSN, uZx, uZy)).rgb, textureLod(tRockS, uX, levelOf(tRockSN, uXx, uXy)).rgb, ax);
       pitS = mix(nZ.b, nX.b, ax);
       bendS = mix(vec3(nZ.r - 0.5, nZ.g - 0.5, 0.0), vec3(0.0, nX.g - 0.5, nX.r - 0.5), ax) * 2.6;
     }
@@ -658,7 +658,7 @@ void main() {
     vec2 uP = second ? uB : uA;
     vec2 gx = second ? uBx : uAx;
     vec2 gy = second ? uBy : uAy;
-    knobCol = textureLod(tKnob, uP, levelOf(tKnob, gx, gy)).rgb;
+    knobCol = textureLod(tKnob, uP, levelOf(tKnobN, gx, gy)).rgb;
     knobH = mix(nA.b, nB.b, pick);
     vec2 sA = nA.rg - 0.5;
     vec2 sB = nB.rg - 0.5;
@@ -668,7 +668,7 @@ void main() {
     if (crystal > 0.0) {
       vec2 uC = uP * 6.1 + 0.23;
       vec4 nC = textureLod(tKnobN, uC, levelOf(tKnobN, gx * 6.1, gy * 6.1));
-      vec3 cC = textureLod(tKnob, uC, levelOf(tKnob, gx * 6.1, gy * 6.1)).rgb;
+      vec3 cC = textureLod(tKnob, uC, levelOf(tKnobN, gx * 6.1, gy * 6.1)).rgb;
       knobCol *= mix(1.0, 0.55 + 0.45 * dot(cC, vec3(0.3333)) / 0.235, crystal * smoothstep(0.35, 0.6, knobH));
       knobFine = mix(0.5, nC.b, crystal);
       knobPale = mix(1.0, dot(cC, vec3(0.3333)) / 0.235, crystal);
@@ -688,7 +688,7 @@ void main() {
     vec3 g = vec3(1.0);
     vec4 ng2 = vec4(0.5);
     if (muddy > 0.0) {
-      g = textureLod(tSilt, uG, levelOf(tSilt, px / 0.62, py / 0.62)).rgb / vec3(0.32, 0.281, 0.257);
+      g = textureLod(tSilt, uG, levelOf(tSiltN, px / 0.62, py / 0.62)).rgb / vec3(0.32, 0.281, 0.257);
       ng2 = textureLod(tSiltN, uG, levelOf(tSiltN, px / 0.62, py / 0.62));
     }
     colour *= mix(vec3(1.0), 0.62 + 0.38 * g, muddy);
@@ -701,7 +701,7 @@ void main() {
       vec2 uKy = vec2(py.x * 0.6 - py.y * 0.8, py.x * 0.8 + py.y * 0.6) / 0.55;
       vec4 nk = textureLod(tCrustN, uK, levelOf(tCrustN, uKx, uKy));
       float lit2 = textureLod(tCrustN, uK + vec2(-0.86 * 0.6 - 0.5 * 0.8, -0.86 * 0.8 + 0.5 * 0.6) * 0.035, levelOf(tCrustN, uKx, uKy)).b;
-      vec3 ck = textureLod(tCrust, uK, levelOf(tCrust, uKx, uKy)).rgb / vec3(0.413, 0.304, 0.269);
+      vec3 ck = textureLod(tCrust, uK, levelOf(tCrustN, uKx, uKy)).rgb / vec3(0.413, 0.304, 0.269);
       vec3 knob = mix(vec3(0.2, 0.075, 0.06), mix(vec3(0.52, 0.5, 0.48), vec3(0.42, 0.3, 0.26), exp(-t / 0.4)) * (0.6 + 0.4 * greyed(ck, 0.4)), smoothstep(0.4, 0.72, nk.b));
       colour = mix(colour, knob, knobby * 0.85);
       bend -= (nk.rg - 0.5) * 2.4 * knobby;
@@ -733,12 +733,14 @@ void main() {
     vec2 uAy = knobUv(py, KNOB_A, 1.5);
     vec2 uBx = knobUv(px, KNOB_B, 2.1);
     vec2 uBy = knobUv(py, KNOB_B, 2.1);
-    vec4 nA = textureLod(tSlickN, uA, levelSkim(tSlickN, uAx, uAy, SKIM));
-    vec4 nB = textureLod(tSlickN, uB, levelSkim(tSlickN, uBx, uBy, SKIM));
+    float lvA = levelSkim(tSlickN, uAx, uAy, SKIM);
+    float lvB = levelSkim(tSlickN, uBx, uBy, SKIM);
+    vec4 nA = textureLod(tSlickN, uA, lvA);
+    vec4 nB = textureLod(tSlickN, uB, lvB);
     float pick = smoothstep(-0.08, 0.08, nB.b - nA.b + (textureLod(tGrain, p.xz / 2.7 + 0.2, 3.0).r - 0.5) * 1.2);
     bool second = pick > 0.5;
     vec2 uP = second ? uB : uA;
-    vec3 cM = textureLod(tSlick, uP, levelSkim(tSlick, second ? uBx : uAx, second ? uBy : uAy, SKIM)).rgb / SLICK_MEAN;
+    vec3 cM = textureLod(tSlick, uP, second ? lvB : lvA).rgb / SLICK_MEAN;
     vec4 nP = textureLod(tGrain, p.xz / 3.7 + 0.21, levelOf(tGrain, px / 3.7, py / 3.7));
     float clod = mix(nA.b, nB.b, pick) * 0.5 + nP.g * 0.5;
     vec2 sA = nA.rg - 0.5;
@@ -754,7 +756,7 @@ void main() {
       vec2 uGx = knobUv(px, tG, 0.41);
       vec2 uGy = knobUv(py, tG, 0.41);
       vec4 nG = textureLod(tSlickN, uG, levelSkim(tSlickN, uGx, uGy, SKIM));
-      cG = mix(cG, min(textureLod(tSlick, uG, levelSkim(tSlick, uGx, uGy, SKIM)).rgb / SLICK_MEAN, vec3(2.2)), grit);
+      cG = mix(cG, min(textureLod(tSlick, uG, levelSkim(tSlickN, uGx, uGy, SKIM)).rgb / SLICK_MEAN, vec3(2.2)), grit);
       vec2 sG = nG.rg - 0.5;
       kb += vec2(tG.x * sG.x + tG.y * sG.y, tG.x * sG.y - tG.y * sG.x) * 0.6 * grit;
       clod += (nG.b - 0.5) * 0.3 * grit;
@@ -818,7 +820,7 @@ void main() {
     vec2 uS = vec2(p.x * 0.6 + p.z * 0.8, p.z * 0.6 - p.x * 0.8) / 1.7;
     vec2 uSx = vec2(px.x * 0.6 + px.y * 0.8, px.y * 0.6 - px.x * 0.8) / 1.7;
     vec2 uSy = vec2(py.x * 0.6 + py.y * 0.8, py.y * 0.6 - py.x * 0.8) / 1.7;
-    vec3 cS = textureLod(tSlick, uS, levelOf(tSlick, uSx, uSy)).rgb / SLICK_MEAN;
+    vec3 cS = textureLod(tSlick, uS, levelOf(tSlickN, uSx, uSy)).rgb / SLICK_MEAN;
     vec2 sS = textureLod(tSlickN, uS, levelOf(tSlickN, uSx, uSy)).rg - 0.5;
     float seenS = smoothstep(60.0, 20.0, dist);
     float m = soaked * (1.0 - 0.75 * churn);
