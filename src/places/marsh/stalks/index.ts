@@ -602,8 +602,9 @@ export function create(ctx: Context): Piece {
         const nearW = wilds.filter((w) => from(w) >= 7 && from(w) < 22);
         const farW = wilds.filter((w) => from(w) >= 22 && from(w) < 90 && sees(w));
         const awayW = wilds.filter((w) => from(w) >= 90 && sees(w));
+        // The wide never comes near enough to a strand to tell its bends: there it has as few as the strands of the stands beside it.
         const meshes = [
-          frondMesh(ctx, growth, nearF, 7, { wet: 0.5 }), frondMesh(ctx, growth, midF, 4, { small: true, blunt: true }), frondMesh(ctx, growth, farF, 2, { small: true, blunt: true }),
+          frondMesh(ctx, growth, nearF, shot.id === 'marsh-01' ? 5 : 7, { wet: 0.5 }), frondMesh(ctx, growth, midF, shot.id === 'marsh-01' ? 3 : 4, { small: true, blunt: true }), frondMesh(ctx, growth, farF, 2, { small: true, blunt: true }),
           stemMesh(ctx, growth, closeW.length, lines(closeW), 150, 24, 2), stemMesh(ctx, growth, nearW.length, lines(nearW), 24, 9, 1), stemMesh(ctx, growth, farW.length, lines(farW), 6, 5, 0, true), stemMesh(ctx, growth, awayW.length, lines(awayW), 3, 4, 0, true),
         ];
         crowns[which] = meshes;
