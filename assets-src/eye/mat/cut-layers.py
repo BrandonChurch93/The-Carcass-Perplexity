@@ -6,8 +6,7 @@ the edge that is in the picture by a cut of colour (GrabCut) kept to a narrow ba
 from how dark the picture is.
 
 Writes, beside the picture:
-  far-long3-cut.png   red: buttress, green: scree foot, where neither: far face. Half the picture's size.
-  far-long3-far.jpg   the far face with what stood before it taken out and the holes filled from the face around them. Half size.
+  far-long3-cut.png   red: buttress, green: scree foot, where neither: far face; blue: see below. Half the picture's size.
 
 Run from the repo root: python3 assets-src/eye/mat/cut-layers.py
 """
@@ -15,6 +14,7 @@ import cv2
 import numpy as np
 
 SRC = 'public/assets/eye/mat/far-long3.jpg'
+REACH = 40  # rows of the half-size picture
 K = 1672 / 1430  # a point read off a third of the picture shown 1430 wide, in the picture's own pixels
 
 # Where the scree meets the rock, third by third from the left.
@@ -76,15 +76,16 @@ def main():
     cut = np.zeros((hh, ww, 3), np.uint8)
     cut[..., 2] = cv2.GaussianBlur(butt, (0, 0), 1.2)
     cut[..., 1] = cv2.GaussianBlur(scree, (0, 0), 1.2)
-    cv2.imwrite('public/assets/eye/mat/far-long3-cut.png', cut)
 
-    # The far face behind the other two is filled from the face beside each hole, and only in a strip along each edge: when the lens
-    # climbs, the layers part by a few pixels and no more of the face than that strip is ever uncovered.
-    front = np.maximum(butt, scree)
-    hole = cv2.dilate(front, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9)))
-    strip = hole & ~cv2.erode(front, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (81, 81)))
-    far = cv2.inpaint(img, strip, 5, cv2.INPAINT_TELEA)
-    cv2.imwrite('public/assets/eye/mat/far-long3-far.jpg', far, [cv2.IMWRITE_JPEG_QUALITY, 84])
+    # Blue: behind the buttresses and the scree the far face goes on, and where the layers part a strip of it is uncovered. There the
+    # shader shows the face that stands above the cut edge, folded down about that edge. Blue is how many rows above a point the far face
+    # begins (REACH rows is 1), and 0 where that is further than a climbing lens ever uncovers.
+    front = cv2.dilate(np.maximum(butt, scree), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))) > 127
+    rows = np.zeros((hh, ww), np.float32)
+    for y in range(1, hh):
+        rows[y] = np.where(front[y], rows[y - 1] + 1, 0)
+    cut[..., 0] = np.where(rows <= REACH, rows * (255.0 / REACH), 0).astype(np.uint8)
+    cv2.imwrite('public/assets/eye/mat/far-long3-cut.png', cut)
     print('scree', int((scree > 127).mean() * 100), 'percent; buttress', int((butt > 127).mean() * 100), 'percent')
 
 

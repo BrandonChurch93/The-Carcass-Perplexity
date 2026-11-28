@@ -56,12 +56,39 @@ const SKY_FRAGMENT = /* glsl */ `
 varying vec3 vDir;
 ${NOISE_GLSL}
 ${RIG_GLSL}
+#ifdef WALL_LAYERS
+// tPlateCut: which layer each part of the picture of the wall stands in (red the buttresses, green the scree foot, neither the far
+// face), and in blue how far above a covered point the far face begins. uPlateKey: the lens the picture was laid for, and in w the
+// metres between one layer and the next.
+uniform sampler2D tPlateCut;
+uniform vec4 uPlateKey;
+// The picture's u and v for a layer that stands nearer by so many metres than the far face, as the lens the picture was laid for
+// sees it. From that lens the layers lie as the picture has them; as the lens climbs away from it they part.
+vec2 layerUv(vec3 ro, vec3 rd, float nearer) {
+  vec2 o = ro.xz - uPlateAt.xz;
+  float a = max(dot(rd.xz, rd.xz), 1e-6);
+  float b = dot(o, rd.xz);
+  float r = uPlateAt.w - nearer;
+  vec3 p = ro + rd * ((-b + sqrt(max(b * b - a * (dot(o, o) - r * r), 0.0))) / a);
+  return plateAt(uPlateKey.xyz, p - uPlateKey.xyz).xy;
+}
+#endif
 void main() {
   vec3 d = normalize(vDir);
   // The footprint of a pixel on the far picture, taken here before any branch so that the frame repeats.
   vec4 plateSpot = plateAt(cameraPosition, d);
   vec2 plateGx = dFdx(plateSpot.xy);
   vec2 plateGy = dFdy(plateSpot.xy);
+#ifdef WALL_LAYERS
+  {
+    vec2 foot = layerUv(cameraPosition, d, 2.0 * uPlateKey.w);
+    vec2 buttress = layerUv(cameraPosition, d, uPlateKey.w);
+    vec3 behind = textureLod(tPlateCut, plateSpot.xy, 0.0).rgb;
+    // Where a nearer layer has moved off the far face, the face shown is the one above the cut edge, folded down about it.
+    vec2 face = plateSpot.xy + vec2(0.0, step(0.5, max(behind.r, behind.g)) * (2.0 * behind.b * 40.0 + 4.0) / float(textureSize(tPlateCut, 0).y));
+    plateSpot.xy = textureLod(tPlateCut, foot, 0.0).g > 0.5 ? foot : textureLod(tPlateCut, buttress, 0.0).r > 0.5 ? buttress : face;
+  }
+#endif
   if (uPlateTone.w > 0.5) {
     gl_FragColor = vec4(rigOut(farRadianceAt(cameraPosition, d, 0.0, plateSpot, plateGx, plateGy)), 1.0);
     return;
@@ -342,6 +369,11 @@ void main() {
 
 export function create(ctx: Context): Piece {
   const skyMaterial = new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms }, vertexShader: SKY_VERTEX, fragmentShader: SKY_FRAGMENT, side: THREE.BackSide });
+  // The sky of a shot whose far wall is cut into layers is a program of its own: this renderer pays for every line of a program on
+  // every pixel, taken or not, and the other shots are not to pay for the layers.
+  const layered = PLATES.find((p) => p.cut);
+  const cutUniforms = { tPlateCut: { value: layered?.cut ? ctx.assets.texture(layered.cut.file, { kind: 'data', repeat: false, anisotropy: 1 }) : null }, uPlateKey: { value: new THREE.Vector4() } };
+  const skyLayered = new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms, ...cutUniforms }, vertexShader: SKY_VERTEX, fragmentShader: SKY_FRAGMENT, defines: { WALL_LAYERS: 1 }, side: THREE.BackSide });
   const sky = new THREE.Mesh(new THREE.SphereGeometry(20000, 64, 32), skyMaterial);
   sky.frustumCulled = false;
   ctx.scene.add(ctx.parts.built('sky', sky));
@@ -409,11 +441,13 @@ export function create(ctx: Context): Piece {
       const i = plateFor();
       const tone = (rig.uPlateTone as THREE.IUniform<THREE.Vector4>).value;
       const near = (rig.uNear as THREE.IUniform<THREE.Vector4>).value;
+      sky.material = i >= 0 && PLATES[i]?.cut ? skyLayered : skyMaterial;
       if (i < 0) {
         tone.w = 0;
         near.w = 0;
       } else {
         const p = PLATES[i] as (typeof PLATES)[number];
+        if (p.cut) cutUniforms.uPlateKey.value.set(KEYS[p.key].position[0], KEYS[p.key].position[1], KEYS[p.key].position[2], p.cut.gap);
         (rig.tPlate as THREE.IUniform).value = pictures[i];
         (rig.uPlateAt as THREE.IUniform<THREE.Vector4>).value.set(p.at[0], p.at[1], p.at[2], p.radius);
         (rig.uPlateLens as THREE.IUniform<THREE.Vector4>).value.set((p.bearing * Math.PI) / 180, p.tanAcross, p.tanUp, p.horizon);
@@ -441,6 +475,7 @@ export function create(ctx: Context): Piece {
     dispose: () => {
       sky.geometry.dispose();
       skyMaterial.dispose();
+      skyLayered.dispose();
       volume.dispose();
       mistSun.dispose();
       noise.dispose();

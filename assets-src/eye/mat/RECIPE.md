@@ -480,15 +480,5 @@ From: `public/assets/eye/mat/far-long3.jpg`, and the lines drawn by hand over it
 Prompt or command: `python3 assets-src/eye/mat/cut-layers.py`
 
 Takes: 1 made, take 1 kept.
-Why this one: the far wall of the last shot stood as one flat picture. Cut into the scree foot, the buttresses and the far face, each on its own cylinder, the wall parts as the lens climbs. Red is buttress, green is scree foot; it is half the picture's size.
-Date: 2026-11-28
-
-## `public/assets/eye/mat/far-long3-far.jpg`
-
-Made by: `assets-src/eye/mat/cut-layers.py` on Python 3 with OpenCV 5.1 and NumPy.
-From: `public/assets/eye/mat/far-long3.jpg` and the cut above.
-Prompt or command: `python3 assets-src/eye/mat/cut-layers.py`
-
-Takes: 1 made, take 1 kept.
-Why this one: the far face behind the buttresses and the scree, with a strip along each cut edge filled from the face beside it, so that no hole opens where the layers part.
+Why this one: the far wall of the last shot stood as one flat picture. Cut into the scree foot, the buttresses and the far face, each on its own cylinder, the wall parts as the lens climbs. Red is buttress, green is scree foot, blue is how far above a covered point the far face begins (what the shader shows where the layers part); it is half the picture's size.
 Date: 2026-11-28
