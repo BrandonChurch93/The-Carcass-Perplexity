@@ -95,7 +95,7 @@ void main() {
   // bruise of old red here and there where it has split.
   float grey = dot(tex, vec3(0.3333));
   float broad = fbm(vWorld.xz * 2.3 + vWorld.y * 3.1);
-  vec3 albedo = mix(vec3(0.43, 0.395, 0.36), vec3(0.69, 0.65, 0.595), clamp(0.2 + 0.9 * broad + 0.5 * (vData.y - 0.8), 0.0, 1.0)) * mix(vec3(1.0), tex / max(grey, 0.05), 0.45) * clamp(mix(1.0, grey, 0.6 * slack), 0.5, 1.3);
+  vec3 albedo = mix(vec3(0.48, 0.435, 0.4), vec3(0.78, 0.73, 0.675), clamp(0.2 + 0.9 * broad + 0.5 * (vData.y - 0.8), 0.0, 1.0)) * mix(vec3(1.0), tex / max(grey, 0.05), 0.45) * clamp(mix(1.0, grey, 0.6 * slack), 0.5, 1.3);
   // Dark in its creases and in the pits of its grain, where the dirt has stayed.
   albedo *= mix(1.0, mix(0.72, 1.04, smoothstep(0.15, 0.62, h0)) * mix(0.9, 1.03, smoothstep(0.25, 0.65, g0)), hide);
   // Never one tone for a hand's width: the dried hide is mottled.
@@ -112,13 +112,19 @@ void main() {
   float shank = hide * smoothstep(0.303, 0.311, kind) * (1.0 - raw);
   albedo = mix(albedo, mix(vec3(0.27, 0.22, 0.185), vec3(0.64, 0.6, 0.53), smoothstep(0.25, 0.75, vnoise(vUv * vec2(31.0, 90.0)))) * (0.7 + 0.5 * grey), 0.6 * shank);
   // Bristles and specks of dried matter, each a pin's head, thick where the hide is slack.
-  float speck = smoothstep(0.74, 0.84, vnoise(vUv * 150.0)) * smoothstep(0.2, 0.55, vnoise(vUv * 9.0 + 3.0));
-  albedo = mix(albedo, vec3(0.16, 0.11, 0.08), 0.6 * speck * hide * smoothstep(0.02, 0.006, foot * uHide.x));
+  float speck = smoothstep(0.68, 0.8, vnoise(vUv * 150.0)) * smoothstep(0.2, 0.55, vnoise(vUv * 9.0 + 3.0));
+  albedo = mix(albedo, vec3(0.16, 0.11, 0.08), 0.72 * speck * hide * smoothstep(0.02, 0.006, foot * uHide.x));
   float bruise = smoothstep(0.62, 0.8, fbm(vWorld.xz * 5.1 + 7.0) + 0.25 * (0.5 - h0));
   albedo = mix(albedo, vec3(0.3, 0.13, 0.11) * (0.6 + 0.6 * grey), 0.62 * bruise * hide);
   // What lies on the rock is dark with what ran out of it and with damp, and grit sticks to it.
-  float low = smoothstep(0.27, 0.03, lift + 0.06 * (broad - 0.5));
+  float low = smoothstep(0.15, 0.02, lift + 0.05 * (broad - 0.5));
   albedo = mix(albedo, albedo * mix(vec3(0.5, 0.36, 0.3), vec3(0.74, 0.68, 0.62), shank), 0.85 * low * hide);
+  // Tears: the hide has split over the belly and the flank in a few ragged places, dark and dry inside, the lip of each curled pale.
+  float rent = fbm(vUv * vec2(6.0, 2.6) + 9.0) + 0.35 * (fbm(vUv * vec2(31.0, 17.0) + 2.0) - 0.5) + 0.12 * (0.5 - h0);
+  float torn = hide * (1.0 - smoothstep(0.2, 0.28, kind));
+  albedo = mix(albedo, vec3(0.8, 0.76, 0.69), 0.55 * torn * smoothstep(0.6, 0.66, rent) * smoothstep(0.72, 0.67, rent));
+  float gash = torn * smoothstep(0.67, 0.7, rent);
+  albedo = mix(albedo, vec3(0.085, 0.045, 0.04) * (0.6 + 0.8 * grey), 0.9 * gash);
   float salt = smoothstep(0.55, 0.8, fbm(vWorld.xz * 11.0 + 3.0) + 0.25 * n.y - 0.1);
   albedo = mix(albedo, vec3(0.8, 0.78, 0.74), 0.16 * salt * hide);
   // The cords of the mop have bled out and dried: dull red at the root, paler and browner toward their ends.
@@ -127,7 +133,7 @@ void main() {
   albedo = mix(albedo, cordColour, cord);
   // The hoofs: horn, dark and worn pale at the edge.
   albedo = mix(albedo, mix(vec3(0.2, 0.15, 0.1), vec3(0.45, 0.36, 0.26), smoothstep(0.3, 0.9, fbm(vUv * 40.0))), hoof);
-  float occ = mix(vData.y, 0.9, cord) * mix(0.45, 1.05, vData.w) * mix(1.0, mix(0.74, 1.04, smoothstep(0.2, 0.7, h0)), hide * slack) * (0.6 + 0.4 * smoothstep(0.0, 0.06, lift));
+  float occ = mix(vData.y, 0.9, cord) * mix(0.6, 1.12, vData.w) * mix(1.0, 0.4, gash) * mix(1.0, mix(0.74, 1.04, smoothstep(0.2, 0.7, h0)), hide * slack) * (0.6 + 0.4 * smoothstep(0.0, 0.06, lift));
   float rough = mix(0.97, 0.5, hoof);
 
   // The shade it throws on the rock under it is not on it: the light is asked for above the reach of that shade.
@@ -135,7 +141,7 @@ void main() {
   // The fog over the shaft beside it is bright and it is pale: it is lit from that side as the living ones are.
   vec3 side = normalize(vec3(uSunDir.x, 0.0, uSunDir.z));
   vec3 fogColour = skyIrradiance(normalize(side + vec3(0.0, 0.4, 0.0))) * vec3(1.22, 1.0, 0.8) / 3.14159;
-  colour += albedo * fogColour * (1.1 * max(0.42 + 0.4 * dot(n, side) + 0.18 * n.y, 0.0) * occ);
+  colour += albedo * fogColour * (1.25 * max(0.42 + 0.4 * dot(n, side) + 0.18 * n.y, 0.0) * occ);
   // Thin dry skin against the low sun: what of it turns up toward the sun is edged with it.
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
   float edge = smoothstep(0.2, 0.9, dot(n, normalize(uSunDir + vec3(0.0, 0.5, 0.0))));
