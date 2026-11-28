@@ -1254,7 +1254,7 @@ export function create(ctx: Context): Piece {
             // One out to each side and ahead as the foot goes in, and one up and back off the foot behind it.
             const way = lands.yaw + (k === 0 ? 0.75 + 0.5 * rand(key, n + 5) : k === 1 ? -0.75 - 0.5 * rand(key, n + 5) : Math.PI + 0.6 * (rand(key, n + 5) - 0.5));
             const late = k === 2 ? 0.07 : 0;
-            thrown.put(x, level, z, age - late, way, k === 2 ? 1.2 : 2.0 + 0.6 * rand(key, n + 9), (k === 2 ? 1.6 : 2.7 + 0.9 * rand(key, n + 11)) * hard, (k === 2 ? 2.8 : 1.6 + 0.7 * rand(key, n + 13)) * hard, 0.66 + 0.2 * rand(key, n + 3), rand(key, n + 15), 3, 0.12 * f.size);
+            thrown.put(x, level, z, age - late, way, k === 2 ? 1.5 : 2.3 + 0.6 * rand(key, n + 9), (k === 2 ? 2.2 : 3.8 + 1.2 * rand(key, n + 11)) * hard, (k === 2 ? 3.6 : 2.4 + 0.9 * rand(key, n + 13)) * hard, 0.7 + 0.2 * rand(key, n + 3), rand(key, n + 15), 3, 0.14 * f.size);
           }
         }
       }
