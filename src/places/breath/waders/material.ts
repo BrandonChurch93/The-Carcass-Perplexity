@@ -106,7 +106,7 @@ void main() {
   // The dead one is drawn from both sides: whatever the lens sees of it faces the lens.
   if (uDead > 0.5 && dot(n, v) < 0.0) n = -n;
   // Where the skin folds over at the root of a leg its inner side is seen: it is skin facing the lens, in the shade of the fold.
-  float inner = gl_FrontFacing || uMirror > 0.5 || uDead > 0.5 ? 0.0 : 1.0;
+  float inner = gl_FrontFacing || uMirror > 0.5 || uDead > 0.5 || dot(n, v) >= 0.0 ? 0.0 : 1.0;
   n = mix(n, -n, inner);
   float kind = vLook.x;
   float u = vLook.y;

@@ -51,8 +51,6 @@ export function create(ctx: Context): Piece {
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
     uniforms: { ...rig.uniforms, ...pictures, uPixel: pixel, uSea: { value: SEA_LEVEL }, uDead: { value: 0 }, uMirror: { value: 0 }, uVeiled: veiled },
-    // Where a leg is drawn far from its rest the skin at its root can fold over on itself: drawn from both sides, a fold is skin and not a hole.
-    side: THREE.DoubleSide,
   });
   material.userData.depthFragment = DEPTH_FRAGMENT;
   const mesh = new THREE.Mesh(geometry, material);
@@ -156,6 +154,8 @@ export function create(ctx: Context): Piece {
       rim.plan.steps = inWide ? rimSteps : nearRim ? rimNearSteps : [];
       rim.plan.stepsRef = nearRim ? RIM_KEY : WIDE_KEY;
       veiled.value.set(MIST.x, MIST.z, misted ? 1 : 0);
+      // On the rim the skin at the root of the one hind leg folds over on itself: drawn from both sides there, the fold is skin and not a hole.
+      material.side = nearRim ? THREE.DoubleSide : THREE.FrontSide;
       const out = inWide ? 1.5 : 1;
       for (const o of outer) {
         o.animal.plan.x = WIDE_FROM.x + (o.x - WIDE_FROM.x) * out;
