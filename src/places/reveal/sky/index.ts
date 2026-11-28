@@ -467,7 +467,7 @@ export function create(ctx: Context): Piece {
   const data = (file: string, repeat: boolean): THREE.Texture => ctx.assets.texture(file, { kind: 'data', repeat });
   const tile = data('sky/cloud-tile.jpg', true);
   // Where the weather stands (assets-src/reveal/sky/make_cover.py), and the Builder's photographs of cloud from orbit (assets-src/reveal/mat/RECIPE.md).
-  const shared: [string, string, boolean][] = [['uCover', 'sky/cover.png', false], ['uMatPopcorn', 'mat/popcorn.jpg', true], ['uMatStreaks', 'mat/streaks.jpg', true], ['uMatSpecks', 'mat/specks.jpg', true], ['uMatCellsNh', 'mat/cells-nh.png', true], ['uMatPopcornNh', 'mat/popcorn-nh.png', true], ['uMatSpecksNh', 'mat/specks-nh.png', true], ['uMatStreaksNh', 'mat/streaks-nh.png', true], ['uMatVeilNh', 'mat/veil-nh.png', true], ['uMatVeil', 'mat/veil.jpg', true], ['uBanks', 'sky/banks.png', false]];
+  const shared: [string, string, boolean][] = [['uCover', 'sky/cover.png', false], ['uWeather', 'sky/weather.png', false], ['uMatPopcorn', 'mat/popcorn.jpg', true], ['uMatStreaks', 'mat/streaks.jpg', true], ['uMatSpecks', 'mat/specks.jpg', true], ['uMatCellsNh', 'mat/cells-nh.png', true], ['uMatPopcornNh', 'mat/popcorn-nh.png', true], ['uMatSpecksNh', 'mat/specks-nh.png', true], ['uMatStreaksNh', 'mat/streaks-nh.png', true], ['uMatVeilNh', 'mat/veil-nh.png', true], ['uMatVeil', 'mat/veil.jpg', true], ['uBanks', 'sky/banks.png', false]];
   (ctx.rig.uniforms.uCloudTile as THREE.IUniform).value = tile;
   for (const [uniform, file, repeat] of shared) (ctx.rig.uniforms[uniform] as THREE.IUniform).value = data(file, repeat);
 

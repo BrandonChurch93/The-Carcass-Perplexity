@@ -131,6 +131,7 @@ export function createRig(): Rig {
     // The cloud of the world (shared/weather.ts): the sky folder gives the pictures.
     uCloudTile: { value: null },
     uCover: { value: null },
+    uWeather: { value: null },
     uMatPopcorn: { value: null },
     uMatStreaks: { value: null },
     uMatSpecks: { value: null },

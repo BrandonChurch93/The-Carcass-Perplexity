@@ -23,8 +23,10 @@ field of cloud has grown, how the sea is ruffled, how a trail of vapour bends) a
 Made by `make_cover.py`. 2048 x 1152, on the rectangle `COVER_RECT` of `src/places/reveal/shared/weather.ts` (px of the master: x -900 to 7600,
 y -820 to 3961.25). Where the weather stands:
 
-- red: two fronts from the plate `mat/front.jpg`. The place no longer reads this channel (the fronts were taken off the cloud sheet at
-  version 3 of the second owner: they smeared the body); it is kept so the file keeps its form.
+- red: the cloud that other land and the ice hold, set by `make_weather.py` after `make_cover.py` has run (see `weather.png` below):
+  a deck over the ice edge, banks on the coast that faces the wind, streets off the far coast in its lee, cumulus against the
+  islands and a wake behind each. Read by `lowAmount` of `src/places/reveal/shared/weather.ts`. (Before 2026-11-28 it held two
+  fronts from the plate `mat/front.jpg`, which the place had stopped reading.)
 - green: how much of the low field of small cloud has grown at a point: full over the open sea, thin over the land, clumped, cleared round the cyclone.
 - blue: the cyclone and the storm on the spine (`mat/cyclone.jpg`, `mat/storm.jpg` laid on the rectangles where `sky/index.ts` draws their sheets:
   the storm's is 512 x 160 px of the master, 40 px west of its mark), which do not drift. It is the shade they throw, read soft.
@@ -33,6 +35,29 @@ y -820 to 3961.25). Where the weather stands:
 
 - `public/assets/reveal/maps/map-a-h.png`: the height of the land, to thin the low cloud over it.
 - `public/assets/reveal/mat/front.jpg`, `cyclone.jpg`, `storm.jpg`: the plates, for their shade.
+
+## `public/assets/reveal/sky/weather.png`
+
+Made by: `assets-src/reveal/sky/make_weather.py` (Python 3 with numpy, scipy and Pillow), committed here
+From: nothing for `weather.png` (seeded noise and the places of the far low and the cyclone); for the red of `cover.png` the ocean builder's mask of other land and ice, `assets-src/reveal/land/ocean/ocean-mask.png`, read and never copied
+Prompt or command: `python3 assets-src/reveal/sky/make_weather.py [path of the mask]`, from the root of the repo, after `make_cover.py`; no model and no prompt; the only noise is of fixed seeds
+Takes: 4 made (an even field; clusters with lanes; the comma of the far low with its dry slot and open cells; the same with the decks kept away from the body and the islands' cloud set upwind and broken); the fourth is kept
+Why this one: the sea reads as clusters of cumulus with clear lanes between and the body stays clear
+Date: 2026-11-28
+
+1024 x 576, on the rectangle `WEATHER_RECT` of `src/places/reveal/shared/weather.ts` (px of the master: x -2600 to 8200, y -1400 to 4675).
+The weather systems as they stand at the titan frame; they travel slowly with the far low and the cloud streams through them faster.
+Used by: `src/places/reveal/shared/weather.ts` (`lowDepth`), read by the part `reveal/cloud` and by the shade on the land.
+
+- red: how much low cloud a system holds: 0 clear sea, about 0.5 broken clusters of cumulus, 1 a front or a deck.
+- green: how much thin veil the wind draws out there.
+- blue: the kind: 0 open cells behind the front, 0.5 cumulus in chains, 1 closed cells.
+
+The same script sets the red of `cover.png` (above); its green and blue are unchanged to the last bit.
+
+### What is read as data
+
+- `assets-src/reveal/land/ocean/ocean-mask.png` (the ocean builder's, from the branch `agent/p10-reveal-ocean`): red other land, green ice.
 
 ## `public/assets/reveal/sky/banks.png`
 

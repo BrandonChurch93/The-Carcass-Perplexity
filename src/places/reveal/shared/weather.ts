@@ -16,7 +16,9 @@ export const FOG_KM = 0.7;
 /** Km a second: staged far faster than weather, so the held frame is seen to live. */
 export const LOW_DRIFT: [number, number] = [5.4, 1.5];
 /** The small low far off toward the planet's edge, px of the master: the wind winds round it as round the cyclone, a quarter as wide. */
-export const LOW2 = { x: 520, y: 800 };
+export const LOW2 = { x: 300, y: 900 };
+/** The rectangle the map of the weather systems lies on (sky/weather.png, assets-src/reveal/sky/make_weather.py), as COVER_RECT is given. */
+export const WEATHER_RECT: [number, number, number, number] = [X(-2600), Z(-1400), 1 / (10800 * KM), 1 / (6075 * KM)];
 const LOW_MUCH = 1.0;
 
 const f = (n: number): string => n.toFixed(4);
@@ -24,6 +26,7 @@ const f = (n: number): string => n.toFixed(4);
 export const WEATHER_GLSL = /* glsl */ `
 uniform sampler2D uCloudTile;
 uniform sampler2D uCover;
+uniform sampler2D uWeather;
 uniform sampler2D uMatPopcorn;
 uniform sampler2D uMatStreaks;
 uniform sampler2D uMatSpecks;
@@ -151,9 +154,14 @@ vec2 windRound(vec2 d, vec2 c) {
   return cmul(c, vec2(0.5 * log(r2), atan(d.y, d.x)));
 }
 const vec2 WIND_FAR = vec2(0.9511, -0.3090);
+// How far the weather systems have travelled down the wind since the titan frame, km: the far low and the map of the systems
+// (sky/weather.png) go together, far slower than the cloud that streams through them. Nothing before the frame is held.
+vec2 systemsRun() {
+  return uLive > 0.0 ? 2.5 * uWx * vec2(0.9511, 0.3090) : vec2(0.0);
+}
 vec2 windLay(vec2 at) {
   windFp = WIND_FAR;
-  return cmul(WIND_FAR, at) + windRound(at - vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))}), vec2(190.99, 381.97)) + windRound(at - vec2(${f(X(LOW2.x))}, ${f(Z(LOW2.y))}), vec2(95.49, 190.99));
+  return cmul(WIND_FAR, at) + windRound(at - vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))}), vec2(190.99, 381.97)) + windRound(at - systemsRun() - vec2(${f(X(LOW2.x))}, ${f(Z(LOW2.y))}), vec2(95.49, 190.99));
 }
 // The change of a lay across the pixel, from the change of the ground across it (the map is smooth; its jump is not in it).
 vec4 windG(vec4 gAt, mat2 m) {
@@ -171,22 +179,23 @@ const mat2 LOW_E = mat2(25.0, 10.0, -10.0, 25.0);
 
 // How much of the low field stands at a point, 0 to 1, before any of its cloud is read: the painted cover, the clear sky over
 // the lake of the Eye and over the sun's image, and in the hold the systems that travel.
+// What other land and the ice hold at the point last asked of lowAmount (sky/cover.png, red): 0 none, about 0.5 a street in
+// the lee of an island or a coast, 1 a bank or a deck.
+float lowHeld = 0.0;
 float lowAmount(vec2 at, vec2 w) {
+  vec3 stands = coverAt(at);
+  float lake = smoothstep(100.0, 230.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
   // The sky stands clear over the lake of the Eye, where the rise begins.
-  float amount = max(coverAt(at).g, 0.6 * westSea(at)) * smoothstep(100.0, 230.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
-  // (Held, the weather is seen to pass: where cloud stands at all is carried by the wind too. The painted cover, which stands on
-  // the ground, gives way through the hold to systems that travel, and only its wide clearing over the land and round the
-  // cyclone stays where it is.)
+  float amount = max(stands.g, 0.6 * westSea(at)) * lake;
+  // (Held, the weather is seen to pass: the painted clumps of the cover, which stand on the ground, give way through the hold
+  // to the systems that travel, and only its wide clearing over the land and round the cyclone stays where it is.)
   if (uLive > 0.0) {
-    float open = smoothstep(0.12, 0.4, texture2D(uCover, clamp((at - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0), 5.0).g);
-    float travels = texture2D(uCloudTile, mat2(0.88, 0.47, -0.47, 0.88) * (w + uWx * vec2(6.0, -9.0)) / 3300.0 + vec2(0.37, 0.81), 3.0).b;
-    amount = mix(amount, open * (0.2 + 0.8 * smoothstep(0.36, 0.62, travels)) * smoothstep(100.0, 230.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))}))), smoothstep(0.0, 22.0, uWx));
+    float open = smoothstep(0.12, 0.4, textureLod(uCover, clamp((at - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0), 5.0).g);
+    amount = mix(amount, open * lake, smoothstep(0.0, 22.0, uWx));
   }
-  // (The field runs in under the outer arms of the cyclone: the painted cover leaves a round hole there, wider than the storm.)
-  float nearStorm = length(at - vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))})) / ${f(1250 * KM)};
-  amount = max(amount, 0.75 * smoothstep(0.3, 0.55, nearStorm) * (1.0 - smoothstep(0.7, 1.1, nearStorm)));
-  amount *= 1.0 - 0.94 * smoothstep(0.03, 0.3, sunImage(at));
-  return amount;
+  float glare = 1.0 - 0.94 * smoothstep(0.03, 0.3, sunImage(at));
+  lowHeld = stands.r * glare;
+  return amount * glare;
 }
 
 // The low cloud as the light meets it: how much water stands in the way (0 where the sea is clear, about 1 in the thin body of a
@@ -216,10 +225,9 @@ float lowDepth(vec2 at) {
     qCell -= uWx * vec2(23.0, -1.0) / 600.0;
     qPuff -= uWx * vec2(20.0, 2.0) / 600.0;
   }
-  // (Where the clusters stand is read on the ground itself, carried the same way: it is soft and wide, and needs no turn.)
-  float patchRun = 5.6 * uTime + 25.0 * held + (uLive > 0.0 ? 17.0 * uWx : 0.0);
-  vec2 lowPatch = mat2(0.8, 0.6, -0.6, 0.8) * (at - vec2(0.9511, 0.3090) * patchRun) / 1500.0 + vec2(0.21, 0.47);
-  vec4 lowGPatch = vec4(mat2(0.8, 0.6, -0.6, 0.8) * gAt.xy, mat2(0.8, 0.6, -0.6, 0.8) * gAt.zw) / 1500.0;
+  // (Where the systems stand is read on the ground itself, where they have travelled to: it is soft and wide.)
+  vec2 lowPatch = (at - systemsRun() - vec2(${f(WEATHER_RECT[0])}, ${f(WEATHER_RECT[1])})) * vec2(${WEATHER_RECT[2].toFixed(9)}, ${WEATHER_RECT[3].toFixed(9)});
+  vec4 lowGPatch = gAt * vec4(${WEATHER_RECT[2].toFixed(9)}, ${WEATHER_RECT[3].toFixed(9)}, ${WEATHER_RECT[2].toFixed(9)}, ${WEATHER_RECT[3].toFixed(9)});
   lowUvA = LOW_A * qChain + vec2(0.3, 0.7);
   lowUvB = LOW_B * qCell + vec2(0.13, 0.4);
   lowUvC = LOW_C * qPuff + vec2(0.61, 0.27);
@@ -238,15 +246,19 @@ float lowDepth(vec2 at) {
   amount *= smoothstep(0.1, 0.4, calm);
   lowWeigh = vec3(0.0);
   lowNear = vec2(0.0);
-  if (amount <= 0.02) return 0.0;
-  // (Where the clusters stand, and where the veil lies: a soft field read first, so most of the open sea, which is clear,
-  // costs one read and no more. The reads are all at places and fineness worked out above: see GRADS.)
-  vec3 stands = pic(uCloudTile, lowPatch, max(abs(lowGPatch), vec4(1.0 / 16384.0)), 2.0).rgb;
-  float cluster = amount * smoothstep(0.52 - 0.14 * LOW_MUCH, 0.76 - 0.14 * LOW_MUCH, stands.r);
-  float veiled = amount * smoothstep(0.4, 0.7, stands.g);
-  if (cluster <= 0.0 && veiled <= 0.0) return 0.0;
+  if (amount <= 0.02 && lowHeld <= 0.0) return 0.0;
+  // (The systems, read first, so most of the open sea, which is clear, costs one read and no more: red how much cloud a
+  // system holds, green the veil, blue its kind (0 open cells, 0.5 cumulus in chains, 1 closed cells). The reads are all at
+  // places and fineness worked out above: see GRADS.)
+  vec3 systems = pic(uWeather, clamp(lowPatch, 0.0, 1.0), lowGPatch).rgb;
+  float cluster = max(amount * min(systems.r * LOW_MUCH, 1.0), lowHeld);
+  float veiled = amount * systems.g;
+  if (cluster <= 0.004 && veiled <= 0.004) return 0.0;
+  float closed = max(clamp(2.0 * systems.b - 1.0, 0.0, 1.0) * (amount * systems.r >= lowHeld ? 1.0 : 0.0), smoothstep(0.62, 0.85, lowHeld));
+  float opened = clamp(1.0 - 2.0 * systems.b, 0.0, 1.0) * (1.0 - closed);
   float chain = dot(pic(uMatStreaks, lowUvA, lowGA, 1.0).rgb, vec3(0.3, 0.55, 0.15)) / 0.31;
-  float density = cluster * smoothstep(0.82 - 0.12 * LOW_MUCH, 1.92 - 0.12 * LOW_MUCH, chain);
+  // (Cumulus stands in chains down the wind; a front or a deck is cloud from side to side; open cells stand free of the chains.)
+  float density = cluster * mix(smoothstep(0.7, 1.8, chain), 1.0, max(closed, 0.7 * opened));
   float drawn = 0.45 * veiled * pow(max(chain - 0.9, 0.0), 1.3);
   if (density <= 0.0) return drawn;
   float cell = cloudAt(uMatPopcorn, lowUvB, lowGB, 0.34);
@@ -258,9 +270,11 @@ float lowDepth(vec2 at) {
   lowNear = vec2(1.0 - smoothstep(240.0, 360.0, uViewKm), 1.0 - smoothstep(85.0, 130.0, uViewKm));
   if (lowNear.x > 0.0) lump = mix(1.0, cloudAt(uMatPopcorn, lowUvD, lowGD, 0.34), lowNear.x);
   if (lowNear.y > 0.0) grain = mix(1.0, cloudAt(uMatSpecks, lowUvE, lowGE, 0.2), lowNear.y);
-  float knots = cell * (0.45 + 0.55 * puff) * mix(1.0, lump, 0.55) * mix(1.0, grain, 0.4);
+  // (Open cells are the photograph turned inside out: cloud in the walls between its cumulus, clear air where they stood.)
+  float knots = mix(cell, max(2.0 - 1.3 * cell, 0.0), opened) * (0.45 + 0.55 * puff) * mix(1.0, lump, 0.55) * mix(1.0, grain, 0.4);
   lowWeigh = vec3(1.0, 0.55, density);
-  float dense = max(knots * (0.25 + 1.5 * density) - 1.0, 0.0);
+  // (A deck has a floor of cloud under its cells, cracked where the cells part.)
+  float dense = max(knots * (0.25 + 1.5 * density) - 1.0, 0.0) + 0.7 * closed * cluster * smoothstep(0.35, 0.9, knots);
   return 1.5 * dense + drawn;
 }
 
