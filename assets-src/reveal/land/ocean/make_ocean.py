@@ -23,7 +23,7 @@ def arg(name, default):
 
 QUICK = '--quick' in sys.argv
 FAST = QUICK or '--fast' in sys.argv      # no erosion and short streaks: for trying the layout, the bed or the silt
-AMOUNT = arg('--amount', 'D')
+AMOUNT = arg('--amount', 'E')
 ICE = float(arg('--ice', '1.0'))
 W, H = (1024, 626) if QUICK else (4096, 2504)
 X0, Y0, PW = -1800.0, -800.0, 9216.0

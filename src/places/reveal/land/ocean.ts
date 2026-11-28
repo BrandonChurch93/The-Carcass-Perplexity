@@ -89,7 +89,7 @@ vec3 oceanOther(vec3 water, vec3 landAt, vec3 bedAt, vec3 light, vec3 glare, vec
   // (The pack and the sheet on the far land: blue grey where it is thin and in its leads, blue white where it is thick, blue in
   // the shade of its own relief. Never the bone's ivory. Into the air of the planet's edge it goes bluer and dimmer.)
   float ice = smoothstep(0.52, 0.8, bedAt.b) * seen;
-  vec3 pack = mix(vec3(0.2, 0.3, 0.37), vec3(0.37, 0.465, 0.565), smoothstep(0.7, 0.98, bedAt.b));
+  vec3 pack = mix(vec3(0.155, 0.235, 0.3), vec3(0.28, 0.36, 0.45), smoothstep(0.7, 0.98, bedAt.b));
   pack *= mix(vec3(1.0), mix(vec3(0.5, 0.64, 0.84), vec3(1.0), clamp(lit, 0.0, 1.0)) * min(lit, 1.25), isle);
   pack *= mix(vec3(0.42, 0.56, 0.74), vec3(1.0), smoothstep(0.04, 0.3, mu));
   // (Under the moon it is a grey a little over the sea's and well under the cloud's.)
