@@ -235,6 +235,8 @@ export function create(ctx: Context): Piece {
   // Staged for the feeding key: the three stand nearer its lens than their stations. The first feeds, filling the right of the frame; the
   // second shakes its tuft dry; the third runs off with its sails up, and is in the place for that shot alone.
   const NEARER: [number, number][] = [[-54.83, -434.61], [-55.4, -455.2], [-61.5, -464]];
+  const second = feeders.length + 1;
+  const third = feeders.length + 2;
   NEARER.forEach(([x, z], i) => {
     if (i === 0) addFeeder(x, z, sideOn(x, z, 0.2), 0.92, 0, feedKey);
     else if (i === 1) addFeeder(x, z, sideOn(x, z, -0.25), 1, 1);
@@ -326,6 +328,7 @@ export function create(ctx: Context): Piece {
     const span = shotSpan(shot.id);
     return { from: span.from, to: span.to, key: shot.key ? keySeconds(shot.key) : T0 };
   });
+  const carcass = shotSpan('ribs-05');
   /** A step is not gone through evenly: the animal gathers on both feet, goes over the one that bears it, and gathers again. */
   const surge = (steps: number): number => {
     const n = Math.floor(steps);
@@ -1655,6 +1658,34 @@ export function create(ctx: Context): Piece {
         const f = feeders[i] as Feeder;
         feederAt(f, seconds);
         runners.hide(i);
+        // The two behind the feeding hero are not its build: one deep in the trunk and thick in the leg with its neck carried up off the
+        // shoulder and pale sails lifted, one lean and long in the neck with its sails higher and redder.
+        if (i === second) {
+          P.girth = 1.18;
+          P.thigh = 1.4;
+          P.neck = 0.86;
+          P.rise = 0.34;
+          P.sail += 0.2;
+          P.warm = -0.28;
+          P.tone *= 0.9;
+        } else if (i === third) {
+          P.girth = 0.86;
+          P.neck = 1.14;
+          P.rise = 0.16;
+          P.sail += 0.3;
+          P.warm = 0.35;
+          P.tone *= 1.08;
+        } else {
+          P.girth = 1;
+          P.thigh = 1;
+          P.neck = 1;
+          P.rise = 0;
+          P.warm = 0;
+        }
+        // Far off behind the carcass the lens is not on them, and a leg a pixel wide is lost in its blur: there the legs are drawn thicker.
+        const far = lp === null && seconds >= carcass.from && seconds <= carcass.to ? smooth(25, 70, Math.hypot(P.x - eye[0], P.z - eye[2])) : 0;
+        P.shank = 1 + 1.6 * far;
+        if (far > 0) P.thigh = Math.max(P.thigh, 1 + 0.8 * far);
         if (tuft.here) bodies.put(i, P);
         else bodies.hide(i);
         rig.setDisc(discs, i, P.x, P.z, 1.1 * f.size, tuft.here ? 0.3 : 0);
