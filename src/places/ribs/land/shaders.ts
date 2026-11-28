@@ -448,7 +448,7 @@ void main() {
     vec3 n3 = textureGrad(tWeedN, u3, dux * s3, duy * s3).rgb;
     // The sheet gives only the broad tone here, read soft: its hanks a stride wide are not this weed's.
     float tone = dot(textureLod(tWall, uw, 5.0).rgb, vec3(0.333)) / 0.1;
-    vec3 strap = w1 * vec3(0.3, 0.25, 0.11) * (0.6 + 0.4 * tone) * (0.6 + 0.4 * dot(textureGrad(tWeed, u3, dux * s3, duy * s3).rgb, vec3(0.333)) / 0.039);
+    vec3 strap = w1 * vec3(0.24, 0.17, 0.06) * (0.6 + 0.4 * tone) * (0.6 + 0.4 * dot(textureGrad(tWeed, u3, dux * s3, duy * s3).rgb, vec3(0.333)) / 0.039);
     albedo = mix(albedo, strap, closeW);
     nc = normalize(n0 + 0.12 * (n - n0) + (bumpD(n0, dpx, dpy, dux * s1, duy * s1, (n1.xy - 0.5) * 1.5) - n0) + (bumpD(n0, dpx, dpy, dux * s3, duy * s3, (n3.xy - 0.5) * 0.7) - n0));
     n = normalize(mix(n, nc, closeW));
@@ -457,17 +457,18 @@ void main() {
   }
   // The hanks that stand proud are olive and gold brown, and wet.
   float hem = smoothstep(0.42, 0.72, wn.z + 0.25 * (fine - 1.0));
-  albedo = mix(albedo, vec3(0.06, 0.046, 0.018) * (0.5 + 0.6 * fine) * (1.0 + 0.9 * closeW), (0.45 + 0.35 * closeW) * hem);
+  albedo = mix(albedo, mix(vec3(0.06, 0.046, 0.018), vec3(0.075, 0.046, 0.012), closeW) * (0.5 + 0.6 * fine), (0.45 - 0.1 * closeW) * hem);
   // Threads of water running down off the hems.
   float thread = smoothstep(0.78, 0.95, vnoise(vec2(vUv.x * 5.0, vUv.y * 0.35 + uTime * 0.9))) * smoothstep(0.5, 0.9, vnoise(vec2(vUv.x * 0.7, vUv.y * 0.11 + 3.0)));
   // One place on the wall where the water of the shelf above runs off: a band a stride or two wide that wanders as it comes down.
   float along = dot(vWorld.xz - uRill.xy, uRill.zw);
   float wander = along + 1.1 * (vnoise(vec2(vWorld.y * 0.3, 3.0)) - 0.5) + 0.3 * (vnoise(vec2(vWorld.y * 1.3, 7.0)) - 0.5);
   float rill = smoothstep(1.0, 0.15, abs(wander)) * smoothstep(50.0, 25.0, length(vWorld.xz - uRill.xy));
-  float fall = smoothstep(0.55, 0.85, vnoise(vec2(wander * 9.0, vWorld.y * 0.5 + uTime * 6.0))) * (0.45 + 0.55 * vnoise(vec2(wander * 3.1, vWorld.y * 2.3 + uTime * 9.0)));
+  // It falls in threads that break into drops, not in a ribbon.
+  float fall = smoothstep(0.55, 0.85, vnoise(vec2(wander * 17.0, vWorld.y * 0.5 + uTime * 6.0))) * (0.45 + 0.55 * vnoise(vec2(wander * 3.1, vWorld.y * 2.3 + uTime * 9.0))) * smoothstep(0.3, 0.75, vnoise(vec2(wander * 29.0, vWorld.y * 6.0 + uTime * 16.0)));
   float runs = rill * smoothstep(0.42, 0.7, vnoise(vec2(wander * 6.0, vWorld.y * 0.4 + uTime * 4.0)));
   albedo *= 1.0 - 0.4 * rill;
-  float rough = mix(mix(0.27 + 0.3 * (1.0 - wn.z), mix(0.66, 0.4, hem), closeW), 0.12, max(thread * (1.0 - closeW), runs));
+  float rough = mix(mix(0.27 + 0.3 * (1.0 - wn.z), mix(0.86, 0.7, hem), closeW), 0.12, max(thread * (1.0 - closeW), runs));
   float occ = (0.25 + 0.75 * smoothstep(0.08, 0.5, wn.z)) * (0.6 + 0.4 * smoothstep(0.2, 0.7, nh.z)) * (0.6 + 0.4 * vShade);
   // On a wall of beds the weed hangs in clumps from each ledge and thins toward the next one down: between the clumps the wall is bare
   // wet rock with its barnacles, dark under the ledge it hangs from.
@@ -495,6 +496,9 @@ void main() {
   c = max(c, albedo * above * (0.36 / 3.14159) * (0.6 + 0.4 * occ));
   // Close, the wet shows as small glints on the blades of weed that turn to the sky, not as a sheen over the whole wall.
   c += above * vec3(1.0, 0.9, 0.7) * (0.1 * closeW * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 60.0) * (0.4 + 0.6 * occ));
+  // The black wet between the fronds holds the sky in beads: points of light, none of them a stride from the next.
+  float bead = smoothstep(0.84, 0.92, vnoise(vUv * vec2(43.0, 37.0))) * smoothstep(0.3, 0.7, vnoise(vUv * vec2(1.7, 0.6) + 9.0)) * (0.3 + 0.7 * vnoise(vUv * vec2(7.0, 5.0)));
+  c += above * (0.6 * closeW * closeW * bead * (0.3 + 0.7 * occ) * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 4.0));
   c += above * (rill * (0.02 + 1.8 * fall * fall));
   // And the water that runs off it: thin bright threads down the fronds, each a few strides long, coming and going.
   float run = smoothstep(0.8, 0.96, vnoise(vec2(vUv.x * 9.0, vUv.y * 0.3 + uTime * 1.6))) * smoothstep(0.55, 0.8, vnoise(vec2(vUv.x * 1.1, vUv.y * 0.13 - uTime * 0.07) + 3.0));
