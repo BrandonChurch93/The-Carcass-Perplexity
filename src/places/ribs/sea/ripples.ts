@@ -29,6 +29,9 @@ interface Wave {
   /** The wave comes in groups a few crests long and a few wide: the vector the groups lie along. */
   gx: number;
   gz: number;
+  /** And the vector along which its crests are crowded and spread: no two stand the same distance apart. */
+  cx: number;
+  cz: number;
   rate: number;
   slope: number;
   phase: number;
@@ -39,7 +42,7 @@ const WAVES: Wave[] = PAIRS.flatMap(([length, slope, a, b], n) =>
     const k = ((Math.PI * 2) / length) * (m === 0 ? 1 : 1.17);
     const angle = Math.atan2(WIND.to[1], WIND.to[0]) + (degrees * Math.PI) / 180;
     const group = angle + ((m === 0 ? 63 : -71) * Math.PI) / 180;
-    return { kx: Math.cos(angle) * k, kz: Math.sin(angle) * k, gx: (Math.cos(group) * k) / 4.3, gz: (Math.sin(group) * k) / 4.3, rate: PACE * Math.sqrt(9.81 * k * Math.tanh(k * UNDER) + SKIN * k * k * k), slope, phase: ((n * 2 + m) * 2.399963) % (Math.PI * 2) };
+    return { kx: Math.cos(angle) * k, kz: Math.sin(angle) * k, gx: (Math.cos(group) * k) / 4.3, gz: (Math.sin(group) * k) / 4.3, cx: (Math.cos(group * 1.7 + n) * k) / 2.9, cz: (Math.sin(group * 1.7 + n) * k) / 2.9, rate: PACE * Math.sqrt(9.81 * k * Math.tanh(k * UNDER) + SKIN * k * k * k), slope, phase: ((n * 2 + m) * 2.399963) % (Math.PI * 2) };
   }),
 );
 
@@ -67,7 +70,9 @@ ${WAVES.map(
     float keep = 1.0 - smoothstep(0.5, 6.0, across * across + along * along);
     if (keep > 0.002) {
       float group = 0.6 + 0.55 * sin(dot(vec2(${f(w.gx)}, ${f(w.gz)}), q) - ${f(w.rate * 0.12)} * t + ${f((w.phase * 3.7) % (Math.PI * 2))});
-      s += k * (${f(w.slope / Math.hypot(w.kx, w.kz))} * keep * group * cos(dot(k, q) - ${f(w.rate)} * t + ${f(w.phase)}));
+      // Sets and the slack water between them; crests crowded here and spread there; and a crest is sharper than its trough.
+      float turn = dot(k, q) - ${f(w.rate)} * t + ${f(w.phase)} + 1.3 * sin(dot(vec2(${f(w.cx)}, ${f(w.cz)}), q) + ${f((w.phase * 5.3) % (Math.PI * 2))} + ${f(w.rate * 0.07)} * t);
+      s += k * (${f(w.slope / Math.hypot(w.kx, w.kz))} * keep * group * group * (cos(turn) + 0.3 * cos(2.0 * turn + 0.9)));
     }
     lost += ${f(0.5 * w.slope * w.slope)} * (1.0 - keep * keep);
   }`,
@@ -79,5 +84,5 @@ float flatBreak(vec2 slope, vec3 v, float high) {
   float back = high / max(v.y, 0.03);
   // A slope along the eye's line only slides the image along itself: it counts for less than one across it.
   float thrown = length(vec2(dot(slope, side), 0.4 * dot(slope, vec2(side.y, -side.x)))) * 2.0 * (0.15 + back / (1.0 + 0.25 * back));
-  return smoothstep(0.13, 0.42, thrown);
+  return smoothstep(0.17, 0.55, thrown);
 }`;
