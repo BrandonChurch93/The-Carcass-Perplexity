@@ -588,7 +588,9 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     // Its edge against the land is soft: the cloud thins where it laps the rock.
     // (By the depth of cloud before the rock, as cloud hides: forty metres of it hide nearly all. Thinned evenly over some hundreds of
     // metres, the flank under the deck showed through every near head as a weave.)
-    float lap = 0.985 * max(1.0 - exp(-max(far - t, 0.0) * (1.0 + 1.4 * grain) / (40.0 + 0.03 * t)), seaCover);
+    // (Before the open sky it does not thin: the last row the march walks to lies at the sky's own distance, and thinned there it
+    // let the sky's dark foot through as a hairline along the horizon.)
+    float lap = 0.985 * max(1.0 - exp(-max((far > 50000.0 ? 1.0e9 : far) - t, 0.0) * (1.0 + 1.4 * grain) / (40.0 + 0.03 * t)), seaCover);
     // Where it has climbed into the storm its last heads thin into the wall's own air: they have no edge against the sky.
     lap *= 1.0 - inStorm * smoothstep(0.03, 0.15, rd.y);
     // And far along the ridge, where the lens looks down the wall's length, it is the sky's own dark foot and no more: kept whole there,
