@@ -75,7 +75,9 @@ float domeAt(vec2 xz, float level, float bl, out vec4 m) {
     float cover;
     float c = carcass(along, bl, cover);
     vec3 t = carcassAt(along);
-    vec3 bm = textureLod(tBodyM, t.xy, bl).rgb * vec3(1.0 - cover, 1.0 - cover, 1.0);
+    // (Bone and torn hide show on the fallen flank alone: the other side lies whole under its salt, and no two dark places sit as a pair.)
+    float open = (1.0 - cover) * smoothstep(0.42, 0.56, t.y);
+    vec3 bm = textureLod(tBodyM, t.xy, bl).rgb * vec3(open, open, 1.0);
     float on = smoothstep(0.0, 0.012, c);
     float sunk = smoothstep(0.55, 0.2, bm.b) * (1.0 - cover);
     float torn = bm.g * on;
