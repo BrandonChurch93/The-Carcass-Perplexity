@@ -254,8 +254,12 @@ void main() {
   // Seen close in the evening the bare hide is a grey going to rose, not a cream: the warmth it has is the sun's.
   skin = mix(skin, dot(skin, vec3(0.3, 0.5, 0.2)) * vec3(1.02, 0.95, 0.97), 0.45 * near);
   // And it is not of one colour: broad patches where the skin is darker and greyer, and the small dark spots of age over the back and the haunch.
-  float patchy = smoothstep(0.46, 0.7, n3(at * vec3(3.1, 4.3, 3.1) + 9.0));
-  float spots = smoothstep(0.7, 0.78, n3(at * 21.0 + 3.0)) * smoothstep(0.35, 0.6, n3(at * 2.3 + 13.0)) * (1.0 - smoothstep(0.006, 0.02, px));
+  float patchy = 0.0;
+  float spots = 0.0;
+  if (near > 0.0) {
+    patchy = smoothstep(0.46, 0.7, n3(at * vec3(3.1, 4.3, 3.1) + 9.0));
+    spots = smoothstep(0.7, 0.78, n3(at * 21.0 + 3.0)) * smoothstep(0.35, 0.6, n3(at * 2.3 + 13.0)) * (1.0 - smoothstep(0.006, 0.02, px));
+  }
   skin *= mix(vec3(1.0), vec3(0.8, 0.74, 0.75), near * 0.7 * patchy) * (1.0 - 0.38 * near * spots);
   // The belly and the inside of the legs are paler; the joints of the legs are rubbed dark.
   skin *= 1.0 + 0.1 * smoothstep(0.2, -0.6, rn.y) * trunk;
@@ -273,17 +277,22 @@ void main() {
   float horn = 1.0 - smoothstep(0.075, 0.1, vRest.y + 0.02 * ragged);
   // Above the wet the leg is damp to the hock and the knee from the wading, and the belly from what the legs threw up: darker, with a sheen.
   float under = trunk * smoothstep(-0.15, -0.7, rn.y);
-  float damp = near * max((1.0 - smoothstep(0.7, 1.25, above + 0.4 * ragged)) * leg, under * smoothstep(0.3, 0.6, n3(at * vec3(2.0, 2.0, 5.0) + 41.0) + 0.5 * under));
-  // Drops hang under the belly and at the back of the legs, swell, and fall: each in a place of its own, each at its own time.
-  vec2 cell = vec2(vRest.z * 34.0, vRest.x * 34.0 + vRest.y * 9.0);
-  vec2 inCell = fract(cell) - 0.5;
-  float which1 = hash12(floor(cell) + own * 91.0);
-  float life = fract(uKin.y * (0.28 + 0.3 * which1) + which1 * 7.0);
-  float grown = smoothstep(0.0, 0.7, life) * (1.0 - smoothstep(0.86, 0.9, life));
-  float drop = near * step(0.62, which1) * max(under * smoothstep(-0.55, -0.9, rn.y), 0.6 * leg * smoothstep(0.75, 1.3, vRest.y) * smoothstep(0.1, -0.4, rn.z))
-    * (1.0 - smoothstep(0.1, 0.24, length(inCell) / max(grown, 0.05))) * (1.0 - smoothstep(0.004, 0.012, px));
-  // Seen close, the mud it kicked up is on the leg in spatters a finger wide, thick at the fetlock and thinning to the hock.
-  float spatter = near * leg * smoothstep(0.6, 0.72, n3(at * vec3(37.0, 23.0, 37.0)) * (0.75 + 0.5 * n3(at * 5.0))) * (1.0 - smoothstep(0.35, 1.3, above + 0.5 * ragged));
+  float damp = 0.0;
+  float drop = 0.0;
+  float spatter = 0.0;
+  if (near > 0.0) {
+    damp = max((1.0 - smoothstep(0.7, 1.25, above + 0.4 * ragged)) * leg, under * smoothstep(0.3, 0.6, n3(at * vec3(2.0, 2.0, 5.0) + 41.0) + 0.5 * under));
+    // Drops hang under the belly and at the back of the legs, swell, and fall: each in a place of its own, each at its own time.
+    vec2 cell = vec2(vRest.z * 34.0, vRest.x * 34.0 + vRest.y * 9.0);
+    vec2 inCell = fract(cell) - 0.5;
+    float which1 = hash12(floor(cell) + own * 91.0);
+    float life = fract(uKin.y * (0.28 + 0.3 * which1) + which1 * 7.0);
+    float grown = smoothstep(0.0, 0.7, life) * (1.0 - smoothstep(0.86, 0.9, life));
+    drop = step(0.62, which1) * max(under * smoothstep(-0.55, -0.9, rn.y), 0.6 * leg * smoothstep(0.75, 1.3, vRest.y) * smoothstep(0.1, -0.4, rn.z))
+      * (1.0 - smoothstep(0.1, 0.24, length(inCell) / max(grown, 0.05))) * (1.0 - smoothstep(0.004, 0.012, px));
+    // Seen close, the mud it kicked up is on the leg in spatters a finger wide, thick at the fetlock and thinning to the hock.
+    spatter = leg * smoothstep(0.6, 0.72, n3(at * vec3(37.0, 23.0, 37.0)) * (0.75 + 0.5 * n3(at * 5.0))) * (1.0 - smoothstep(0.35, 1.3, above + 0.5 * ragged));
+  }
   vec3 albedo = mix(skin * mix(vec3(1.0), mix(vec3(0.17, 0.15, 0.14), vec3(0.2, 0.175, 0.17), near), wet) * (1.0 - 0.78 * waterline) * mix(vec3(1.0), vec3(0.45, 0.4, 0.4), damp * (1.0 - wet)), vec3(0.13, 0.1, 0.08), max(0.55 * fleck, 0.6 * spatter));
   albedo = mix(albedo, vec3(0.05, 0.045, 0.04), horn);
   float occ = mix(0.48, 1.0, vShade.x) * (1.0 - 0.35 * groove);
