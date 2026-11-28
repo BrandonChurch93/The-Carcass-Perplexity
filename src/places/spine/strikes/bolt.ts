@@ -104,14 +104,14 @@ export function restruck(rng: Rng, site: StrikeSite, first: Line[]): Line[] {
     const dir: Vec3 = [rng.range(-1, 1), rng.range(-0.9, -0.3), rng.range(-1, 1)];
     lines.push({ points: crooked(rng, a, add(a, dir, reach / len(dir)), 4 + fine, 0.2), width: 0.3, gain: 0.3, from: i / (path.length - 1), to: 1, branch: 1 });
   }
-  // And it forks as the first did, by ways of its own: two branches off its upper part that die in the air, each with a twig.
-  for (let f = 0; f < 2; f++) {
+  // And it forks as the first did, by ways of its own: three branches off its upper part that die in the air, each with a twig.
+  for (let f = 0; f < 3; f++) {
     const i = Math.min(path.length - 3, Math.max(1, Math.floor(rng.range(0.22, 0.7) * (path.length - 1))));
     const a = path[i] as Vec3;
-    const reach = site.rise * rng.range(0.16, 0.34);
+    const reach = site.rise * rng.range(0.24, 0.46);
     const dir: Vec3 = [rng.range(-1, 1), rng.range(-0.8, -0.35), rng.range(-1, 1)];
     const fork = crooked(rng, a, add(a, dir, reach / len(dir)), 5 + fine, 0.2);
-    lines.push({ points: fork, width: 0.42, gain: 0.5, from: i / (path.length - 1), to: 1, branch: 1 });
+    lines.push({ points: fork, width: 0.42, gain: 0.7, from: i / (path.length - 1), to: 1, branch: 1 });
     const j = Math.floor(rng.range(0.3, 0.7) * (fork.length - 1));
     const c = fork[j] as Vec3;
     const dir2: Vec3 = [rng.range(-1, 1), rng.range(-0.8, -0.3), rng.range(-1, 1)];

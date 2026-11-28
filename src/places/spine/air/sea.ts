@@ -54,6 +54,13 @@ const float MIST_LONG = 240.0;
 const float SEA_KEY = 0.05;
 const float SEA_KEY_REACH = 1800.0;
 const float SEA_KEY_CEIL = 0.3;
+// The puffs on the heaps are cut from the storm's own noise (its red: round lumps at three sizes), which is a body and not a
+// picture: it flows through the heaps down the gale faster than they travel, and upward, so a head's top turns over as it goes.
+// Metres a repeat, their height as a share of a heap's, and metres a second along the gale and upward.
+const float PUFF_SPAN = 600.0;
+const float PUFF_TALL = 0.4;
+const float PUFF_RUN = 78.0;
+const float PUFF_CLIMB = 13.0;
 float seaLod = 1.0;
 // Laid a little turned from the ridge, so that no row of heads runs along it or straight away from the lens.
 vec2 heapUv(vec2 at) {
@@ -96,6 +103,13 @@ float seaLift(vec3 p, int detail, bool swell) {
     float small = textureLod(tHeaps, heapUv(q3.zx) * 3.7 + 0.37, max(seaLod + 2.25, 0.0)).g - 0.45;
     n += 0.14 * small * (0.35 + 1.3 * heap.r);
     seaHead += 0.1 * small;
+    // (Read at one size: they are there only as far as the lens holds them, and fade out with the distance.)
+    float seen = 1.0 - smoothstep(-0.8, 1.2, seaLod);
+    if (seen > 0.0) {
+      float puff = (noise(vec3(p.x - 0.2 * PUFF_RUN * uTime, p.y - PUFF_CLIMB * uTime, p.z - 0.98 * PUFF_RUN * uTime) / PUFF_SPAN).r - 0.5) * seen;
+      n += PUFF_TALL * puff * (0.3 + 1.2 * heap.r);
+      seaHead += 0.34 * puff;
+    }
   }
   seaN = n;
   return n;
@@ -157,6 +171,52 @@ float seaVeil(vec3 ro, vec3 rd, out float at) {
   vec2 gm = (pm.xz - vec2(0.2, 0.98) * (uTime * 39.0)) / 1700.0;
   float torn = textureLod(tSeaNh, vec2(0.629 * gm.x - 0.777 * gm.y, 0.777 * gm.x + 0.629 * gm.y) + 0.61, max(log2(max(at, 30.0) * seaPix) + 2.6, 1.0)).b;
   return 1.0 - exp(-seaMist * (0.45 + 1.5 * smoothstep(0.15, 0.95, torn)) / MIST_LONG);
+}
+// Kilometres out the deck is not walked to as a surface: it is a body of cloud, asked at eight distances from the lens (a sixth
+// farther each time, the same for every ray) how thick it stands there. Its towers are cut from the storm's noise in the world, so
+// they pass one before another as the lens moves, drift down the gale and turn over upward; the long swell of the real deck says
+// where a range of them stands and where a gap lies. Each is lit on its crown and dark in its body. rgb: light, a: what they hide.
+const float CROWN_SPAN = 6800.0;
+const float CROWN_TALL = 200.0;
+vec4 seaCrowns(vec3 ro, vec3 rd, float until, float plate) {
+  vec3 c = vec3(0.0);
+  float kept = 1.0;
+  // (From a little under the height the deck's own far heads stop at, upward: that height is a level, and stood as a ruled line.
+  // Under it the deck is the walked surface's and they have no body: laid over its hollows they were a slab.)
+  float base = BANK_TOP - 60.0;
+  vec2 round_ = rd.xz * inversesqrt(max(dot(rd.xz, rd.xz), 1e-6));
+  float toDusk = max(dot(round_, vec2(cos(DUSK_AZ), sin(DUSK_AZ))), 0.0);
+  vec3 pale = mix(SEA_COLD * vec3(1.05, 1.1, 1.26) + SEA_WARM * (0.12 + 0.3 * toDusk * toDusk), SEA_COLD * vec3(0.4, 0.45, 0.6), plate);
+  // Toward the heart of the dusk they stand lower, and behind the long lens, which sees a few degrees, lower still.
+  float low = (1.0 - 0.55 * pow(toDusk, 4.0)) * (1.0 - 0.5 * plate);
+  vec3 dark = mix(SEA_COLD * vec3(0.4, 0.46, 0.66), SEA_COLD * vec3(0.2, 0.23, 0.32), plate);
+  for (int i = 0; i < 8; i++) {
+    float ts = 5000.0 * exp(0.16 * float(i));
+    if (ts > until) break;
+    vec3 p = ro + rd * ts;
+    float h = (p.y - base) / CROWN_TALL;
+    if (h > 1.6 || h < -0.6) continue;
+    vec2 at = p.xz - vec2(0.42, 0.91) * (uTime * 31.0);
+    float range = textureLod(tSeaNh, at / 11000.0 + 0.27, 3.0).b;
+    vec4 body = noise(vec3(at.x / CROWN_SPAN, p.y / (0.5 * CROWN_SPAN) - uTime * 0.004, at.y / CROWN_SPAN));
+    // A tower stands only where the noise is at its fullest: between two of them the deck is low and the band of the dusk is seen over
+    // it. Its fine billows (the noise's blue) bite its outline and model its face.
+    float billow = body.b - 0.5;
+    float inside = smoothstep(0.38, 0.75, range) * 1.5 * smoothstep(0.4, 0.8, body.r) * low + 0.2 * billow - max(h, 0.0);
+    // (Behind the long lens only the farthest stand: nearer ones filled its few degrees as a slab.)
+    float thick = smoothstep(0.0, 0.3, inside) * smoothstep(-0.6, -0.1, h) * smoothstep(4400.0, 6200.0, ts) * mix(1.0, smoothstep(8000.0, 11000.0, ts), plate);
+    if (thick <= 0.0) continue;
+    // Its crown takes the sky and the dusk and its foot is in the shade of the row before it (by its height, not by its edge: lit
+    // round its edge, each tower was a pale ring). The rows behind go into the air's slate, as the deck under them does.
+    float up = smoothstep(-0.3, 1.0, h);
+    vec3 tone = pale * (0.55 + 0.4 * up - 0.15 * smoothstep(0.1, 0.7, inside)) * (1.0 + 0.7 * billow);
+    tone = mix(tone, dark * (0.8 + 0.5 * up) * (1.0 + 0.5 * billow), 1.0 - exp(-ts * ts / 5.0e7));
+    tone += STRIKE_COLOUR * min(uStrikeTop.w * 0.02, 0.04) * up;
+    c += kept * thick * tone;
+    kept *= 1.0 - thick;
+    if (kept < 0.02) break;
+  }
+  return vec4(c, 1.0 - kept);
 }
 `;
 
@@ -292,6 +352,14 @@ export const SEA_MARCH_GLSL = /* glsl */ `
 
 /** In main, after the storm's air is measured: the deck's light, laid over what stands behind it. */
 export const SEA_SHADE_GLSL = /* glsl */ `
+  // The far towers of the deck stand before whatever the ray meets behind them: the deck's own far level, the land, the sky.
+  if (uShow.y > 0.0 && rd.y > -0.075 && rd.y < 0.06 && through > 0.01 && stormSide(rd) < 0.98) {
+    vec2 uvC = vec2(0.0);
+    vec4 crowns = seaCrowns(ro, rd, seaAt > 0.0 ? min(seaAt, far) : far, uPlate.w > 0.0 ? plateAt(atan(rd.z, rd.x), rd.y, uvC) : 0.0);
+    float hid = crowns.a * (1.0 - stormSide(rd));
+    light += through * crowns.rgb * (1.0 - stormSide(rd));
+    through *= 1.0 - hid;
+  }
   if (seaAt > 0.0 && through > 0.01) {
     float t = seaAt;
     vec3 p = ro + rd * t;
@@ -320,7 +388,7 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     // before it and takes the air's pale haze as they do. Dark as the wall's foot, it stood between them as a notch of blue water.)
     float intoDusk = dot(rd.xz, vec2(cos(DUSK_AZ), sin(DUSK_AZ))) * inversesqrt(max(dot(rd.xz, rd.xz), 1e-6));
     float wallAt = smoothstep(150.0, 1400.0, ridgeAt(p.x).x - p.z) * smoothstep(500.0, 2000.0, t);
-    float inWall = wallAt * (1.0 - smoothstep(0.6, 0.9, intoDusk));
+    float inWall = wallAt * (1.0 - smoothstep(0.3, 0.75, intoDusk));
     float inStorm = max(stormSide(rd), inWall);
     float head = mix(smoothstep(-0.2, 0.55, seaHead), 0.45, 0.5 * inWall);
     // The way a face of it looks, from the heights a little way off on two hands: wider with the distance, as the lens sees less of it.
