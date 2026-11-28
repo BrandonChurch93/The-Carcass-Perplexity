@@ -1,5 +1,5 @@
 // The brine's own surface, its domes of gas, and what a dome becomes when it tears.
-import { F, K1_AT, POOL_R, R, STUCK, rel } from '../shared/anchors';
+import { BEASTS, F, K1_AT, POOL_R, R, STUCK, rel } from '../shared/anchors';
 
 const STUCK_AT = rel(STUCK[0], STUCK[1]);
 import { BRINE_GLSL } from '../shared/brine-glsl';
@@ -27,8 +27,7 @@ const omega = (len: number): number => {
 // the skin, and which slow patch of the pool lets it through (a look at the grain that main has taken already). Each length runs at
 // its own speed, by gravity and the skin's tension, so the pattern never slides as one sheet.
 const AMBIENT: [number, number, number, string][] = [
-  [1.37, 0.72, 0.04, 'carried.b'],
-  [0.91, -0.38, 0.045, 'heave.g'],
+  [0.91, -0.38, 0.05, 'heave.g'],
   [0.61, 0.1, 0.05, 'carried.g'],
   [0.43, -0.75, 0.055, 'carried.a'],
   [0.29, 0.47, 0.06, 'fine.g'],
@@ -51,7 +50,17 @@ const ambientWaves = AMBIENT.map(([len, turn, lean, patch], i) => {
     ripples += d * (lets * seenAs * cos(${k.toFixed(3)} * dot(d, bent) - ${omega(len).toFixed(3)} * uTime + ${(i * 2.39).toFixed(2)}));
     lost += lets * lets * (1.0 - seenAs * seenAs);
   }`;
-}).join('\n');
+});
+// (The lengths under a third of a metre are asked for only within some strides of the lens, the two finest within ten metres: past
+// that no lens of the place can tell their crests apart, and they are counted as lost at their mean.)
+const lostMean = (from: number): string => AMBIENT.slice(from).reduce((sum, w) => sum + 0.2 * w[2] * w[2], 0).toFixed(5);
+const ambientLong = ambientWaves.slice(0, 3).join('\n');
+const ambientShort = ambientWaves.slice(3, 7).join('\n');
+const ambientFine = ambientWaves.slice(7).join('\n');
+// The ring round all the animals: outside it no pixel asks any of them.
+const STIR_AT = BEASTS.slice(0, MAX_STIR).map((b) => ({ at: rel(b.d, b.l), reach: 1.9 * b.size + 8 }));
+const STIR_MID = [STIR_AT.reduce((sum, b) => sum + (b.at[0] as number), 0) / Math.max(STIR_AT.length, 1), STIR_AT.reduce((sum, b) => sum + (b.at[1] as number), 0) / Math.max(STIR_AT.length, 1)];
+const STIR_REACH = STIR_AT.reduce((far, b) => Math.max(far, Math.hypot((b.at[0] as number) - (STIR_MID[0] as number), (b.at[1] as number) - (STIR_MID[1] as number)) + b.reach), 0);
 // What an animal sends out as it shifts in the brine: rings of three lengths, in packets that leave it one after another.
 const STIR: [number, number][] = [
   [0.34, 0.13],
@@ -202,9 +211,16 @@ void main() {
   float lost = 0.0;
   float ruffle = 0.42 + 0.5 * smoothstep(0.35, 0.75, carried.a) + 2.2 * speed + 0.25 * inPool + 1.3 * brineMud;
   if (dist < 120.0) {
-${ambientWaves}
+${ambientLong}
+    if (dist < 30.0) {
+${ambientShort}
+      if (dist < 10.0) {
+${ambientFine}
+      } else lost += ${lostMean(7)};
+    } else lost += ${lostMean(3)};
     ripples *= ruffle;
     lost *= ruffle * ruffle;
+    if (dist < 60.0 && length(p.xz - ${v2(STIR_MID)}) < ${STIR_REACH.toFixed(2)})
     for (int i = 0; i < ${MAX_STIR}; i++) {
       if (i >= uStirCount) break;
       vec4 beast = uStir[i];
