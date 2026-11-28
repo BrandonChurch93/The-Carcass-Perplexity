@@ -176,7 +176,7 @@ export function createKnobs(ctx: Context, depthFragment: string, sheets: Record<
     const size = SIZES[k.kind] as [number, number, number];
     const mesh = new THREE.Mesh(ball);
     mesh.position.set(x, ground + k.lift, z);
-    mesh.rotation.set(0, k.turn, 0);
+    mesh.rotation.set(0.1, k.turn, -0.22);
     mesh.updateMatrixWorld();
     const material = new THREE.ShaderMaterial({
       uniforms: {
