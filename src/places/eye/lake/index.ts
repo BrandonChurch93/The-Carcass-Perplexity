@@ -763,6 +763,11 @@ void main() {
     float lean = -uWake * dot(wake, normalize(v.xz)) / max(v.y, 0.05);
     lean *= (1.0 - uLeave.x) / (1.0 + abs(lean));
     c *= 1.0 - 0.55 * max(lean, 0.0);
+#if EYE_LEAVE
+    // From over it a ring is told by the side of the sky the sun went down in: the face turned to it is light, the one turned from it dark.
+    float turned = -70.0 * dot(wake, normalize(uSunDir.xz));
+    c *= 1.0 + 0.6 * uLeave.x * turned / (1.0 + abs(turned));
+#endif
     c += (1.6 * refl + skyDown * vec3(0.012, 0.016, 0.022)) * max(-lean, 0.0);
     // Here and there a crest throws the wall's gold whole, for a moment: no finer than the pixels hold.
     float bright = max(-lean, 0.0);
