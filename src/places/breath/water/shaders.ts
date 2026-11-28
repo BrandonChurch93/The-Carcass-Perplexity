@@ -72,6 +72,8 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   float airs = 0.6 * vnoise((xz - gone * 2.6) * 0.085) + 0.4 * vnoise((xz - gone * 3.4) * vec2(0.31, 0.23) + 7.0);
   float broad = vnoise((xz - gone * 1.2) * 0.011 + 3.0);
   float gust = smoothstep(0.42, 0.7, airs + 0.3 * (broad - 0.5));
+  // From the high wide view a gust is a patch with an edge: ruffled water inside it, near glass outside, and the patches cross the pool.
+  gust = mix(gust, smoothstep(0.44, 0.58, airs + 0.3 * (broad - 0.5)), uHigh);
   // Shallow water over a bed carries less of a wave, and a film over a plate none. Ankle deep it is still ruffled all over: the picture of the
   // feeding waders has no glass in it.
   float deep = smoothstep(0.004, 0.05, depth) * (0.5 + 0.5 * smoothstep(0.03, 0.25, depth));
@@ -88,9 +90,12 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   float lanes = 0.5;
   // How much water lies round the place, 0 to 1 (flow.ts). Outside the stream's map it is the depth under the pixel.
   float around = smoothstep(0.02, 0.3, depth);
+  // Which way the water deepens, for each metre gone: off the bank, the bar or the shelf.
+  vec2 lean = vec2(0.0);
   if (inStream > 0.0) {
     vec4 ln = texture2D(tLines, fu);
     vec4 ca = texture2D(tCarried, fu);
+    if (ca.a > 0.01 && ca.a < 0.8) lean = vec2(texture2D(tCarried, fu + vec2(uFlowRect.z, 0.0)).a, texture2D(tCarried, fu + vec2(0.0, uFlowRect.w)).a) - ca.a;
     float speed = ca.r * ${FASTEST.toFixed(2)};
     around = mix(around, ca.a, inStream);
     float moving = smoothstep(0.015, 0.06, speed) * inStream;
@@ -135,7 +140,7 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   a5 *= smoothstep(0.0035, 0.007, a5);
   // From the high wide view the light air is not seen as a grain over the whole channel: the water lies silky there between the gusts,
   // which cross it as darker ruffled patches.
-  float air = 1.0 - 0.6 * uHigh;
+  float air = 1.0 - 0.7 * uHigh;
   float a1 = (0.016 * air + 0.012 * gust * air) * deep * (1.0 - 0.3 * slick);
   float a04 = (0.032 * air + 0.05 * gust * (0.5 + 0.5 * air)) * deep * (1.0 - 0.55 * slick);
   // Fast water over a shallow bar is broken: the short bands stand up there whatever the wind does.
@@ -154,6 +159,16 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   float shore = 1.0 - smoothstep(0.08, 0.6, around);
   bent += uWind * (1.5 * shore / max(length(uWind), 1e-3));
   float shoal = uHigh * shore;
+  // And the deep middle carries the longer waves the margins cannot: the size of the ripple follows the bed.
+  float middle = uHigh * smoothstep(0.35, 0.9, around);
+  a1 *= 1.0 + 1.3 * middle;
+  a04 *= 1.0 + 0.6 * middle;
+  a008 *= 1.0 - 0.45 * middle;
+  // Inside a gust the water is not one grain either: a few metres of longer ripple, then a few of fine, and the places drift with the air.
+  float size = uHigh * (vnoise(xz * 0.27 - 0.4 * gone + 11.0) - 0.5);
+  a04 *= 1.0 + 1.6 * size;
+  a016 *= 1.0 - 0.7 * size;
+  a008 *= 1.0 - 1.6 * size;
   a04 *= 1.0 + 0.9 * shoal;
   a016 *= 1.0 + 1.4 * shoal;
   a008 *= 1.0 + 1.4 * shoal;
@@ -161,6 +176,21 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   float thin = smoothstep(0.003, 0.012, depth) * (1.0 - smoothstep(0.03, 0.1, depth));
   a016 += 0.03 * thin;
   a008 += 0.06 * thin;
+  // A bank the ripples run at sends them back: short crests that lie along it and leave it, in groups, strongest on the side the wind
+  // drives the water at, bent by the bed like the rest, and gone two or three crests out. Only off a bank that drops: over a flat bar
+  // they would lie in even rows as far as the bar goes.
+  float back = length(lean) * inStream;
+  float aBack = 0.0;
+  float kBack = 0.0;
+  vec2 off = vec2(0.0);
+  if (back > 0.02) {
+    off = lean / length(lean);
+    float facing = clamp(-dot(off, uWind) / max(length(uWind), 1e-3), 0.0, 1.0);
+    float groups = smoothstep(0.3, 0.7, vnoise(xz * 0.45 - 0.5 * gone + 5.0));
+    float crest = 6.2832 / (120.0 * back);
+    kBack = 1.0 - smoothstep(0.25 * crest, crest, foot);
+    aBack = 0.2 * (1.0 - smoothstep(0.06, 0.2, around)) * smoothstep(0.05, 0.14, back) * smoothstep(0.01, 0.05, around) * (0.25 + 0.75 * facing) * groups * deep;
+  }
   float k5 = 1.0 - smoothstep(1.3, 5.3, foot);
   float k1 = 1.0 - smoothstep(0.36, 1.42, foot);
   float k04 = 1.0 - smoothstep(0.1, 0.42, foot);
@@ -171,8 +201,9 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   if (k04 > 0.0) slope += band(tWave, bent, turned(uWind, 0.38), 5.0, 0.4, 6.1, stream, foot) * (4.0 * a04);
   if (k016 > 0.0) slope += band(tRipple, bent, turned(uWind, -0.52), 1.9, 0.27, 9.1, stream, foot) * (4.0 * a016);
   if (k008 > 0.0) slope += band(tWave, bent, turned(uWind, 0.66), 0.96, 0.235, 9.95, stream, foot) * (4.0 * a008);
+  if (kBack > 0.0) slope += off * (aBack * kBack * cos(120.0 * around - 9.0 * uTime + 4.0 * bend1 + 2.0 * bend2));
   // What the pixel could not show of them stays in the water as roughness: the variance of the slope it has lost.
-  lost = 2.0 * (a5 * a5 * (1.0 - k5) + a1 * a1 * (1.0 - k1) + a04 * a04 * (1.0 - k04) + a016 * a016 * (1.0 - k016) + a008 * a008 * (1.0 - k008));
+  lost = 2.0 * (a5 * a5 * (1.0 - k5) + a1 * a1 * (1.0 - k1) + a04 * a04 * (1.0 - k04) + a016 * a016 * (1.0 - k016) + a008 * a008 * (1.0 - k008)) + aBack * aBack * (1.0 - kBack);
   // The rings round what stands in the water, as the waders folder drew them for this camera.
   // They are read a little aside by the wind's own slope, so a ring crosses the ripples as a bent, broken line and not as a drawn circle.
   // A second, slower push aside makes their spacing uneven, and they stand only in short arcs: where the small ripples stand high (bend2) a ring is lost.
@@ -267,9 +298,9 @@ vec4 water(vec2 xz, float depth, vec4 land, float shelf, float foot) {
   float path = depth / max(nv, 0.25);
   // It is milky: in the body of the channel the silt hides the bed a hand deep. With clearer water there the wide view showed the gravel of
   // the bed through the whole channel as a speckle. Toward a bank, a bar or a shelf the water thins and clears, and the rock shows through it.
-  float clear = exp(-path * mix(4.0, 14.0, smoothstep(0.05, 0.35, around)));
+  float clear = exp(-path * mix(4.0, 14.0, smoothstep(0.05 + 0.05 * uHigh, 0.35 + 0.1 * uHigh, around)));
   // Its colour goes with how much of it there is: a pale green wash at the margins, the milky teal over the flats, a dark one in the deep lane.
-  vec3 tone = mix(vec3(0.19, 0.31, 0.27), mix(vec3(0.085, 0.27, 0.27), vec3(0.03, 0.16, 0.18), smoothstep(0.45, 0.9, around)), smoothstep(0.05, 0.4, around));
+  vec3 tone = mix(mix(vec3(0.19, 0.31, 0.27), vec3(0.24, 0.345, 0.285), uHigh), mix(vec3(0.085, 0.27, 0.27), vec3(0.03, 0.16, 0.18), smoothstep(0.45 + 0.05 * uHigh, 0.9, around)), smoothstep(0.05 + 0.05 * uHigh, 0.4 + 0.12 * uHigh, around));
   // Seen from low down and against the light the body of shallow water is not green: what comes back out of it is the low sun in its silt,
   // a dull warm olive, as under the feeding waders in the picture. From above it is the teal of the wide view.
   // Only where the eye is low and the look is flat: looked down on by more than a quarter of a right angle the teal comes through again,

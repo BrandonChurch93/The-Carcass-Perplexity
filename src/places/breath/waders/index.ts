@@ -1,7 +1,7 @@
 // The waders: the herd in the tide channel, the far flock on the shallows, and the one that stands over the drop at the rim.
 // Each animal is a skin of tubes posed on the processor from the time alone (animal.ts); who each one is and what it does is in herd.ts.
 import * as THREE from 'three';
-import { MIST_WADER, NEAR_WADERS, RIM_WADER, SEA_LEVEL, footing, keySeconds, shotSpan } from '../shared/anchors';
+import { NEAR_WADERS, RIM_WADER, SEA_LEVEL, footing, keySeconds, shotSpan } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import type { Context, Piece } from '../shared/context';
 import { Wader, shuffle, type Env } from './animal';
@@ -17,7 +17,7 @@ export const PARTS: readonly string[] = ['waders'];
 /** Discs of contact shade for an animal that stands on rock: four feet. Its long shadow is one more. */
 const DISCS = 5;
 /** Drops in the air under one lifted tuft, at most. */
-const DROPS = 104;
+const DROPS = 120;
 /** Metres of water a wader stands in at most. */
 const WADE = 0.14;
 const hash = (n: number): number => {
@@ -96,7 +96,7 @@ export function create(ctx: Context): Piece {
   // Staged: in the view of the plumes it stands on the rock behind the weed, where its neck and mop rise clear of the fronds beside the sun.
   // Staged: in the view of the plumes it is a whole animal at mid distance in the glare, large and white, seen in the gap between the fronds,
   // side on with its neck up, as the picture has it: a sixth of the frame high.
-  const MIST = { x: MIST_WADER.x, z: MIST_WADER.z, heading: MIST_WADER.heading };
+  const MIST = { x: -37.7, z: -23.6, heading: 95 };
   // Staged: in the view of the rim it stands clear of the growth, before it, where the picture of the rim has it.
   const RIM_NEAR = { x: -28.0, z: 17.4, heading: 38 };
   const rimUp = rim.plan.up;
@@ -154,6 +154,8 @@ export function create(ctx: Context): Piece {
       rim.plan.steps = inWide ? rimSteps : nearRim ? rimNearSteps : [];
       rim.plan.stepsRef = nearRim ? RIM_KEY : WIDE_KEY;
       veiled.value.set(MIST.x, MIST.z, misted ? 1 : 0);
+      // On the rim the skin at the root of the one hind leg folds over on itself: drawn from both sides there, the fold is skin and not a hole.
+      material.side = nearRim ? THREE.DoubleSide : THREE.FrontSide;
       const out = inWide ? 1.5 : 1;
       for (const o of outer) {
         o.animal.plan.x = WIDE_FROM.x + (o.x - WIDE_FROM.x) * out;
@@ -224,10 +226,10 @@ export function create(ctx: Context): Piece {
             for (let d = 0; d < count; d++) {
               // Ten of the tips run in streams, a bead after a bead down one line; the rest drip singly.
               const stream = d % 10;
-              const run = d < 40;
+              const run = d < 80;
               const tipAt = run ? stream : d;
-              const period = run ? 0.4 + 0.1 * hash(seed + stream * 7.7) : 0.22 + 0.26 * hash(seed + d * 7.7);
-              const turn = (stood.sinceLift + (run ? (Math.floor(d / 10) / 4 + 0.12 * hash(seed + d * 1.3)) * period : 3 * hash(seed + d * 1.3))) / period;
+              const period = run ? 0.5 + 0.16 * hash(seed + stream * 7.7) : 0.22 + 0.26 * hash(seed + d * 7.7);
+              const turn = (stood.sinceLift + (run ? (Math.floor(d / 10) / 8 + 0.1 * hash(seed + d * 1.3)) * period : 3 * hash(seed + d * 1.3))) / period;
               const tip = Math.floor(hash(seed + tipAt * 3.3) * (tips.length / 3)) * 3;
               const n = Math.floor(turn);
               if (hash(seed + d * 5.1 + n * 9.7) > 0.25 + 0.75 * pour) continue;
@@ -238,7 +240,8 @@ export function create(ctx: Context): Piece {
               const z = (tips[tip + 2] as number) + fling * (hash(seed + d * 6.9 + n * 2.3) - 0.5) * fall;
               const y = (tips[tip + 1] as number) - 4.9 * fall * fall;
               const heavy = hash(seed + d * 9.3 + n * 4.7);
-              if (y > sea) drips.add(x, y, z, 9.8 * fall * 0.0083, 0.0012 + 0.0016 * heavy + 0.0034 * heavy * heavy * heavy * heavy);
+              // What runs off a strand hangs from its tip as a short thread before it breaks into beads.
+              if (y > sea) drips.add(x, y, z, Math.max(9.8 * fall * 0.0083, run ? 0.03 * (1 - fall / 0.14) : 0), 0.0018 + 0.0024 * heavy + 0.0044 * heavy * heavy * heavy * heavy);
               else if (d % 4 === 0) ripples.add(x, z, 0.55, 0.5 * pour + 0.12, (sea - y) / 3, seed + d, 48, 0.24);
             }
             ripples.add(stood.tuft.x, stood.tuft.z, 0.9, 0.2 + 0.45 * pour, 5, seed, 40, 0.26);

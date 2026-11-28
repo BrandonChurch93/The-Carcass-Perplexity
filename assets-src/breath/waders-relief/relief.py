@@ -46,19 +46,21 @@ def marks(f, u, k, seed, which):
         ax = (-0.5 + 1.0 * h1(i * 3.3 + 2, seed)) * 1.0 * k
         ay = (-0.34 + 0.6 * h1(i * 5.1 + 3, seed)) * k
         turn = (h1(i * 7.7 + 4, seed) - 0.5) * 2.4
-        length = (0.06 + 0.2 * h1(i * 2.9 + 5, seed)) * k
+        # A scar is a long thin scratch that runs out to nothing at both ends: a short furrow with lips would read as a closed eye.
+        length = (0.2 + 0.22 * h1(i * 2.9 + 5, seed)) * k
         dx, dy = np.cos(turn), np.sin(turn)
         along = np.clip((f - ax) * dx + (u - ay) * dy, 0, length)
+        taper = np.maximum(np.sin(np.pi * along / length), 0.0) ** 0.7
         # A scar is never straight: it wanders as it goes.
         bend = 0.012 * k * np.sin(along / (0.05 * k) + i)
         px, py = ax + dx * along - dy * bend, ay + dy * along + dx * bend
         d = np.hypot(f - px, u - py)
-        groove = np.maximum(groove, bell(d, 0.0035 * k) * (0.6 + 0.4 * h1(i * 1.7 + 6, seed)))
+        groove = np.maximum(groove, bell(d, 0.0024 * k) * taper * (0.5 + 0.35 * h1(i * 1.7 + 6, seed)))
     for i in range(5 + int(h1(2.0, seed) * 5)):
         ax = (-0.55 + 1.15 * h1(i * 4.3 + 12, seed)) * k
         ay = (-0.4 + 0.75 * h1(i * 6.1 + 13, seed)) * k
         r = (0.008 + 0.014 * h1(i * 2.3 + 14, seed)) * k
-        lump = lump + bell(np.hypot(f - ax, u - ay), r) * (0.0018 + 0.002 * h1(i * 3.9 + 15, seed)) * k
+        lump = lump + bell(np.hypot(f - ax, u - ay), r) * (0.001 + 0.0012 * h1(i * 3.9 + 15, seed)) * k
     return groove, lump
 
 def press(f, u, nf, nu, leg, neck, rib, cage, k, seed, which, broad=False, leg_len=2.4, neck_len=2.5):

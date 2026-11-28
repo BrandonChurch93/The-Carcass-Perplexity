@@ -701,12 +701,19 @@ void main() {
   vec3 lean = ga * w.x + gb * w.y;
   float height = sa.b * w.x + sb.b * w.y;
   float grey = dot(m0 / uMean, vec3(0.3333));
-  float up = clamp(n.y, 0.0, 1.0);
+  float face = clamp(n.y, 0.0, 1.0);
 
   // Broad fields, by the shape's own metres (along it and round it): too broad to show a stretch. The second is bent by the first, which
   // is what makes a vein wander.
-  vec4 a = texture2D(tRock, vUv / mix(vec2(41.0, 17.0), vec2(23.0, 19.0), uBone));
-  vec4 b = texture2D(tRock, vUv / mix(vec2(19.0, 7.3), vec2(8.3, 7.1), uBone) + 0.35 * a.ra);
+  // The wall's mesh gives the metres round it and the metres under its own top (land/wall.ts): the fields are laid by height, as they were.
+  vec2 laid = vec2(vUv.x, p.y);
+  float under = vUv.y;
+  // The wall begins with a slope under the brim, its first metre (land/wall.ts). It is wall, not a ledge: bedded, wet and run over like
+  // the face below it. Taken for a ledge, with no beds and no runs, it lay in the sun as one smooth pale sheet round the rim.
+  float brow = smoothstep(1.5, 0.9, under);
+  float up = face * (1.0 - brow);
+  vec4 a = texture2D(tRock, laid / mix(vec2(41.0, 17.0), vec2(23.0, 19.0), uBone));
+  vec4 b = texture2D(tRock, laid / mix(vec2(19.0, 7.3), vec2(8.3, 7.1), uBone) + 0.35 * a.ra);
   vec4 c = texture2D(tRock, vec2(vUv.x / 3.1, p.y / 4.2) + 0.3 * b.ar);
   vec3 albedo;
   float rough;
@@ -716,9 +723,10 @@ void main() {
   float bedIn = fract(bedAt);
   float bedLone = fract(sin(floor(bedAt) * 12.9898 + 2.3) * 43758.5453);
   float bedSeen = smoothstep(0.8, 0.3, fwidth(bedAt)) * (1.0 - up);
+  float browOn = brow * smoothstep(0.3, 0.6, face);
   float bedFoot = bedSeen * smoothstep(0.22, 0.0, bedIn) * (0.4 + 0.6 * bedLone);
   // The picture's own blocks are held down: at full strength, on courses, the wall was laid masonry with moss in the joints.
-  n = normalize(n - 0.55 * uMat.y * (lean - n * dot(lean, n)));
+  n = normalize(n - mix(0.55, 1.5, brow) * uMat.y * (lean - n * dot(lean, n)));
   float tone = clamp(1.0 + 0.6 * (grey - 1.0), 0.5, 1.5);
   vec3 base = mix(vec3(0.035, 0.036, 0.03), vec3(0.11, 0.105, 0.085), clamp(0.5 + 1.5 * (a.r - 0.5), 0.0, 1.0)) * tone;
   // Slime where the seep keeps the rock wet, rust below the foot of an arch, pale lime where water has dried.
@@ -729,22 +737,24 @@ void main() {
   float lime = smoothstep(0.7, 0.85, c.r + 0.3 * (b.r - 0.5)) * (1.0 - up);
   base = mix(base, vec3(0.3, 0.31, 0.26) * tone, 0.2 * lime);
   // The top beds are the shelf's own stone: pale, green with weed, not yet wet through.
-  float topBeds = smoothstep(-3.6, -0.8, p.y + 2.0 * (a.a - 0.5));
+  // Only the first bed or two under the brim: where the shelf stands three metres over the tide the wall under it is as wet and dark
+  // as it is anywhere. Keyed to the height alone, the east wall was one pale dry sheet from the brim down to its first band.
+  float topBeds = smoothstep(-3.6, -0.8, p.y + 2.0 * (a.a - 0.5)) * smoothstep(0.55, 0.12, under + 0.3 * (b.r - 0.5));
   albedo = mix(base, mix(vec3(0.2, 0.18, 0.14), vec3(0.11, 0.115, 0.08), slime) * tone, 0.7 * topBeds);
   // Runs: where water comes down the face the rock is black and shines, and between the runs lime has dried pale on it.
   // A run is a few paces long and an arm wide, and a bed's lip breaks it: drawn out twenty times its width, as it was, the face was
   // combed into upright stripes a finger apart from top to bottom.
   float streak = texture2D(tRock, vec2(vUv.x / 5.3, p.y / 8.0) + 0.15 * a.ra).r + 0.5 * (texture2D(tRock, vec2(vUv.x / 2.9 + 0.3, p.y / 4.0)).a - 0.5);
   float wetRun = smoothstep(0.52, 0.36, streak + 0.12 * (bedLone - 0.5)) * (1.0 - up);
-  albedo *= mix(1.0, 0.5, wetRun);
+  albedo *= mix(1.0, 0.5, wetRun) * mix(1.0, 0.46 + 0.3 * height, browOn) * mix(0.45, 1.0, smoothstep(0.0, 0.12 + 0.5 * b.r, under));
   albedo = mix(albedo, vec3(0.3, 0.27, 0.2) * tone, 0.16 * smoothstep(0.66, 0.8, streak) * (1.0 - up));
   // The beds: one is not the tone of the next, and the foot of each is shut in under the lip of the one above.
   albedo *= mix(1.0, 0.55, bedFoot) * mix(1.0, 0.72 + 0.56 * bedLone, 0.7 * bedSeen);
-  n = normalize(n + vec3(0.0, bedSeen * mix(0.16, -0.8, smoothstep(0.22, 0.0, bedIn)) * (0.4 + 0.6 * bedLone), 0.0));
+  n = normalize(n + vec3(0.0, bedSeen * mix(0.16, -0.8 - 0.9 * browOn, smoothstep(0.22 + 0.2 * browOn, 0.0, bedIn)) * (0.4 + 0.6 * bedLone), 0.0));
   occ *= mix(1.0, 0.6, bedFoot);
   // A ledge holds what falls: grit, paler than the face.
   albedo = mix(albedo, vec3(0.2, 0.185, 0.16) * tone, 0.6 * smoothstep(0.6, 0.9, up));
-  rough = mix(mix(0.3, 0.75, topBeds), 0.16, wetRun);
+  rough = mix(mix(0.3, 0.75, max(topBeds, smoothstep(1.8, 0.7, under))), mix(0.16, 0.5, browOn), wetRun);
   occ *= 0.75 + 0.5 * height;
   // The tiers carried on round the side that fell: bands of the arches' own stone, cream with rust in it, and under each the wall is
   // rust-dark and wet with what runs off it.
