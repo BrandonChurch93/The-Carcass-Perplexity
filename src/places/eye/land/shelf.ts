@@ -96,6 +96,7 @@ export function shelfRock(u: number, w: number, toLip: (u: number, w: number) =>
 const SHELF_VERTEX = /* glsl */ `
 attribute float aOpen;
 attribute float aWeed;
+uniform vec4 uSeat;
 varying float vWeed;
 varying vec3 vWorld;
 varying vec3 vNormal;
@@ -107,6 +108,8 @@ void main() {
   vOpen = aOpen;
   vWeed = aWeed;
   gl_Position = projectionMatrix * viewMatrix * w;
+  // Two meshes of the same rock, a fine and a coarse: from far off only the coarse is drawn, the other is folded into a point.
+  if ((distance(cameraPosition.xz, uSeat.xy) > uSeat.z) != (uSeat.w > 0.5)) gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
 }`;
 
 const SHELF_FRAGMENT = /* glsl */ `
@@ -167,7 +170,7 @@ void main() {
   gl_FragColor = vec4(0.0);
 }`;
 
-export function createShelf(ctx: Context, sheets: Record<string, THREE.IUniform>): { mesh: THREE.Mesh; dispose: () => void } {
+export function createShelf(ctx: Context, sheets: Record<string, THREE.IUniform>): { meshes: THREE.Mesh[]; dispose: () => void } {
   const seat = bonesSeat();
   const world = (u: number, w: number): [number, number] => [seat.x + seat.along[0] * u + seat.toCamera[0] * w, seat.z + seat.along[1] * u + seat.toCamera[1] * w];
   const toLip = (u: number, w: number): number => {
@@ -204,7 +207,7 @@ export function createShelf(ctx: Context, sheets: Record<string, THREE.IUniform>
     return out;
   };
   const near = blurred(2);
-  const far = blurred(7);
+  const wideBlur = blurred(7);
   const position = new Float32Array(wide * tall * 3);
   const open = new Float32Array(wide * tall);
   const weed = new Float32Array(wide * tall);
@@ -220,7 +223,7 @@ export function createShelf(ctx: Context, sheets: Record<string, THREE.IUniform>
       const w = W0 + j * CELL;
       const off = Math.max(Math.max(-1.9 - u, u - 3.0), Math.max(-0.75 - w, w - 1.3));
       weed[o] = smooth(0.55, -0.25, off + 0.6 * (vnoise(u * 1.9 + 7, w * 1.9 + 3) - 0.5)) * (0.5 + 0.5 * smooth(0.3, 0.6, vnoise(u * 5.3, w * 5.3 + 9)));
-      open[o] = Math.min(1, Math.max(0, 0.8 - 22 * ((near[o] as number) - h) - 7 * ((far[o] as number) - h)));
+      open[o] = Math.min(1, Math.max(0, 0.8 - 22 * ((near[o] as number) - h) - 7 * ((wideBlur[o] as number) - h)));
     }
   }
   // Only what stands out of the water, and the faces that go down into it, is kept.
@@ -240,20 +243,39 @@ export function createShelf(ctx: Context, sheets: Record<string, THREE.IUniform>
   geometry.setAttribute('aWeed', new THREE.BufferAttribute(weed, 1));
   geometry.setIndex(index);
   geometry.computeVertexNormals();
-  const material = new THREE.ShaderMaterial({
-    uniforms: { ...ctx.rig.uniforms, tFace: sheets.tFace as THREE.IUniform, tFaceNh: sheets.tFaceNh as THREE.IUniform },
-    vertexShader: SHELF_VERTEX,
-    fragmentShader: SHELF_FRAGMENT,
-    side: THREE.DoubleSide,
-  });
-  material.userData.depthFragment = SHELF_DEPTH;
-  const mesh = new THREE.Mesh(geometry, material);
-  geometry.computeBoundingSphere();
+  // The same field again at every fifth point, for an eye far off.
+  const STRIDE = 5;
+  const coarse: number[] = [];
+  for (let j = 0; j + STRIDE < tall; j += STRIDE) {
+    for (let i = 0; i + STRIDE < wide; i += STRIDE) {
+      const a = j * wide + i;
+      const b = a + STRIDE * wide;
+      let any = false;
+      for (let n = 0; n <= STRIDE && !any; n++) for (let m = 0; m <= STRIDE && !any; m++) any = up(a + n * wide + m);
+      if (any) coarse.push(a, b, a + STRIDE, a + STRIDE, b, b + STRIDE);
+    }
+  }
+  const far = geometry.clone();
+  far.setIndex(coarse);
+  const materialOf = (isFar: number): THREE.ShaderMaterial => {
+    const m = new THREE.ShaderMaterial({
+      uniforms: { ...ctx.rig.uniforms, tFace: sheets.tFace as THREE.IUniform, tFaceNh: sheets.tFaceNh as THREE.IUniform, uSeat: { value: new THREE.Vector4(seat.x, seat.z, 100, isFar) } },
+      vertexShader: SHELF_VERTEX,
+      fragmentShader: SHELF_FRAGMENT,
+      side: THREE.DoubleSide,
+    });
+    m.userData.depthFragment = SHELF_DEPTH;
+    return m;
+  };
+  const meshes = [new THREE.Mesh(geometry, materialOf(0)), new THREE.Mesh(far, materialOf(1))];
+  for (const m of meshes) m.geometry.computeBoundingSphere();
   return {
-    mesh,
+    meshes,
     dispose: () => {
-      geometry.dispose();
-      material.dispose();
+      for (const m of meshes) {
+        m.geometry.dispose();
+        (m.material as THREE.Material).dispose();
+      }
     },
   };
 }

@@ -271,9 +271,9 @@ export function create(ctx: Context): Piece {
   const knobs = createKnobs(ctx, NEAR_DEPTH, block);
   // The rock of the shelf round the bones, where it stands out of the water.
   const shelf = createShelf(ctx, block);
-  ctx.scene.add(ctx.parts.built('land', socket, patch, cropMesh, lipMesh, ...knobs.meshes, shelf.mesh));
+  ctx.scene.add(ctx.parts.built('land', socket, patch, cropMesh, lipMesh, ...knobs.meshes, ...shelf.meshes));
   for (const m of knobs.meshes) ctx.scene.add(m);
-  ctx.scene.add(shelf.mesh);
+  for (const m of shelf.meshes) ctx.scene.add(m);
   ctx.scene.add(lipMesh);
   ctx.scene.add(patch);
   ctx.scene.add(cropMesh);
