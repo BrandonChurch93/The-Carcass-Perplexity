@@ -144,21 +144,29 @@ vec2 lidHeads(vec2 p, float lod, bool fine, float soft) {
   return vec2(max(big, 0.85 * mid * (1.0 - 0.75 * soft)) * (0.74 + 0.26 * mix(small, 0.6, soft)), h);
 }
 
-// How much cloud stands at a place of the deck, 0 to 1, for a lens at a height. All by the height, the same in both places:
-// while the lens is in the deck and as it leaves the top the deck is whole, the white before the glass. Over the top, the open places
-// of the photographs are open air. On the frames about the cut they are open only where the water under them is the deep water both
-// places share, and from the cut on, farther and farther out. As the lens sees more of the deck at once the open places widen, until
-// thin wisps are left about one place, and then nothing.
-vec2 lidStands(vec2 p, float n, float camA) {
+// Where the deck may open, 0 to 1, for a lens at a height. On the frames about the cut only over the deep water both places share, its
+// edge a cloud's edge that keeps inside the lake's shore; from the cut on, farther and farther out, and soon everywhere.
+float lidShared(vec2 p, float camA) {
+  float wide = 1.0 + 6.0 * smoothstep(1.0, 1.06, camA) + 200.0 * smoothstep(1.04, 1.2, camA);
+  float ragged = 1.0 + 0.16 * (1.0 - vnoise(p * 13.0 + 6.1)) + 0.18 * (1.0 - vnoise(p * 31.0 + 2.3)) + 0.1 * (1.0 - vnoise(p * 83.0 + 5.1));
+  return (1.0 - smoothstep(0.81, 0.93, ragged * length(p / (LID_LAKE * uLidWater.w * (1.0 - LID_TOP))) / wide)) * smoothstep(0.0, 0.04, camA - LID_TOP);
+}
+
+// How much cloud stands at a place of the deck, x, 0 to 1, for a lens at a height, how whole the deck is there, y, and its banks alone, z. All by the
+// height, the same in both places: while the lens is in the deck and as it leaves the top the deck is whole, the white before the
+// glass. Over the top, where the deck may open, the open places of the photographs are open air and only their banks stand. As the
+// lens sees more of the deck at once the open places widen, until thin wisps are left about one place, and then nothing.
+vec3 lidStands(vec2 p, float n, float camA) {
   float above = camA - LID_TOP;
   float near = 1.0 - smoothstep(0.08, 0.45, length(p - LID_LAST));
-  float open = 0.1 + 0.9 * smoothstep(0.11, 0.8, above) - 0.38 * near * smoothstep(0.3, 0.8, above) + 1.2 * smoothstep(1.9, ${G(LID_GONE)}, camA);
-  float cloud = smoothstep(open - 0.05, open + 0.15, n);
-  float wide = 1.0 + 6.0 * smoothstep(1.0, 1.08, camA) + 200.0 * smoothstep(1.05, 1.25, camA);
-  // The edge of the whole deck is a cloud's edge, in and out, never a ring.
-  float ragged = 1.0 + 0.5 * (1.0 - vnoise(p * 31.0 + 2.3)) + 0.3 * (1.0 - vnoise(p * 83.0 + 5.1));
-  float shared = (1.0 - smoothstep(0.62, 0.9, ragged * length(p / (LID_LAKE * uLidWater.w * (1.0 - LID_TOP))) / wide)) * smoothstep(0.0, 0.04, above);
-  return vec2(mix(1.0, cloud, shared), 1.0 - shared);
+  // About the first open place the banks are few; farther out more of them stand, and thin with the height like the rest.
+  float first = mix(0.5, 0.3, smoothstep(1.0, 2.2, length(p / (LID_LAKE * uLidWater.w * (1.0 - LID_TOP)))));
+  float open = mix(first, 0.95, smoothstep(0.15, 0.7, above)) - 0.38 * near * smoothstep(0.3, 0.8, above) + 1.2 * smoothstep(1.9, ${G(LID_GONE)}, camA);
+  // The edge of a bank is a soft one, softer from far over it.
+  float feather = smoothstep(0.12, 0.3, above);
+  float cloud = smoothstep(open - 0.12 - 0.08 * feather, open + 0.18 + 0.2 * feather, n);
+  float shared = lidShared(p, camA);
+  return vec3(mix(1.0, cloud, shared), 1.0 - shared, cloud);
 }
 
 // The cloud between the eye and whatever lies at 'far' along the ray: rgb is its light, a is how much of what lies behind comes through.
@@ -186,12 +194,14 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     // Where the ray meets the deck: on its top, or at the lens itself while the lens is inside. The heads stand to the top and the folds
     // between them lie lower, so a leaning ray meets a fold a little farther on: the heads slide against the folds as the lens moves.
     vec2 q = from + lean * (min(above, 0.0) - max(above, 0.0));
+    // Where the deck is whole it is one soft top, seen without the edges of its banks.
+    lod += 2.0 * (1.0 - lidShared(q, camA)) * (1.0 - close);
     vec2 h = lidHeads(q, lod, true, soft);
     if (above > 0.0) {
       q = from - lean * (above + LID_RELIEF * (1.0 - h.y));
       h = lidHeads(q, lod, true, soft);
     }
-    vec2 stands = lidStands(q, h.x, camA);
+    vec3 stands = lidStands(q, h.x, camA);
     float alpha = stands.x;
     if (alpha > 0.0) {
       // One low sun: a head is lit where the cloud a little way toward the sun stands no higher, and in its own shade on the other side.
@@ -210,11 +220,14 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
       float tone = smoothstep(0.25, 1.0, h.x);
       float lit = mix(0.06 + 0.2 * h.y + 0.3 * tone, 0.1 + 0.45 * tone + 0.2 * (h.y - 0.3), far) + mix(1.7, 1.5, far) * (1.0 * (h.y - hs.y) + 1.0 * (h.y - hf.y) + 0.9 * (h.y - hb.y));
       // A head throws its shade on the lower cloud behind it.
-      lit -= 0.3 * smoothstep(0.08, 0.3, hb.y - h.y);
+      lit -= 0.45 * smoothstep(0.06, 0.3, hb.y - h.y);
       // A bank is lit on its side toward the sun and in its own shade on the other, and so is the edge of the deck.
       lit += 0.8 * clamp(h.x - hs.x, -0.3, 0.3) + 0.55 * clamp(h.x - hb.x, -0.3, 0.3);
       // Where the deck is whole, low cloud lies between the banks: lit too, in swells with a sunward and a shaded side.
-      lit += stands.y * (1.0 - smoothstep(0.15, 0.6, h.x)) * (0.3 + 0.2 * swell + 2.2 * (swell - swellSun));
+      // Its top is small heads, far smaller than the banks, each with its lit side.
+      float puffs = textureLod(uLidMap, q * 2.6 + vec2(0.2, 0.7), max(lod + 1.2, 0.0)).g;
+      float puffsSun = textureLod(uLidMap, (q + sunSide * 0.012 * span) * 2.6 + vec2(0.2, 0.7), max(lod + 1.7, 0.0)).g;
+      lit += stands.y * (1.0 - smoothstep(0.15, 0.6, h.x)) * (0.3 + 0.2 * puffs + 1.0 * (puffs - puffsSun) + 0.15 * swell + 1.6 * (swell - swellSun));
       // The edge of an open place is a side of cloud: lit where it faces the sun, in shade where it faces away.
       lit += 0.5 * clamp(alpha - lidStands(q + sunSide * 0.02 * span, hs.x, camA).x, -1.0, 1.0);
       // What is left at the last is thin and in shade.
@@ -224,11 +237,13 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
       lit = clamp(max(lit, -0.04) + 0.06 + 0.24 * swell, 0.0, 1.0);
       // The shade of a bank is not one blue: the light that comes through the cloud warms it where the bank is heaped.
       vec3 shade = mix(uLidShade, uLidInside * 1.25, 0.5 * smoothstep(0.35, 0.95, h.y));
+      // The top of a deck lies under the whole sky and beside lit cloud: its folds are in soft shade, never dark.
+      shade = mix(shade, uLidSunlit, mix(0.22, 0.4, stands.y));
       // The eye reads light by its ratio: the half tones of a bank lie low between its shade and its sunlit heads.
       float bright = smoothstep(0.0, 1.1, lit);
       vec3 colour = mix(shade, uLidSunlit * 1.05, bright * bright * (0.35 + 0.65 * bright));
       // Where the cloud is thin the light goes through it: a veil is pale, not a sheet of shade.
-      colour = mix(colour, mix(uLidShade, uLidSunlit, 0.42 + 0.4 * lit), 0.7 * (1.0 - smoothstep(0.1, 0.9, alpha)) * (1.0 - late));
+      colour = mix(colour, mix(uLidShade, uLidSunlit, 0.42 + 0.4 * lit), mix(0.3, 0.85, stands.y) * (1.0 - smoothstep(0.1, 0.9, alpha)) * (1.0 - late));
       // Inside the deck and just over it the cloud is the white before the glass, with no more than a breath of the heads in it.
       colour = mix(colour, mix(uLidInside, uLidWarm, 0.35 + 0.3 * lit) * 2.1, close);
       // The lens climbs into the deck from under it: the more of the deck lies under the lens, the less of the water comes through.
@@ -238,19 +253,22 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
       tr = 1.0 - alpha;
     }
   }
-  // The shade of the deck lies on the water and the shore under it, thrown away from the sun, with the open places of the deck in it.
-  float shadeIn = uLidShadow * smoothstep(LID_FOOT, LID_FOOT + 0.05, camA);
+  // The shade of the banks lies on the water and the shore under them, thrown away from the sun. The low cloud between them is thin
+  // and lets the light through: the lake under the deck is water in the evening light, with the shade of the banks on it.
+  // While the deck is all but whole the water under it lies in one even shade; the shade of single banks comes as the deck opens.
+  float shadeIn = uLidShadow * smoothstep(LID_FOOT, LID_FOOT + 0.05, camA) * smoothstep(1.0, 1.1, camA);
   vec2 g = from + lean * (floorA - camA);
   if (shadeIn > 0.0 && tr > 0.02 && floorA < 0.45) {
     vec2 q = g + sunSide * 0.42 * (LID_TOP - floorA);
     float lod = log2(max(reach * (camA - floorA) * LID_TILE, 1.0));
-    vec2 h = lidHeads(q, lod + 1.0, false, smoothstep(0.12, 0.3, above));
-    tr *= 1.0 - 0.9 * shadeIn * lidStands(q, h.x, max(camA, LID_TOP + 0.04)).x * (1.0 - 0.6 * smoothstep(0.35, 0.8, above));
+    // The banks stand high over the water: their shade comes down soft.
+    vec2 h = lidHeads(q, lod + 2.6, false, 1.0);
+    tr *= 1.0 - 0.62 * shadeIn * lidStands(q, h.x, max(camA, LID_TOP + 0.04)).z * (1.0 - 0.6 * smoothstep(0.35, 0.8, above));
   }
   // One water under the deck. On the frames about the cut the deep water of the lake is drawn here, the same in both places, with the wind
   // on it and the shade of the deck: the Eye's own water goes over to it as the lens nears the cut, and it goes over to the rise's as the
   // lens climbs on. It has no edge: toward the shores each place keeps its own lake, and on those frames the deck is whole over them.
-  float about = smoothstep(0.8, 0.99, camA) * (1.0 - smoothstep(1.01, 1.12, camA));
+  float about = smoothstep(0.8, 0.99, camA) * (1.0 - smoothstep(1.0, 1.06, camA));
   float water = about * (1.0 - smoothstep(0.93, 1.02, length(g / (LID_LAKE * uLidWater.w))));
   if (water > 0.0 && tr > 0.02 && floorA < 0.02) {
     vec2 wind = normalize(uLidDrift);
