@@ -279,7 +279,10 @@ void bodyOne(int i, vec3 ro, vec3 rd, float t0, float t1, float jitter) {
     // base burns orange and its upper smoke is dark against it, lump by lump, and it is never one flat colour.
     if (G.w > 0.0) fire *= exp(-G.w * B.w * up * (0.4 + 1.2 * dens));
     light += fireOnSmoke(fire);
-    if (C.z > 0.0) light += C.z * roundLights(p) * (0.4 + 0.6 * skyT);
+    // The round lights stand low (the fall, its foot, the pools): they light a billow from below as the lake does. Taken alike by every point
+    // of a body they laid one even orange over it, top and underside, and the bank beside the fall stood as a flat tint.
+    // What takes them is the side of a billow that has smoke over it (its underside), less where it is thick; a top that is open to the sky takes a fifth.
+    if (C.z > 0.0) light += C.z * roundLights(p) * (0.2 + 0.9 * skyward * mix(1.2, 0.5, dens)) * (0.55 + 0.45 * skyT);
     float a = 1.0 - exp(-dens * B.w * pace);
     lay(close, t, mid, E.rgb * light, a);
     through *= 1.0 - a;
@@ -403,7 +406,14 @@ void steamOne(int i, vec3 ro, vec3 rd, float t0, float t1, float jitter) {
     // less than what lies under it, and to the same height.
     // A vent in the rock of the bank stands over no lava and takes none of this: it is pale. Only a vapour whose foot is on the lake does.
     float onLake = smoothstep(2.0, 0.6, A.y);
-    if (near > 0.0) light += near * fireOnSmoke(mix(0.45, 0.17, kind) * below + (onLake > 0.0 ? onLake * mix(0.3, 0.2, kind) * lakeGlow(p.xz, max(3.0 * h, 8.0)) : vec3(0.0)) + roundLights(p));
+    // A smoke that stands a few metres from one of the round lights (the fume up the wind of the fall, beside its mouth) took all of it and stood as
+    // a pale glowing lump. What smoke takes of them is bent over at ten times what the sky gives it: it is lit warm from below and stays smoke.
+    if (near > 0.0) {
+      vec3 round1 = roundLights(p);
+      float knee = 10.0 * skyLight(p.y).r;
+      round1 *= knee / (knee + kind * round1.r);
+      light += near * fireOnSmoke(mix(0.45, 0.17, kind) * below + (onLake > 0.0 ? onLake * mix(0.3, 0.2, kind) * lakeGlow(p.xz, max(3.0 * h, 8.0)) : vec3(0.0)) + round1);
+    }
     float a = 1.0 - exp(-sigma * dt);
     lay(close, t, mid, albedo * light, a);
   }
@@ -467,7 +477,7 @@ void groundOne(int i, vec3 ro, vec3 rd, float t0, float t1, float jitter) {
     vec4 w = noise(vec3(C.x, (s - C.y * uTime) / 11.0, C.x * 1.7 + 0.04 * s));
     float wide = 1.7 * A.w + 0.3 * out1;
     float c = dot(rel, side) - (w.g - 0.5) * (1.2 * A.w + 0.55 * out1);
-    float roof = (0.3 + 0.75 * A.w + 0.09 * out1) * (0.55 + 0.9 * w.a);
+    float roof = (0.3 + 0.75 * A.w + 0.06 * out1) * (0.55 + 0.9 * w.a);
     if (abs(c) >= 1.25 * wide || h >= 1.4 * roof) continue;
     vec3 q = vec3(s - C.y * uTime, 2.2 * h + 0.35 * s, c) / C.z + C.x;
     float n1 = noise(q).r;
@@ -476,10 +486,12 @@ void groundOne(int i, vec3 ro, vec3 rd, float t0, float t1, float jitter) {
     float lid = h / roof + (small.a - 0.5) * 0.5 + (n1 - 0.5) * 0.3;
     if (edge >= 1.0 || lid >= 1.0) continue;
     float shape = (1.0 - smoothstep(0.25, 1.0, edge)) * (1.0 - smoothstep(0.35, 1.0, lid));
-    float wisps = smoothstep(0.34, 0.72, n1 * 0.6 + small.b * 0.4);
-    float puff = mix(0.3, 1.45, smoothstep(0.3, 0.62, w.r));
+    float wisps = smoothstep(0.4, 0.68, n1 * 0.6 + small.b * 0.4);
+    float puff = 1.9 * smoothstep(0.4, 0.66, w.r);
     // It thins as it widens and is gone before the end of its run.
-    float dens = shape * (0.2 + 1.1 * wisps) * puff * smoothstep(0.0, 0.08, u) * pow(1.0 - u, 1.3) * mix(1.0, 1.7 * A.w / wide, 0.75);
+    // A trail of vapour was a veil with knots in it, and gust and lump were so little apart that it lay as one even smear over the rough crust and
+    // took its fine detail. It is lumps with nothing between them, and between two gusts the crust is clear.
+    float dens = shape * 2.2 * wisps * wisps * puff * smoothstep(0.0, 0.08, u) * pow(1.0 - u, 1.3) * mix(1.0, 1.7 * A.w / wide, 0.75);
     if (dens <= 0.0) continue;
     // The fire under it and round it: what is open within a few metres of the point, most where it lies low.
     vec3 below = lakeGlow(p.xz, 2.5 + 1.5 * h);

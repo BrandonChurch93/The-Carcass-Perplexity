@@ -45,7 +45,7 @@ const vec3 DECK_FIRE = vec3(650.0, -60.0, 1500.0);
 const vec3 DECK_GLOW = vec3(0.15, 0.072, 0.038);
 const vec3 DECK_BODY = vec3(0.5, 0.47, 0.45);
 vec4 deck(vec3 d, float t) {
-  if (d.y < 0.02) return vec4(0.0);
+  if (d.y < 0.015) return vec4(0.0);
   vec2 at = cameraPosition.xz + d.xz * ((DECK_HIGH - cameraPosition.y) / d.y);
   vec2 q = vec2(dot(at, DECK_ALONG) - DECK_SPEED * t, dot(at, vec2(-DECK_ALONG.y, DECK_ALONG.x)));
   vec2 bend = textureLod(tNoise, vec3(q / 9000.0, 0.21), 0.0).ga - 0.5;
@@ -54,10 +54,10 @@ vec4 deck(vec3 d, float t) {
   vec4 lumps = textureLod(tNoise, vec3(q.x / 2100.0 + 0.3, q.y / 1250.0, 0.77), 0.0);
   float fine = textureLod(tNoise, vec3(q.x / 560.0, q.y / 340.0 + 0.7, 0.13), 0.0).r;
   float n = large + 0.34 * (lumps.r - 0.4) + 0.1 * (fine - 0.4);
-  float thick = smoothstep(0.43, 0.68, n);
+  float thick = smoothstep(0.6, 0.78, n);
   // A sheet seen aslant is looked through for longer; far off it goes into the air and the pale band over the rim.
   float a = 1.0 - exp(-2.2 * thick * min(1.0 / d.y, 4.0));
-  a *= smoothstep(0.02, 0.11, d.y);
+  a *= smoothstep(0.015, 0.055, d.y);
   vec2 off = at - DECK_FIRE.xy;
   float fire = 1.0 / (1.0 + dot(off, off) / (DECK_FIRE.z * DECK_FIRE.z));
   // The underside is in lumps: each catches the fire on its low side, and the thick middle of a bank takes less of it than its rim.
