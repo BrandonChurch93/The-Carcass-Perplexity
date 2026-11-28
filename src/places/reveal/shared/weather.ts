@@ -16,7 +16,18 @@ export const FOG_KM = 0.7;
 /** Km a second: staged far faster than weather, so the held frame is seen to live. */
 export const LOW_DRIFT: [number, number] = [5.4, 1.5];
 /** The small low far off toward the planet's edge, px of the master: the wind winds round it as round the cyclone, a quarter as wide. */
-export const LOW2 = { x: 300, y: 900 };
+export const LOW2 = { x: 360, y: 1150 };
+// How many storms the sea holds: 1 the cyclone alone, 2 with the far low at the head of its front, 3 with a small one to the
+// south-west. (The same number is given to assets-src/reveal/sky/make_weather.py as STORMS, which clears the sea round each.)
+export const STORMS = 3;
+// The other storms, each drawn by the cyclone's sheet (sky/index.ts): where (px of the master), the half width of its sheet (the
+// cyclone's is 1250), how it is turned, where in the photographs its arms are taken from, and how much thinner it stands.
+export const OTHER_STORMS = [
+  { at: LOW2, half: 680, turn: 2.1, arms: [0.37, 0.61], thinner: 0.1 },
+  { at: { x: 470, y: 2760 }, half: 640, turn: 4.4, arms: [0.71, 0.23], thinner: 0.2 },
+] as const;
+// How far the weather systems travel down the wind for each unit of the weather's clock, km.
+export const SYSTEMS_RUN = 2.5;
 /** The rectangle the map of the weather systems lies on (sky/weather.png, assets-src/reveal/sky/make_weather.py), as COVER_RECT is given. */
 export const WEATHER_RECT: [number, number, number, number] = [X(-2600), Z(-1400), 1 / (10800 * KM), 1 / (6075 * KM)];
 const LOW_MUCH = 1.0;
@@ -157,7 +168,7 @@ const vec2 WIND_FAR = vec2(0.9511, -0.3090);
 // How far the weather systems have travelled down the wind since the titan frame, km: the far low and the map of the systems
 // (sky/weather.png) go together, far slower than the cloud that streams through them. Nothing before the frame is held.
 vec2 systemsRun() {
-  return uLive > 0.0 ? 2.5 * uWx * vec2(0.9511, 0.3090) : vec2(0.0);
+  return uLive > 0.0 ? ${f(SYSTEMS_RUN)} * uWx * vec2(0.9511, 0.3090) : vec2(0.0);
 }
 vec2 windLay(vec2 at) {
   windFp = WIND_FAR;
@@ -289,7 +300,12 @@ float lowDepth(vec2 at) {
   // (At the heart of a low, where the wind's map is wound too tight to hold a cell, the deck's cells are read on the ground.)
   float whole = 0.8;
   if (wound * closed > 0.0) whole = clamp(0.35 + 0.5 * cloudAt(uMatPopcorn, (at - systemsRun() - uWx * vec2(6.0, 2.0)) / 170.0 + vec2(0.21, 0.63), gAt / 170.0 * lowSoft, 0.34), 0.0, 1.0);
-  float dense = max(knots * (0.25 + 1.5 * density) - 1.0, 0.0) + 1.7 * closed * cluster * mix(mix(pow(max(chain - 0.4, 0.0), 1.3), 1.0, 0.7 * smoothstep(0.9, 0.99, systems.r)) * (0.45 + 0.55 * smoothstep(0.35, 0.9, knots)), 0.6 * whole, wound);
+  // (A body is white and whole at its tops and has an edge: the wind-drawn photograph says where it is thick, the larger lay of
+  // cumulus breaks it into tops a few pixels wide from orbit with the sea dark between them, and the smaller lay lumps each top.)
+  float form = mix(pow(max(chain - 0.4, 0.0), 1.3), 1.0, 0.7 * smoothstep(0.9, 0.99, systems.r));
+  float tops = form * (0.42 + 0.58 * smoothstep(0.45, 1.25, puff)) * (0.55 + 0.45 * smoothstep(0.35, 0.9, cell));
+  float stood = smoothstep(0.16, 0.34, tops) * (1.0 + 2.6 * tops);
+  float dense = max(knots * (0.25 + 1.5 * density) - 1.0, 0.0) + closed * cluster * mix(stood, 1.4 * whole, wound);
   return 1.5 * dense + drawn;
 }
 
@@ -302,7 +318,8 @@ vec2 lowField(vec2 at) {
   if (depth <= 0.0) return vec2(0.0);
   vec3 a = pic(uMatStreaksNh, lowUvA, lowGA).rgb;
   vec3 b = pic(uMatPopcornNh, lowUvB, lowGB).rgb;
-  vec3 c = pic(uMatSpecksNh, lowUvC, lowGC).rgb;
+  vec3 c = vec3(0.5);
+  if (lowWeigh.y > 0.0) c = pic(uMatSpecksNh, lowUvC, lowGC).rgb;
   vec3 d = vec3(0.5);
   vec3 e = vec3(0.5);
   if (lowNear.x > 0.0) d = mix(d, pic(uMatPopcornNh, lowUvD, lowGD).rgb, lowNear.x);
@@ -454,7 +471,7 @@ float cloudShade(vec2 xz) {
   float lift = mix(1.0, 3.0, smoothstep(150.0, 700.0, uViewKm));
   // (From orbit the shadow of the low field is read soft: sharp, every fleck of cloud had a dark twin cut to its own shape.)
   lowSoft = mix(1.0, 4.5, smoothstep(200.0, 700.0, uViewKm));
-  float low = 1.0 - exp(-1.3 * max(lowDepth(xz + toSun * ${LOW_KM.toFixed(1)} * min(lift, 1.7)), 0.0));
+  float low = 1.0 - exp(-1.3 * max(lowDepth(xz + toSun * ${LOW_KM.toFixed(1)} * mix(min(lift, 1.7), 3.6, smoothstep(900.0, 2000.0, uViewKm))), 0.0));
   float high = highDepth(xz + toSun * ${HIGH_KM.toFixed(1)} * lift);
   // (The middle deck stands well off the ground, and its shadow is drawn well off it: that is what tells its height.)
   float bank = 1.0 - exp(-1.3 * max(bankDepth(xz + toSun * ${BANK_KM.toFixed(1)} * 2.2 * lift), 0.0));

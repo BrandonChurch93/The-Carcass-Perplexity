@@ -2,11 +2,11 @@
 // edge of the planet the air and the black behind it. Each is a sheet at its own height, so the rise passes them at their own speeds.
 // The cloud itself is one field of the world (shared/weather.ts): the surface takes its shade from the same field.
 import * as THREE from 'three';
-import { AT, KM, LIMB, LIMB_FOLLOW, LIVE_FROM, RISE_FIRST, X, Z, driftAt } from '../shared/anchors';
+import { AT, KM, LIMB, LIMB_FOLLOW, LIVE_FROM, RISE_FIRST, X, Z, driftAt, weatherAt } from '../shared/anchors';
 import { FPS } from '../../../config';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
-import { BANK_KM, FOG_KM, GROUND_RECT, HIGH_KM, LOW_KM, WEATHER_GLSL } from '../shared/weather';
+import { BANK_KM, FOG_KM, GROUND_RECT, HIGH_KM, LOW_KM, OTHER_STORMS, STORMS, SYSTEMS_RUN, WEATHER_GLSL } from '../shared/weather';
 
 export const PARTS = ['cloud', 'cyclone', 'storm', 'vapour', 'space', 'atmosphere'] as const;
 
@@ -191,6 +191,25 @@ void main() {
 
 // The cyclone: drawn from the Builder's photographs of wind-drawn streaks and of small cumulus, wound round its eye (the cyclone of round 19:
 // the photograph of a whole cyclone that stood here in round 25 read soft and flat at native size).
+// How another storm is drawn out (the cyclone's sheet, below): so much shorter all round, less so much on the side at this angle.
+const DRAWN_OUT = [0.35, 0.8, 0.9] as const;
+// The part of its square sheet that another storm can reach, as [left, bottom, right, top] with the square -1 to 1: the sheet is
+// cut to it, so the clear sea round a storm that is drawn out to one side is not paid for.
+function reachOfOther(): [number, number, number, number] {
+  const box: [number, number, number, number] = [0, 0, 0, 0];
+  for (let i = 0; i < 720; i++) {
+    const side = (i / 720) * 2 * Math.PI;
+    // (The same sum as in the sheet, with the photograph's part of it at its least.)
+    const shorter = 1.32 - 0.3 * Math.cos(side - 3.4) - 0.12 * Math.cos(2 * side + 1) - 0.25 + DRAWN_OUT[0] - DRAWN_OUT[1] * Math.cos(side - DRAWN_OUT[2]);
+    const r = 0.98 / Math.max(shorter, 1);
+    box[0] = Math.min(box[0], r * Math.cos(side));
+    box[1] = Math.min(box[1], r * Math.sin(side));
+    box[2] = Math.max(box[2], r * Math.cos(side));
+    box[3] = Math.max(box[3], r * Math.sin(side));
+  }
+  return box;
+}
+
 const CYCLONE_FRAGMENT = /* glsl */ `
 ${RIG_GLSL}
 ${NOISE_GLSL}
@@ -198,6 +217,9 @@ ${CLOUD_LIGHT_GLSL}
 uniform sampler2D uStreaks;
 uniform sampler2D uMatVeil;
 uniform sampler2D uCloudTile;
+// The other storms of the sea are drawn by this same sheet, smaller and far off: xy where in the photographs their arms are
+// taken from, z 1 for a storm with no eye, w how much thinner it stands. All 0 for the cyclone, which is drawn as it was.
+uniform vec4 uOther;
 varying vec3 vWorld;
 varying vec2 vUv;
 float lum(vec3 c) {
@@ -216,7 +238,7 @@ float storm(vec2 p, float turn, float lopsided, float shorter, float drawnIn) {
   // drawn out along the arm, three to six times its width, and the storm is strokes. Whole multiples of the angle keep the
   // winding without a seam.)
   float phase = around - 0.3183 * lr;
-  vec2 wound = vec2(2.0 * around + 0.1592 * lr, phase);
+  vec2 wound = vec2(2.0 * around + 0.1592 * lr, phase) + uOther.xy;
   vec2 bend = texture2D(uCloudTile, p * 0.3 + 0.3, 3.0).rg - 0.5;
   float grain = 1.0 / max(r, 0.05);
   vec2 gx = dFdx(vUv) * grain;
@@ -232,10 +254,15 @@ float storm(vec2 p, float turn, float lopsided, float shorter, float drawnIn) {
   // (The same photograph at three sizes, the finer the farther out, where the winding has drawn the coarse one out to strokes.)
   float outer = smoothstep(0.15, 0.65, r);
   float clumps = lum(textureGrad(uStreaks, ub, gx * 0.75, gy * 0.75).rgb);
-  float fine = (mix(0.45, 0.2, outer) * clumps + mix(0.4, 0.5, outer) * lum(textureGrad(uStreaks, uc, gx * 2.0, gy * 2.0).rgb) + mix(0.15, 0.3, outer) * lum(textureGrad(uStreaks, ud, gx * 4.5, gy * 4.5).rgb)) / 0.304;
+  // (Another storm is small in the picture: its finest lay and the rings at its heart are under a pixel there, each at its mean,
+  // and are not read.)
+  float finest = 0.304;
+  if (uOther.z < 0.5) finest = lum(textureGrad(uStreaks, ud, gx * 4.5, gy * 4.5).rgb);
+  float fine = (mix(0.45, 0.2, outer) * clumps + mix(0.4, 0.5, outer) * lum(textureGrad(uStreaks, uc, gx * 2.0, gy * 2.0).rgb) + mix(0.15, 0.3, outer) * finest) / 0.304;
   // (Near the eye the wound lays have shrunk under a pixel and the bands were smooth. There the same cells are laid in
   // rings round the eye, a few pixels each, so the inner bands are crowds of tops.)
-  float ringed = lum(textureGrad(uStreaks, vec2(8.0 * around, 9.0 * r) + vec2(0.31, 0.57), gx * 3.0, gy * 3.0).rgb) / 0.304;
+  float ringed = 1.0;
+  if (uOther.z < 0.5) ringed = lum(textureGrad(uStreaks, vec2(8.0 * around, 9.0 * r) + vec2(0.31, 0.57), gx * 3.0, gy * 3.0).rgb) / 0.304;
   fine *= mix(1.0, 0.5 + 0.5 * ringed, 1.0 - smoothstep(0.12, 0.34, r));
   // (Left whole, the arms read from far off as five bold strokes of one weight. A second lay of the bands, finer and at
   // its own place along the winding, and the clumps of the cell photograph break each into lengths of unlike weight.)
@@ -255,7 +282,7 @@ float storm(vec2 p, float turn, float lopsided, float shorter, float drawnIn) {
   // (Toward the eye a band is one body of cloud and its cells are the lumps of its top; outward it opens into rows of them.)
   // (Inside a band the cells still show: a band is a crowd of tops, not a smooth sheet.)
   float body = cover * mix(cells, 0.07 + 0.93 * cells, max(core, band * (1.0 - outer)));
-  return body * smoothstep(0.006, 0.036, r) * (1.0 - smoothstep(0.8, 0.98, r * shorter));
+  return body * mix(smoothstep(0.006, 0.036, r), 1.0, uOther.z) * (1.0 - smoothstep(0.8, 0.98, r * shorter)) * (1.0 - uOther.w);
 }
 void main() {
   vec2 p = vUv * 2.0 - 1.0;
@@ -279,6 +306,8 @@ void main() {
   // (How much shorter the storm stands on a side than on its longest: this stands on the planet and does not turn with it.)
   float side = atan(p.y, p.x);
   float shorter = 1.32 - 0.3 * cos(side - 3.4) - 0.12 * cos(2.0 * side + 1.0) + 0.5 * (texture2D(uCloudTile, p * 0.17 + vec2(0.71, 0.38), 3.0).b - 0.5);
+  // (Another storm is no wheel: it is drawn out far on the side its front leaves it and cut short on the side across.)
+  shorter += uOther.z * (${DRAWN_OUT[0].toFixed(3)} - ${DRAWN_OUT[1].toFixed(3)} * cos(side - ${DRAWN_OUT[2].toFixed(3)}));
   float thick = storm(body, turn, lopsided, max(shorter, 1.0), drawnIn);
   // Each band is lit on its side toward the sun and takes its neighbour's shade on the other; the wall round the eye stands highest.
   // (How its thickness falls toward the sun, from the change of it across the pixel.)
@@ -419,7 +448,7 @@ export function create(ctx: Context): Piece {
 
   const made: { geometry: THREE.BufferGeometry; material: THREE.ShaderMaterial }[] = [];
   let order = 10;
-  const sheet = (name: string, geometry: THREE.BufferGeometry, fragment: string, extra: Record<string, THREE.IUniform> = {}, additive = false): THREE.Mesh => {
+  const sheet = (name: string, geometry: THREE.BufferGeometry, fragment: string, extra: Record<string, THREE.IUniform> = {}, additive = false, under?: THREE.Object3D): THREE.Mesh => {
     const material = new THREE.ShaderMaterial({
       uniforms: { ...ctx.rig.uniforms, ...extra },
       vertexShader: UV_VERTEX,
@@ -439,7 +468,9 @@ export function create(ctx: Context): Piece {
     mesh.frustumCulled = false;
     mesh.renderOrder = order++;
     made.push({ geometry, material });
-    ctx.scene.add(ctx.parts.built(name, mesh));
+    // (A sheet under another is of that one's part: it is shown and hidden with it.)
+    if (under) under.add(mesh);
+    else ctx.scene.add(ctx.parts.built(name, mesh));
     return mesh;
   };
   const quad = (at: { x: number; y: number }, halfX: number, halfZ: number, height: number, turn: number): THREE.BufferGeometry =>
@@ -447,6 +478,14 @@ export function create(ctx: Context): Piece {
       .rotateX(-Math.PI / 2)
       .rotateY(turn)
       .translate(X(at.x), height, Z(at.y));
+
+  // A square sheet cut to a part of itself ([left, bottom, right, top] with the square -1 to 1): what is left is drawn as it was.
+  const cut = (at: { x: number; y: number }, half: number, height: number, turn: number, box: readonly [number, number, number, number]): THREE.BufferGeometry => {
+    const g = new THREE.PlaneGeometry((box[2] - box[0]) * half * KM, (box[3] - box[1]) * half * KM).translate(0.5 * (box[0] + box[2]) * half * KM, 0.5 * (box[1] + box[3]) * half * KM, 0);
+    const uv = g.getAttribute('uv');
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, 0.5 + 0.5 * (box[0] + (box[2] - box[0]) * uv.getX(i)), 0.5 + 0.5 * (box[1] + (box[3] - box[1]) * uv.getY(i)));
+    return g.rotateX(-Math.PI / 2).rotateY(turn).translate(X(at.x), height, Z(at.y));
+  };
 
   // The breath of the throat: it leaves the neck and is carried up the picture and to the left by the wind.
   const wind = new THREE.Vector2(-0.43, -0.9).normalize();
@@ -462,7 +501,21 @@ export function create(ctx: Context): Piece {
     uGroundRect: { value: new THREE.Vector4(...GROUND_RECT) },
   });
   sheet('storm', quad({ x: AT.storm.x - 40, y: AT.storm.y }, 256, 80, 7, 0.03), STORM_FRAGMENT, { uPicture: { value: data('mat/storm.jpg', false) } });
-  sheet('cyclone', quad(AT.cyclone, 1250, 1250, 6, 0), CYCLONE_FRAGMENT, { uStreaks: { value: data('mat/streaks.jpg', true) } });
+  const cyclone = sheet('cyclone', quad(AT.cyclone, 1250, 1250, 6, 0), CYCLONE_FRAGMENT, { uStreaks: { value: data('mat/streaks.jpg', true) }, uOther: { value: new THREE.Vector4(0, 0, 0, 0) } });
+  // The other storms of the sea (shared/weather.ts, OTHER_STORMS): the far low at the head of its front and a small one to the
+  // south-west, each the cyclone's own sheet at its own size, turned its own way, with arms from another place in the photographs
+  // and no eye. They travel with the weather systems, slowly, down the wind.
+  const reach = reachOfOther();
+  const others = OTHER_STORMS.slice(0, STORMS - 1).map((o) =>
+    sheet(
+      'cyclone',
+      cut(o.at, o.half, 6, o.turn, reach),
+      CYCLONE_FRAGMENT,
+      { uStreaks: { value: data('mat/streaks.jpg', true) }, uOther: { value: new THREE.Vector4(o.arms[0], o.arms[1], 1, o.thinner) } },
+      false,
+      cyclone,
+    ),
+  );
   const centre = { x: LIMB.cx, y: LIMB.cy };
   const ring = (inner: number, outer: number): THREE.BufferGeometry =>
     new THREE.RingGeometry(inner * LIMB.r * KM, outer * LIMB.r * KM, 720, 1).rotateX(-Math.PI / 2).translate(X(centre.x), 12, Z(centre.y));
@@ -474,6 +527,8 @@ export function create(ctx: Context): Piece {
     setTime: (seconds) => {
       const [driftX, driftZ] = driftAt(RISE_FIRST + seconds * FPS);
       for (const edge of edges) edge.position.set(LIMB_FOLLOW * driftX, 0, LIMB_FOLLOW * driftZ);
+      const run = SYSTEMS_RUN * weatherAt(seconds);
+      for (const other of others) other.position.set(run * 0.9511, 0, run * 0.309);
     },
     dispose: () => {
       for (const m of made) {
